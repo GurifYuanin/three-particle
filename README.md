@@ -1,44 +1,19 @@
-# [jslib-base](https://github.com/yanhaijing/jslib-base)
-[![](https://img.shields.io/badge/Powered%20by-jslib%20base-brightgreen.svg)](https://github.com/yanhaijing/jslib-base)
-[![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/yanhaijing/jslib-base/blob/master/LICENSE)
-[![Build Status](https://travis-ci.org/yanhaijing/jslib-base.svg?branch=master)](https://travis-ci.org/yanhaijing/jslib-base)
-[![Coveralls](https://img.shields.io/coveralls/yanhaijing/jslib-base.svg)](https://coveralls.io/github/yanhaijing/jslib-base)
-[![npm](https://img.shields.io/badge/npm-0.1.0-orange.svg)](https://www.npmjs.com/package/jslib-base)
-[![NPM downloads](http://img.shields.io/npm/dm/jslib-base.svg?style=flat-square)](http://www.npmtrends.com/jslib-base)
-[![Percentage of issues still open](http://isitmaintained.com/badge/open/yanhaijing/jslib-base.svg)](http://isitmaintained.com/project/yanhaijing/jslib-base "Percentage of issues still open")
-
-English | [简体中文](./README.zh-CN.md)
+# [three-particle](https://github.com/GurifYuanin/three-particle)
+[![](https://img.shields.io/badge/Powered%20by-three%20particle-brightgreen.svg)](https://github.com/GurifYuanin/three-particle)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/GurifYuanin/three-particle/blob/master/LICENSE)
+[![Build Status](https://travis-ci.org/GurifYuanin/three-particle.svg?branch=master)](https://travis-ci.org/GurifYuanin/three-particle)
+[![npm](https://img.shields.io/badge/npm-5.6.0-orange.svg)](https://www.npmjs.com/package/three-particle)
+[![NPM downloads](http://img.shields.io/npm/dm/three-particle.svg?style=flat-square)](http://www.npmtrends.com/three-particle)
+[![Percentage of issues still open](http://isitmaintained.com/badge/open/GurifYuanin/three-particle.svg)](http://isitmaintained.com/project/GurifYuanin/three-particle "Percentage of issues still open")
 
 The best third party `JS|TS` library scaffold. By forking or cloning the repository, you can complete the basic framework for building a new library.
-
-**The library that based jslib-base can be shared to the [jsmini](https://github.com/jsmini) platform**
-
-## Characteristics
-
-- Coded in ES6+ or TypeScript, easily compile and generate production code
-- Integrated babel-runtime (Default set to closed)
-- Third parties rely on automatic injection(Tree shaking)
-- Supports multi environment, including default browsers, Node, AMD, CMD, Webpack, Rollup, Fis and so on.
-- Integrated code style lint(eslint|tslint).
-- Integrated unit test environment(mocha).
-- Integrated test coverage(istanbul).
-- Integrated continuous integration tool [travis-ci](https://www.travis-ci.org/)
-- Supports banner
-- Supports one-key renaming.
-- Supports [sideEffects](https://github.com/webpack/webpack/tree/master/examples/side-effects)
-- Integrated Issue template
-- Integrated [jsmini](https://github.com/jsmini)
-
-**Note:** When `export` and `export default` are not used at the same time, there is the option to 
-turn on `legacy mode`. Under `legacy mode`, the module system can be compatible with `IE6-8`. For more information on legacy mode, 
-please see rollup supplemental file. 
 
 ## Compatibility
 Unit tests guarantee support on the following environment:
 
 | IE   | CH   | FF   | SF   | OP   | IOS  | Android   | Node  |
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ----- |
-| 6+   | 29+ | 55+  | 9+   | 50+  | 9+   | 4+   | 4+ |
+| 6+   | 29+  | 55+  | 9+   | 50+  | 9+   | 4+   | 4+    |
 
 > Note: Compiling code depend on ES5, so you need import [es5-shim](http://github.com/es-shims/es5-shim/) to compatible with `IE6-8`, here is a [demo](./demo/demo-global.html)
 
@@ -53,30 +28,30 @@ Unit tests guarantee support on the following environment:
 └── TODO.md - Planned features
 ```
 
-## Usage Instructions
+## Quick Start
 
 Using npm, download and install the code. 
 
 ```bash
-$ npm install --save jslib-base
+$ npm install --save three-particle
 ```
 
 For node environment：
 
 ```js
-var base = require('jslib-base');
+var base = require('three-particle');
 ```
 
 For webpack or similar environment：
 
 ```js
-import base from 'jslib-base';
+import base from 'three-particle';
 ```
 
 For requirejs environment:
 
 ```js
-requirejs(['node_modules/jslib-base/dist/index.aio.js'], function (base) {
+requirejs(['node_modules/three-particle/dist/index.aio.js'], function (base) {
     // do something...
 })
 ```
@@ -84,7 +59,7 @@ requirejs(['node_modules/jslib-base/dist/index.aio.js'], function (base) {
 For browser environment:
 
 ```html
-<script src="node_modules/jslib-base/dist/index.aio.js"></script>
+<script src="node_modules/three-particle/dist/index.aio.js"></script>
 ```
 
 ## Documents
@@ -140,7 +115,7 @@ For renaming project, you need change `fromName` and `toName` in `rename.js`, th
 
 ## Contributors
 
-[contributors](https://github.com/yanhaijing/jslib-base/graphs/contributors)
+[contributors](https://github.com/GurifYuanin/three-particle/graphs/contributors)
 
 ## Change Log
 [CHANGELOG.md](./CHANGELOG.md)
@@ -149,32 +124,6 @@ For renaming project, you need change `fromName` and `toName` in `rename.js`, th
 [TODO.md](./TODO.md)
 
 ## Current Users
-
-jsmini
-
-- [type](https://github.com/jsmini/type)
-- [is](https://github.com/jsmini/is)
-- [inherits](https://github.com/jsmini/inherits)
-- [guid](https://github.com/jsmini/guid)
-- [clone](https://github.com/jsmini/clone)
-- [extend](https://github.com/jsmini/extend)
-- [event](https://github.com/jsmini/event)
-- [url](https://github.com/jsmini/url)
-- [querystring](https://github.com/jsmini/querystring)
-- [pubsub](https://github.com/jsmini/pubsub)
-- [load](https://github.com/jsmini/load)
-- [md5](https://github.com/jsmini/md5)
-- [console](https://github.com/jsmini/console)
-
-other
-
-- [littlejs](https://github.com/Zenquan/littlejs)
-- [axios-miniprogram-adapter](https://github.com/bigmeow/axios-miniprogram-adapter)
-- [react-compare](https://github.com/fXy-during/react-compare)
-- [z](https://github.com/PinghuaZhuang/z)
-- [xidux](https://github.com/ximolang/xidux)
-- [qrcode-decoder](https://github.com/yugasun/qrcode-decoder)
-- [search-util](https://github.com/The-End-Hero/search-util)
 
 ## Relative links
 

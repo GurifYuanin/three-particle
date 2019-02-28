@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            border: none;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <script src="../node_modules/es5-shim/es5-shim.js"></script>
+    <script src="../node_modules/es5-shim/es5-sham.js"></script>
+
+    <script src="./js/three.min.js"></script>
+    <script src="../dist/index.js"></script>
+    <script>
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        const s = new PA.Sphere(5);
+        scene.add(s);
+
+        camera.position.set(0, 0, 32);
+
+        (function render() {
+            // emitter.update();
+            renderer.render(scene, camera);
+            requestAnimationFrame(render);
+        })();
+
+    </script>
+</body>
+
+</html>

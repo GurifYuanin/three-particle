@@ -1,12 +1,12 @@
 {
   "name": "jslib-base",
   "version": "0.1.0",
-  "description": "最好用的js第三方库脚手架",
+  "description": "A particle plugin base on three.js",
   "main": "dist/index.js",
   "jsnext:main": "dist/index.esm.js",
   "module": "dist/index.esm.js",
   "sideEffects": false,
-  "srctype": "js",
+  "srctype": "ts",
   "scripts:ts": {
     "rename": "node rename.js",
     "clean": "rimraf ./dist",
@@ -25,6 +25,7 @@
     "clean": "rimraf ./dist",
     "lint": "eslint -c .eslintrc.js src/**.js",
     "lint:fix": "eslint --fix -c .eslintrc.js src/**.js",
+    "dev": "rollup -c config/rollup.config.js -w",
     "build:self": "rollup -c config/rollup.config.js",
     "build:esm": "rollup -c config/rollup.config.esm.js",
     "build:aio": "rollup -c config/rollup.config.aio.js",
@@ -34,14 +35,14 @@
     "coveralls": "nyc report --reporter=text-lcov | coveralls",
     "release": "npn test && npm run build && git commit -am $npm_package_version && git tag $npm_package_version && git push && git push --tags"
   },
-  "author": "yanhaijing",
+  "author": "GurifYuanin",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git://github.com/yanhaijing/jslib-base.git"
+    "url": "git://github.com/GurifYuanin/three-particle.git"
   },
   "bugs": {
-    "url": "https://github.com/yanhaijing/jslib-base/issues"
+    "url": "https://github.com/GurifYuanin/three-particle/issues"
   },
   "devDependencies": {
     "@babel/cli": "7.1.5",
@@ -49,6 +50,7 @@
     "@babel/plugin-transform-runtime": "^7.1.0",
     "@babel/preset-env": "^7.1.0",
     "@babel/register": "7.0.0",
+    "@types/node": "^10.12.18",
     "babel-plugin-istanbul": "5.1.0",
     "cdkit": "1.1.0",
     "coveralls": "3.0.2",
@@ -61,8 +63,8 @@
     "rimraf": "2.6.2",
     "rollup": "0.57.1",
     "rollup-plugin-babel": "^4.0.3",
-    "rollup-plugin-commonjs": "8.3.0",
-    "rollup-plugin-node-resolve": "3.0.3",
+    "rollup-plugin-commonjs": "^8.3.0",
+    "rollup-plugin-node-resolve": "^4.0.0",
     "rollup-plugin-typescript2": "0.18.0",
     "rollup-plugin-uglify": "1.0.0",
     "source-map-support": "0.5.9",
@@ -72,6 +74,7 @@
     "typescript": "3.1.6"
   },
   "dependencies": {
+    "@babel/runtime": "^7.1.2",
     "@jsmini/clone": "0.3.0",
     "@jsmini/console": "0.6.0",
     "@jsmini/event": "0.5.1",
@@ -84,6 +87,6 @@
     "@jsmini/querystring": "0.1.0",
     "@jsmini/type": "0.4.0",
     "@jsmini/url": "0.1.0",
-    "@babel/runtime": "^7.1.2"
+    "three": "^0.99.0"
   }
 }

@@ -10,8 +10,8 @@ var name = pkg.name.split('/').pop();
 // var name = pkg.name.replace('@', '').replace(/\//g, '_');
 var version = pkg.version;
 
-var banner = 
-`/*!
+var banner =
+    `/*!
  * ${pkg.name} ${version} (https://github.com/yanhaijing/jslib-base)
  * API https://github.com/yanhaijing/jslib-base/blob/master/doc/api.md
  * Copyright 2017-${(new Date).getFullYear()} yanhaijing. All Rights Reserved
@@ -30,8 +30,8 @@ function getCompiler(opt) {
                     '@babel/preset-env',
                     {
                         'targets': {
-                          'browsers': 'last 2 versions, > 1%, ie >= 6, Android >= 4, iOS >= 6, and_uc > 9',
-                          'node': '0.10'
+                            'browsers': 'last 2 versions, > 1%, ie >= 6, Android >= 4, iOS >= 6, and_uc > 9',
+                            'node': '0.10'
                         },
                         'modules': false,
                         'loose': false
@@ -53,7 +53,11 @@ function getCompiler(opt) {
     }
 
     opt = opt || {
-        tsconfigOverride: { compilerOptions : { module: 'ES2015' } }
+        tsconfigOverride: {
+            compilerOptions: {
+                module: 'ES2015'
+            }
+        }
     }
 
     return typescript(opt);
