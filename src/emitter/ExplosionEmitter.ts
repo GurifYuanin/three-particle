@@ -2,9 +2,9 @@ import Emitter from './Emitter';
 
 class ExplosionEmitter extends Emitter {
   particles = [];
-  constructor() {
-    super();
+  constructor(options) {
+    super(options);
   }
 }
 
-export default ExplosionEmitter; 
+export default ExplosionEmitter;
