@@ -1,17 +1,26 @@
 import * as THREE from 'three';
-import Emitter from '../emitter/Emitter';
 
 class Particle extends THREE.Mesh {
-  startTime: number; // 粒子创建时间，单位 ms
-  lifeTime: number; // 粒子生命长度，单位 ms
+  static TRANSFORM_LINEAR: number = 0;
+  static TRANSFORM_SMOOTH: number = 1;
+  static TRANSFORM_SMOOTHER: number = 2;
+  clock: THREE.Clock; // 生命时钟
+  startTime: number; // 粒子创建时间，单位 s
+  life: number; // 粒子生命长度，单位 s
+  direction: THREE.Vector3;
   type: string;
 
-  constructor({ geometry, material, lifeTime = 3 }) {
+  constructor({ geometry, material, life = 3 }) {
     super(geometry, material);
-    this.startTime = new Date().getTime();
+    this.clock = new THREE.Clock();
+    this.clock.start();
     this.type = 'Particle';
-
-    this.lifeTime = lifeTime * 1000;
+    this.direction = new THREE.Vector3(
+      THREE.Math.randFloatSpread(1),
+      THREE.Math.randFloatSpread(1),
+      THREE.Math.randFloatSpread(1)
+    ).normalize();
+    this.life = life;
   }
 }
 export default Particle;
