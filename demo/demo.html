@@ -15,7 +15,6 @@
 </head>
 
 <body>
-
     <script src="../node_modules/es5-shim/es5-shim.js"></script>
     <script src="../node_modules/es5-shim/es5-sham.js"></script>
 
@@ -28,13 +27,18 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        const s = new PA.Sphere(5);
-        scene.add(s);
+        const light = new THREE.PointLight(0xffffff, 1, 1000);
+        scene.add(light);
+        const emitter = new TP.ExplosionEmitter();
+        const sphere = new TP.Sphere(5);
+        emitter.addParticle(sphere);
+        scene.add(emitter);
 
         camera.position.set(0, 0, 32);
 
         (function render() {
             // emitter.update();
+            emitter.update();
             renderer.render(scene, camera);
             requestAnimationFrame(render);
         })();
