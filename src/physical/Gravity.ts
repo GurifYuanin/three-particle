@@ -1,15 +1,24 @@
+import * as THREE from 'three';
 import Physical from './Physical';
 import Particle from '../particle/Particle';
 
 class Gravity extends Physical {
-  gravity: number = 9.8;
+  direction: THREE.Vector3; // 重力方向
+  gravity: number; // 重力系数
 
-  constructor() {
-    super();
+  constructor({
+    direction = new THREE.Vector3(0, -1, 0),
+    gravity = 9.8,
+    ...options
+  } = {}) {
+    super(options);
+    this.direction = direction; // 重力默认为 y 轴负方向
+    this.gravity = gravity;
   }
   effect(particle: Particle) {
     super.effect(particle);
-
+    const elapsedTime: number = particle.clock.elapsedTime
+    particle.direction.add(this.direction.clone().multiplyScalar(this.gravity * elapsedTime));
   }
 }
 
