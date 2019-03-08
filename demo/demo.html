@@ -29,15 +29,29 @@
 
         const light = new THREE.PointLight(0xffffff, 1, 1000);
         scene.add(light);
-        const emitter = new TP.ExplosionEmitter();
-        const sphere = new TP.Sphere(5);
+        const emitter = new TP.ExplosionEmitter({
+            particlesOpacityKey: [0, .5, 1],
+            particlesOpacityValue: [0, 1, 0],
+            particlesScaleKey: [0, .5, 1],
+            particlesScaleValue: [new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 1, 1), new THREE.Vector3(0, 0, 0)],
+            velocity: 1
+        });
+        const sphere = new TP.Sphere({
+            radius: 10
+        });
+        const gravity = new TP.Gravity({
+            gravity: 1
+        });
         emitter.addParticle(sphere);
+        emitter.addPhysical(gravity);
         scene.add(emitter);
 
         camera.position.set(0, 0, 32);
 
         (function render() {
             // emitter.update();
+            const now = Date.now() / 1000;
+            emitter.anchor.set(Math.sin(now) * 20, Math.cos(now) * 20, 0);
             emitter.update();
             renderer.render(scene, camera);
             requestAnimationFrame(render);

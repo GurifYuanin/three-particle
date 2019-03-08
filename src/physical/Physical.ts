@@ -1,7 +1,7 @@
 import Particle from '../particle/Particle';
 
 class Physcial {
-  constructor() {
+  constructor({ } = {}) {
 
   }
   effect(particle: Particle) {
