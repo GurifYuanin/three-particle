@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import Particle from '../particle/Particle';
+import { ParticleInterface } from '../particle/Particle';
 import Physical from './Physical';
 
 class Wind extends Physical {
@@ -9,7 +9,7 @@ class Wind extends Physical {
     super(options);
   }
 
-  effect(particle: Particle) {
+  effect(particle: ParticleInterface) {
     super.effect(particle);
 
   }

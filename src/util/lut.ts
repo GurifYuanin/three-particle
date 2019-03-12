@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import Particle from '../particle/Particle';
+import { Particle } from '../particle/Particle';
 
 class Lut {
   static getInterpolationFunction(particlesTransformType) {

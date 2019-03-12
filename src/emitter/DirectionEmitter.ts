@@ -1,12 +1,33 @@
 import Emitter from './Emitter';
+import { ParticleInterface } from '../particle/Particle';
+import * as THREE from 'three';
 
 class DirectionEmitter extends Emitter {
-  constructor({ ...options } = {}) {
+  direction: THREE.Vector3; // 方向
+  spread: number; // 粒子发散值
+  constructor({
+    direction = new THREE.Vector3(0, 0, -1),
+    spread = 10,
+    ...options
+  } = {}) {
     super(options || {});
+    this.direction = direction.normalize();
+    this.spread = spread;
   }
-  update() {
+  generate(): ParticleInterface[] {
+    const generatedParticles: ParticleInterface[] = super.generate();
+    for (let i = 0; i < generatedParticles.length; i++) {
+      generatedParticles[i].direction = new THREE.Vector3(
+        this.direction.x * this.spread + THREE.Math.randFloatSpread(this.spread),
+        this.direction.y * this.spread + THREE.Math.randFloatSpread(this.spread),
+        this.direction.z * this.spread + THREE.Math.randFloatSpread(this.spread),
+      ).normalize();
+    }
+    return generatedParticles;
+  }
+  update(): void {
     // 生成粒子
-    super.generate();
+    this.generate();
 
     // 清除生命周期已经结束的粒子
     super.clear();
