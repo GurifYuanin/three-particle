@@ -2,7 +2,10 @@
     "compilerOptions": {
         "target": "ES5",
         "module": "es6",
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "lib": [
+            "es6"
+        ]
     },
     "include": [
         "src/**/*.ts"

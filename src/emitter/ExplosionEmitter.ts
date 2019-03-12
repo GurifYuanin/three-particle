@@ -1,15 +1,26 @@
+import * as THREE from 'three';
 import Emitter from './Emitter';
-import Particle from '../particle/Particle';
+import { ParticleInterface } from '../particle/Particle';
 
 class ExplosionEmitter extends Emitter {
-  velocity: number; // 粒子爆炸速度，unit/s
-  constructor({ velocity = 10, ...options } = {}) {
+  constructor({ ...options } = {}) {
     super(options || {});
-    this.velocity = velocity;
   }
+  generate(): ParticleInterface[] {
+    const generatedParticles: ParticleInterface[] = super.generate();
+    for (let i = 0; i < generatedParticles.length; i++) {
+      generatedParticles[i].direction = new THREE.Vector3(
+        THREE.Math.randFloatSpread(1),
+        THREE.Math.randFloatSpread(1),
+        THREE.Math.randFloatSpread(1)
+      ).normalize();
+    }
+    return generatedParticles;
+  }
+
   update() {
     // 生成粒子
-    super.generate();
+    this.generate();
 
     // 清除生命周期已经结束的粒子
     super.clear();
@@ -18,12 +29,7 @@ class ExplosionEmitter extends Emitter {
     super.update();
 
     // 特有属性更新
-    for (let i = this.children.length - 1; i >= 0; i--) {
-      const particle = this.children[i];
-      if (particle instanceof Particle) {
-        particle.position.addScaledVector(particle.direction, this.velocity);
-      }
-    }
+
   }
 }
 
