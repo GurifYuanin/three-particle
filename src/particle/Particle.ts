@@ -7,12 +7,13 @@ class Particle {
   clock: THREE.Clock; // 生命时钟
   life: number; // 粒子生命长度，单位 s
   direction: THREE.Vector3; // 粒子运动方向
-
+  emitting: boolean;
   constructor({ life = 3 }) {
     this.clock = new THREE.Clock();
     this.clock.start();
     this.life = life;
     this.direction = new THREE.Vector3(0, 0, 0);
+    this.emitting = true;
   }
 }
 

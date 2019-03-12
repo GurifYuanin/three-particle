@@ -29,8 +29,8 @@
 
         const light = new THREE.PointLight(0xffffff, 1, 1000);
         scene.add(light);
-        const emitter = new TP.DirectionEmitter({
-            emission: 100,
+        const emitter = new TP.ExplosionEmitter({
+            emission: 50,
             // particlesOpacityKey: [0, .5, 1],
             // particlesOpacityValue: [0, 1, 0],
             // particlesScaleKey: [0, .5, 1],
@@ -38,12 +38,12 @@
             //     0, 0)],
             velocity: 1,
             direction: new THREE.Vector3(0, -1, 0),
-            flat: [
-                new THREE.Vector3(1, 0, 0),
-                new THREE.Vector3(0, 0, -1),
-                new THREE.Vector3(-1, 0, 0),
-                new THREE.Vector3(0, 0, 1)
-            ]
+            // flat: [
+            //     new THREE.Vector3(1, 0, 0),
+            //     new THREE.Vector3(0, 0, -1),
+            //     new THREE.Vector3(-1, 0, 0),
+            //     new THREE.Vector3(0, 0, 1)
+            // ]
         });
         const sphere = new TP.Sphere({
             radius: 1
@@ -58,13 +58,18 @@
         const points = new TP.Points({
             pointsNumber: 5
         });
-        emitter.addParticle(sphere);
+        const text = new TP.Text({
+            size: .1,
+            height: .1,
+        });
+        // emitter.addParticle(sphere);
         // emitter.addParticle(line);
         // emitter.addParticle(points);
         // emitter.addPhysical(gravity);
+        emitter.addParticle(text);
         scene.add(emitter);
 
-        camera.position.set(0, 0, 32);
+        camera.position.set(0, 0, 132);
 
         (function render() {
             const now = Date.now() / 1000;
