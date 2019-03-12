@@ -1,5 +1,6 @@
 export { default as Sphere } from './particle/Sphere';
 export { default as Line } from './particle/Line';
+export { default as Points } from './particle/Points';
 
 export { default as ExplosionEmitter } from './emitter/ExplosionEmitter';
 export { default as DirectionEmitter } from './emitter/DirectionEmitter';

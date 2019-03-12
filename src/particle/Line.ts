@@ -6,39 +6,33 @@ class Line extends THREE.Line {
   verticesDistenceScale: number; // 每两个端点之间的长度缩放值
   verticesNumber: number; // 线段端点数
   verticesSize: number; // 线段维度
-  vertexColors: number; // 线段颜色类型
-  color: THREE.Color; // 线段颜色
+  vertices: number[];
   colors: number[];
   constructor({
     verticesDistenceScale = 1,
     verticesNumber = 2,
     verticesSize = 3,
-    vertexColors = THREE.NoColors,
-    color = new THREE.Color(1, 1, 1),
+    vertices = [],
     colors = [],
+    material = new THREE.LineBasicMaterial() as THREE.Material, // LineBasicMaterial | LineDashMaterial
     ...options
   } = {}) {
-    const geometry = new THREE.BufferGeometry();
-    const material = new THREE.LineBasicMaterial({
-      vertexColors,
-      color,
-      transparent: true,
-      opacity: 1,
-      side: THREE.DoubleSide
-    });
+    const geometry: THREE.BufferGeometry = new THREE.BufferGeometry();
     // 添加端点
     const verticesArray: number[] = Array.from({ length: verticesNumber * verticesSize });
-    verticesArray.fill(0.0);
-    const positionAttribute = new THREE.BufferAttribute(new Float32Array(verticesArray), verticesSize);
+    for (let i = 0; i < verticesArray.length; i++) {
+      verticesArray[i] = i < vertices.length ? vertices[i] : 0.0;
+    }
+    const positionAttribute: THREE.BufferAttribute = new THREE.BufferAttribute(new Float32Array(verticesArray), verticesSize);
     positionAttribute.dynamic = true;
     geometry.addAttribute('position', positionAttribute);
     // 添加颜色
-    if (vertexColors === THREE.VertexColors) {
+    if (material.vertexColors === THREE.VertexColors) {
       const verticesColorArray: number[] = Array.from({ length: verticesNumber * verticesSize });
-      for (let i = 0; i < verticesColorArray.length; i++) {
+      for (let i: number = 0; i < verticesColorArray.length; i++) {
         verticesColorArray[i] = i < colors.length ? colors[i] : Math.random();
       }
-      const colorAttribute = new THREE.BufferAttribute(new Float32Array(verticesColorArray), verticesSize)
+      const colorAttribute: THREE.BufferAttribute = new THREE.BufferAttribute(new Float32Array(verticesColorArray), verticesSize);
       colorAttribute.dynamic = true;
       geometry.addAttribute('color', colorAttribute);
     }
@@ -47,17 +41,18 @@ class Line extends THREE.Line {
     this.verticesDistenceScale = verticesDistenceScale;
     this.verticesNumber = verticesNumber;
     this.verticesSize = verticesSize;
-    this.vertexColors = vertexColors;
-    this.color = color;
+    this.vertices = vertices;
     this.colors = colors;
     this.type = 'Line';
   }
   clone(): Line | any {
     return new Line({
+      verticesDistenceScale: this.verticesDistenceScale,
       verticesNumber: this.verticesNumber,
       verticesSize: this.verticesSize,
-      vertexColors: this.vertexColors,
-      color: this.color
+      vertices: this.vertices,
+      colors: this.colors,
+      material: (this.material as THREE.Material).clone()
     });
   }
 }

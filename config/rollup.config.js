@@ -38,7 +38,7 @@ module.exports = {
       // non-CommonJS modules will be ignored, but you can also
       // specifically include/exclude files
       include: 'node_modules/**', // Default: undefined
-      exclude: ['node_modules/foo/**', 'node_modules/bar/**'], // Default: undefined
+      // exclude: ['node_modules/foo/**', 'node_modules/bar/**'], // Default: undefined
       // these values can also be regular expressions
       // include: /node_modules/
 
@@ -54,9 +54,9 @@ module.exports = {
 
       // explicitly specify unresolvable named exports
       // (see below for more details)
-      namedExports: {
-        './module.js': ['foo', 'bar']
-      }, // Default: undefined
+      // namedExports: {
+      //   './module.js': ['foo', 'bar']
+      // }, // Default: undefined
 
       // sometimes you have to leave require statements
       // unconverted. Pass an array containing the IDs

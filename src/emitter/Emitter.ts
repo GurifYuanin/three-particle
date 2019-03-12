@@ -2,8 +2,8 @@ import * as THREE from 'three';
 import { Particle, ParticleInterface } from '../particle/Particle';
 import Physical from '../physical/Physical';
 import Line from '../particle/Line';
-import Lut from '../util/lut';
-import Util from '../util/util';
+import Lut from '../util/Lut';
+import Util from '../util/Util';
 
 
 class Emitter extends THREE.Object3D {
