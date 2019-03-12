@@ -2,8 +2,8 @@ import * as THREE from 'three';
 import { Particle, ParticleInterface } from '../particle/Particle';
 import Physical from '../physical/Physical';
 import Line from '../particle/Line';
-import Lut from '../util/lut';
-import Util from '../util/util';
+import Lut from '../util/Lut';
+import Util from '../util/Util';
 
 
 class Emitter extends THREE.Object3D {
@@ -111,6 +111,7 @@ class Emitter extends THREE.Object3D {
   update(): void {
     for (let i: number = this.children.length - 1; i >= 0; i--) {
       const particle: ParticleInterface = this.children[i] as ParticleInterface;
+      if (!particle.emitting) continue;
       const elapsedTimePercentage: number = particle.clock.elapsedTime % particle.life / particle.life;
       const interpolationFunction: (x: number, y: number, t: number) => number = Lut.getInterpolationFunction(this.particlesTransformType);
       // 粒子透明度

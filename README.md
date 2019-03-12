@@ -61,6 +61,11 @@ For browser environment:
 ```html
 <script src="node_modules/three-particle/dist/index.aio.js"></script>
 ```
+### Warning
+Please don't update npm package `rollup-plugin-typescript2`, or you will get an error.
+```shell
+[!] Error: Entry module cannot be external
+```
 
 ## Documents
 [API](./doc/api.md)
@@ -124,6 +129,7 @@ For renaming project, you need change `fromName` and `toName` in `rename.js`, th
 [TODO.md](./TODO.md)
 
 ## Current Users
+
 
 ## Relative links
 
