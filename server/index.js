@@ -17,9 +17,9 @@ router.get('/', (req, res) => {
       <div style="width: 100%;">hello three-particle!</div>
       <div style="width: 100%;">
         ${files
-          .filter(file => file.endsWith('.html'))
-          .map(file => `<a href="./demo/${file}" style="padding: 0 5px;">${file}</a>`)
-          .join('')}
+    .filter(file => file.endsWith('.html'))
+    .map(file => `<a href="./demo/${file}" style="padding: 0 5px;">${file}</a>`)
+    .join('')}
       </div>
     </div>
   `);
@@ -36,4 +36,8 @@ app.use('/', router);
 
 detect(1234).then((port) => {
   app.listen(port);
+  console.clear();
+  console.log(' ---------------------------------');
+  console.log(`|  \x1b[42m\x1b[37m OK \x1b[0m Listen on localhost:${port}  |`);
+  console.log(' ---------------------------------');
 });

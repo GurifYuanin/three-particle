@@ -3,7 +3,11 @@ import { ParticleInterface } from '../particle/Particle';
 import Physical from './Physical';
 
 class Wind extends Physical {
+  direction: THREE.Vector3; // 风方向
+  intensity: number; // 风力
+  spread: number; // 风发散值
   constructor({
+
     ...options
   }) {
     super(options);
@@ -11,7 +15,6 @@ class Wind extends Physical {
 
   effect(particle: ParticleInterface) {
     super.effect(particle);
-
   }
 }
 

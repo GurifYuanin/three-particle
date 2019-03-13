@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Particle } from './Particle';
 
+/* 点集 */
 class Points extends THREE.Points {
   static readonly type: string = 'Points';
   verticesNumber: number; // 点数量
@@ -10,6 +11,7 @@ class Points extends THREE.Points {
   vertexColors: number;
   color: THREE.Color; // 点统一颜色
   colors: number[]; //点颜色
+  options: object;
   constructor({
     verticesNumber = 10,
     verticesSize = 3,
@@ -45,6 +47,7 @@ class Points extends THREE.Points {
     this.vertices = vertices;
     this.spread = spread;
     this.colors = colors;
+    this.options = options;
     this.type = 'Points';
   }
   clone(): Points | any {
@@ -54,7 +57,8 @@ class Points extends THREE.Points {
       vertices: this.vertices,
       spread: this.spread,
       colors: this.colors,
-      material: (this.material as THREE.Material).clone()
+      material: (this.material as THREE.Material).clone(),
+      ...this.options
     });
   }
 }

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { Particle } from '../particle/Particle';
 
 class Lut {
-  static getInterpolationFunction(particlesTransformType) {
+  static getInterpolationFunction(particlesTransformType): (x: number, y: number, t: number) => number {
     switch (particlesTransformType) {
       case Particle.TRANSFORM_LINEAR: return THREE.Math.lerp;
       case Particle.TRANSFORM_SMOOTH: return THREE.Math.smoothstep;

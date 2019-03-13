@@ -21,7 +21,7 @@ module.exports = {
     'three'
   ],
   plugins: [
-    common.getCompiler({
+    ...common.getCompilers({
       tsconfigOverride: {
         compilerOptions: {
           declaration: true,

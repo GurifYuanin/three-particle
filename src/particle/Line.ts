@@ -1,13 +1,15 @@
 import * as THREE from 'three';
 import { Particle } from './Particle';
 
+/* 线段 */
 class Line extends THREE.Line {
   static readonly type: string = 'Line';
   verticesDistenceScale: number; // 每两个端点之间的长度缩放值
   verticesNumber: number; // 线段端点数
   verticesSize: number; // 线段维度
-  vertices: number[];
-  colors: number[];
+  vertices: number[]; // 自定义端点位置
+  colors: number[]; // 自定义端点颜色
+  options: object;
   constructor({
     verticesDistenceScale = 1,
     verticesNumber = 2,
@@ -43,6 +45,7 @@ class Line extends THREE.Line {
     this.verticesSize = verticesSize;
     this.vertices = vertices;
     this.colors = colors;
+    this.options = options;
     this.type = 'Line';
   }
   clone(): Line | any {
@@ -52,7 +55,8 @@ class Line extends THREE.Line {
       verticesSize: this.verticesSize,
       vertices: this.vertices,
       colors: this.colors,
-      material: (this.material as THREE.Material).clone()
+      material: (this.material as THREE.Material).clone(),
+      ...this.options
     });
   }
 }

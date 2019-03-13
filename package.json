@@ -1,5 +1,5 @@
 {
-  "name": "jslib-base",
+  "name": "three-particle",
   "version": "0.1.0",
   "description": "A particle plugin base on three.js",
   "main": "dist/index.js",
@@ -8,7 +8,6 @@
   "sideEffects": false,
   "srctype": "ts",
   "scripts:ts": {
-    "rename": "node rename.js",
     "clean": "rimraf ./dist",
     "lint": "tslint -c tslint.json src/**.ts",
     "build:self": "rollup -c config/rollup.config.js",
@@ -21,7 +20,6 @@
     "release": "npn test && npm run build && git commit -am $npm_package_version && git tag $npm_package_version && git push && git push --tags"
   },
   "scripts": {
-    "rename": "node rename.js",
     "clean": "rimraf ./dist",
     "lint": "eslint -c .eslintrc.js src/**.js",
     "lint:fix": "eslint --fix -c .eslintrc.js src/**.js",
@@ -78,6 +76,7 @@
     "typescript": "3.1.6"
   },
   "dependencies": {
+    "@babel/polyfill": "^7.2.5",
     "@babel/runtime": "^7.3.4",
     "@jsmini/clone": "0.3.0",
     "@jsmini/console": "0.6.0",

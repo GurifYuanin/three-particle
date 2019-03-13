@@ -1,20 +1,32 @@
 import * as THREE from 'three';
 
-const loader = new THREE.FontLoader();
+const fontLoader: THREE.FontLoader = new THREE.FontLoader();
+const textureLoader: THREE.TextureLoader = new THREE.TextureLoader();
+
+// cache
+const fonts: {
+  [path: string]: THREE.Font
+} = {};
+const textures: {
+  [path: string]: THREE.Texture
+} = {};
 
 class Loader {
-  static fonts = {};
-  static load(path: string, callback: (args: any) => any) {
-    const font = Loader.fonts[path];
-    if (font) {
-      callback(Loader.fonts[path]);
+  static loadFont(path: string, callback?: (args: any) => any): void {
+    const font: THREE.Font | undefined = fonts[path];
+    if (font && callback) {
+      callback(font);
     } else {
-      loader.load(path, (font) => {
-        Loader[path] = font;
-        callback(font);
+      fontLoader.load(path, (font) => {
+        fonts[path] = font;
+        if (callback) {
+          callback(font);
+        }
       });
     }
-    return font;
+  }
+  static loadTexture(path: string): THREE.Texture {
+    return textures[path] = textures[path] || textureLoader.load(path);
   }
 }
 

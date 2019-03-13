@@ -99,10 +99,14 @@ class Emitter extends THREE.Object3D {
       for (let i: number = 0; i < deltaEmission; i++) {
         const maxIndex: number = this.particles.length - 1;
         const randomIndex: number = THREE.Math.randInt(0, maxIndex);
-        const randomParticle: ParticleInterface = this.particles[randomIndex].clone();
-        randomParticle.position.set(this.anchor.x, this.anchor.y, this.anchor.z);
-        generatedParticles.push(randomParticle);
-        this.add(randomParticle);
+        let randomParticle: ParticleInterface = this.particles[randomIndex].clone();
+        if (randomParticle.emitting) {
+          randomParticle.position.set(this.anchor.x, this.anchor.y, this.anchor.z);
+          generatedParticles.push(randomParticle);
+          this.add(randomParticle);
+        } else {
+          Util.dispose(randomParticle);
+        }
       }
     }
     return generatedParticles;
@@ -207,13 +211,21 @@ class Emitter extends THREE.Object3D {
   clear(): void {
     // 清除生命周期已经结束的粒子
     for (let i: number = this.children.length - 1; i >= 0; i--) {
-      let particle: ParticleInterface = this.children[i] as ParticleInterface;
+      const particle: ParticleInterface = this.children[i] as ParticleInterface;
       if (particle.clock.getElapsedTime() > particle.life) {
         // 这里调用了 getElapsedTime() ，将进行一次时间的打点
         // 后续直接使用 elapsedTime 而不需要再次调用该方法
         this.remove(particle);
-        particle = null;
+        Util.dispose(particle);
       }
+    }
+  }
+  clearAll(): void {
+    // 清除所有粒子
+    for (let i: number = this.children.length - 1; i >= 0; i--) {
+      const particle: ParticleInterface = this.children[i] as ParticleInterface;
+      this.remove(particle);
+      Util.dispose(particle);
     }
   }
 }
