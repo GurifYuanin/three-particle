@@ -3,6 +3,7 @@ import { Particle } from './Particle';
 import Loader from '../util/Loader';
 
 class Sprite extends THREE.Sprite {
+  static readonly type: string = 'Sprite';
   options: object;
   image: string;
   constructor({
@@ -14,6 +15,7 @@ class Sprite extends THREE.Sprite {
     Particle.prototype.constructor.call(this, options);
     this.image = image;
     this.options = options;
+    this.type = 'Sprite';
   }
   clone(): Sprite | any {
     return new Sprite({

@@ -9,9 +9,9 @@ import Util from '../util/Util';
 class Emitter extends THREE.Object3D {
   emission: number; // 每秒发射的粒子数
   emitting: boolean; // 是否发射粒子中
-  velocity: number; // 粒子移动速度
   clock: THREE.Clock; // 生命时钟
   anchor: THREE.Vector3; // 粒子发射原点
+  radius: THREE.Vector3; // 粒子发射起始点半径
   particles: ParticleInterface[]; // 发射粒子样板
   physicals: Physical[]; // 物理场
   particlesPositionRandom: THREE.Vector3; // 粒子位置随机数
@@ -32,8 +32,8 @@ class Emitter extends THREE.Object3D {
 
   constructor({
     emission = 100,
-    velocity = 10,
     anchor = new THREE.Vector3(0, 0, 0),
+    radius = new THREE.Vector3(0, 0, 0),
     particlesPositionRandom = new THREE.Vector3(0, 0, 0),
     particlesOpacityRandom = 0,
     particlesOpacityKey = [],
@@ -50,13 +50,13 @@ class Emitter extends THREE.Object3D {
   } = {}) {
     super();
     this.emission = emission;
-    this.velocity = velocity;
     this.emitting = true;
     this.clock = new THREE.Clock();
     this.clock.start();
     this.particles = [];
     this.physicals = [];
     this.anchor = anchor;
+    this.radius = radius instanceof THREE.Vector3 ? radius : new THREE.Vector3(radius, radius, radius);
     this.particlesPositionRandom = particlesPositionRandom;
     this.particlesOpacityRandom = particlesOpacityRandom;
     this.particlesOpacityKey = particlesOpacityKey;
@@ -101,7 +101,11 @@ class Emitter extends THREE.Object3D {
         const randomIndex: number = THREE.Math.randInt(0, maxIndex);
         let randomParticle: ParticleInterface = this.particles[randomIndex].clone();
         if (randomParticle.emitting) {
-          randomParticle.position.set(this.anchor.x, this.anchor.y, this.anchor.z);
+          randomParticle.position.set(
+            this.anchor.x + THREE.Math.randFloatSpread(this.radius.x),
+            this.anchor.y + THREE.Math.randFloatSpread(this.radius.y),
+            this.anchor.z + THREE.Math.randFloatSpread(this.radius.z),
+          );
           generatedParticles.push(randomParticle);
           this.add(randomParticle);
         } else {
@@ -197,13 +201,13 @@ class Emitter extends THREE.Object3D {
           }
           const directionArray: number[] = [particle.direction.x, particle.direction.y, particle.direction.z];
           for (n = 0; n < verticesSize; n++) {
-            positionArray[m * verticesSize + n] += (directionArray[n] * this.velocity * (<unknown>particle as Line).verticesDistenceScale);
+            positionArray[m * verticesSize + n] += directionArray[n] * particle.velocity;
           }
           position.needsUpdate = true;
           break;
         }
         default: {
-          particle.position.addScaledVector(particle.direction, this.velocity);
+          particle.position.addScaledVector(particle.direction, particle.velocity);
         }
       }
     }
