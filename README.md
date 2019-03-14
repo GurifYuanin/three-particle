@@ -30,7 +30,7 @@ Unit tests guarantee support on the following environment:
 ```
 
 ## Demo
-You can view example on [Github page](https://gurifyuanin.github.io/three-particle/demo/index.html) !
+You can view example on [Github page](https://gurifyuanin.github.io/three-particle/demo/) !
 
 ## Usage
 
