@@ -4,7 +4,7 @@ import Physical from '../physical/Physical';
 import Line from '../particle/Line';
 import Lut from '../util/Lut';
 import Util from '../util/Util';
-
+import Effect from '../effect/Effect';
 
 class Emitter extends THREE.Object3D {
   emission: number; // 每秒发射的粒子数
@@ -14,7 +14,8 @@ class Emitter extends THREE.Object3D {
   radius: THREE.Vector3; // 粒子发射起始点半径
   particles: ParticleInterface[]; // 发射粒子样板
   physicals: Physical[]; // 物理场
-  particlesPositionRandom: THREE.Vector3; // 粒子位置随机数
+  effects: Effect[]; // 特效场
+  particlesPositionRandom: null | THREE.Vector3; // 粒子位置随机数
   particlesOpacityRandom: number; // 粒子透明度随机数
   particlesOpacityKey: number[]; // 一个生命周期内，粒子透明度关键帧百分比
   particlesOpacityValue: number[]; // 一个生命周期内，粒子透明度关键帧透明度值
@@ -34,7 +35,7 @@ class Emitter extends THREE.Object3D {
     emission = 100,
     anchor = new THREE.Vector3(0, 0, 0),
     radius = new THREE.Vector3(0, 0, 0),
-    particlesPositionRandom = new THREE.Vector3(0, 0, 0),
+    particlesPositionRandom = null,
     particlesOpacityRandom = 0,
     particlesOpacityKey = [],
     particlesOpacityValue = [],
@@ -55,6 +56,7 @@ class Emitter extends THREE.Object3D {
     this.clock.start();
     this.particles = [];
     this.physicals = [];
+    this.effects = [];
     this.anchor = anchor;
     this.radius = radius instanceof THREE.Vector3 ? radius : new THREE.Vector3(radius, radius, radius);
     this.particlesPositionRandom = particlesPositionRandom;
@@ -80,6 +82,10 @@ class Emitter extends THREE.Object3D {
   // 新增物理场
   addPhysical(physical: Physical): void {
     this.physicals.push(physical);
+  }
+  // 新增特效场
+  addEffect(effect: Effect): void {
+    this.effects.push(effect);
   }
   // 开始发射粒子，默认为开启
   start(): void {
@@ -150,7 +156,7 @@ class Emitter extends THREE.Object3D {
       }
       Util.fill(particle.material, true, 'needsUpdate');
       // 粒子位置
-      particle.position.add(new THREE.Vector3(
+      this.particlesPositionRandom && particle.position.add(new THREE.Vector3(
         THREE.Math.randFloatSpread(this.particlesPositionRandom.x),
         THREE.Math.randFloatSpread(this.particlesPositionRandom.y),
         THREE.Math.randFloatSpread(this.particlesPositionRandom.z),
@@ -181,6 +187,12 @@ class Emitter extends THREE.Object3D {
           break;
         }
       }
+
+      // 特效场影响
+      for (let j: number = 0; j < this.effects.length; j++) {
+        this.effects[j].effect(particle);
+      }
+
       // 物理场影响
       for (let j: number = 0; j < this.physicals.length; j++) {
         this.physicals[j].effect(particle);

@@ -7,6 +7,7 @@ class Sphere extends THREE.Mesh {
   radius: number;
   widthSegments: number;
   heightSegments: number;
+  border: number;
   options: object;
   constructor({
     radius = 50,
@@ -21,6 +22,7 @@ class Sphere extends THREE.Mesh {
     this.radius = radius;
     this.widthSegments = widthSegments;
     this.heightSegments = heightSegments;
+    this.border = radius;
     this.options = options;
     this.type = 'Sphere';
   }

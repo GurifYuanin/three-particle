@@ -18,13 +18,16 @@
         });
         const sphere = new TP.Sphere({
             velocity: 1,
-            radius: 1
+            radius: 1,
+            life: 5
         });
         const gravity = new TP.Gravity({
-            gravity: 1
+            gravity: .1,
+            floor: new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
         });
         emitter.addParticle(sphere);
         emitter.addPhysical(gravity);
+        emitter.anchor.y = 5;
         scene.add(emitter);
 
         camera.position.set(0, 0, 50);

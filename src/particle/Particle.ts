@@ -8,6 +8,7 @@ class Particle {
   velocity: number; // 粒子移动速度
   life: number; // 粒子生命长度，单位 s
   direction: THREE.Vector3; // 粒子运动方向
+  border: number; // 边界半径，用于碰撞检测
   emitting: boolean; // 粒子是否可以被发射
   constructor({
     life = 3,
@@ -18,6 +19,7 @@ class Particle {
     this.life = life;
     this.direction = new THREE.Vector3(0, 0, 0);
     this.velocity = velocity;
+    this.border = 1;
     this.emitting = true;
   }
 }

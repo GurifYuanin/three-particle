@@ -20,15 +20,13 @@ class Wind extends Physical {
 
   effect(particle: ParticleInterface): void {
     super.effect(particle);
-    particle.direction.add(
+    particle.velocity = particle.direction.add(
       this.direction
         .clone()
         .multiplyScalar(this.intensity)
         .addScalar(THREE.Math.randFloatSpread(this.spread))
-    );
-    // particle.direction.x += THREE.Math.randFloatSpread(this.spread) + this.direction.x * this.intensity;
-    // particle.direction.y += THREE.Math.randFloatSpread(this.spread) + this.direction.y * this.intensity;
-    // particle.direction.z += THREE.Math.randFloatSpread(this.spread) + this.direction.z * this.intensity;
+    ).length();
+    particle.direction.divideScalar(particle.velocity); // 单位向量化
   }
 }
 
