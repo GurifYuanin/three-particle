@@ -7,7 +7,7 @@ class Sprite extends THREE.Sprite {
   options: object;
   image: string;
   constructor({
-    image = '/demo/images/star.png',
+    image = './images/star.png',
     material = new THREE.SpriteMaterial({ map: Loader.loadTexture(image) }) as THREE.Material,
     ...options
   } = {}) {

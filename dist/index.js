@@ -340,7 +340,7 @@ var TP = (function (exports,THREE) {
       __extends(Sprite, _super);
       function Sprite(_a) {
           if (_a === void 0) { _a = {}; }
-          var _b = _a.image, image = _b === void 0 ? '/demo/images/star.png' : _b, _c = _a.material, material = _c === void 0 ? new THREE.SpriteMaterial({ map: Loader.loadTexture(image) }) : _c, options = __rest(_a, ["image", "material"]);
+          var _b = _a.image, image = _b === void 0 ? './images/star.png' : _b, _c = _a.material, material = _c === void 0 ? new THREE.SpriteMaterial({ map: Loader.loadTexture(image) }) : _c, options = __rest(_a, ["image", "material"]);
           var _this = _super.call(this, material) || this;
           Particle.prototype.constructor.call(_this, options);
           _this.image = image;
