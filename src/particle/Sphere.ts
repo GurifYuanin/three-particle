@@ -10,7 +10,7 @@ class Sphere extends THREE.Mesh {
   border: number;
   options: object;
   constructor({
-    radius = 50,
+    radius = 5,
     widthSegments = 32,
     heightSegments = 32,
     material = new THREE.MeshPhongMaterial() as THREE.Material,

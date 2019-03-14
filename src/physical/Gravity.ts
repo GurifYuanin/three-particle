@@ -23,6 +23,7 @@ class Gravity extends Physical {
     this.bounce = bounce;
     this.firction = firction;
     this.gravity = gravity;
+    this.type = 'Gravity';
   }
   effect(particle: ParticleInterface): void {
     super.effect(particle);
