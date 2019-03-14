@@ -29,6 +29,9 @@ Unit tests guarantee support on the following environment:
 └── TODO.md - Planned features
 ```
 
+## Demo
+You can view example on [Github page](https://gurifyuanin.github.io/three-particle/demo/index.html) !
+
 ## Usage
 
 Using npm, download and install the code. 
