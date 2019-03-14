@@ -1,5 +1,7 @@
+import { ParticleInterface } from '../particle/Particle';
+
 class Util {
-  static fill(target: any | any[], source: any, propertyName?: string) {
+  static fill(target: any | any[], source: any, propertyName?: string): void {
     if (Array.isArray(target)) {
       for (let i = target.length - 1; i >= 0; i--) {
         if (propertyName) {
@@ -15,6 +17,11 @@ class Util {
         target = source;
       }
     }
+  }
+  static dispose(particle: ParticleInterface): void {
+    particle.geometry.dispose();
+    particle.material.dispose();
+    particle = null;
   }
 }
 

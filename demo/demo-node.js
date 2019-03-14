@@ -1,2 +1,2 @@
-var base = require('../dist/index.js');
-console.log(base.name);
+var TP = require('../dist/index.js');
+console.log(TP);

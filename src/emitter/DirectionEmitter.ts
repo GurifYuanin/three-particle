@@ -4,20 +4,15 @@ import * as THREE from 'three';
 
 class DirectionEmitter extends Emitter {
   direction: THREE.Vector3; // 方向
-  flat: THREE.Vector3[]; // 粒子发射起始点平面
-  isFlat: boolean;
   spread: number; // 粒子发散值
   constructor({
     direction = new THREE.Vector3(0, 0, -1),
-    flat = [],
     spread = 10,
     ...options
   } = {}) {
     super(options || {});
     this.direction = direction.normalize();
     this.spread = spread;
-    this.flat = flat;
-    this.isFlat = flat.length > 0;
     this.type = 'DirectionEmitter';
   }
   generate(): ParticleInterface[] {
@@ -28,14 +23,6 @@ class DirectionEmitter extends Emitter {
         this.direction.y * this.spread + THREE.Math.randFloatSpread(this.spread),
         this.direction.z * this.spread + THREE.Math.randFloatSpread(this.spread),
       ).normalize();
-      if (this.isFlat) {
-        const end: THREE.Vector3 = this.flat[THREE.Math.randInt(0, this.flat.length - 1)];
-        generatedParticles[i].position.set(
-          THREE.Math.randFloat(end.x, this.anchor.x),
-          THREE.Math.randFloat(end.y, this.anchor.y),
-          THREE.Math.randFloat(end.z, this.anchor.z),
-        );
-      }
     }
     return generatedParticles;
   }

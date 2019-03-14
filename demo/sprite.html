@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Document</title>
+    <title>Sprite</title>
 </head>
 
 <body>
@@ -12,22 +12,13 @@
     <script src="./javascripts/common.js"></script>
     <script>
         const emitter = new TP.ExplosionEmitter({
+            radius: 50,
             emission: 100,
-            particlesOpacityKey: [0, .5, 1],
-            particlesOpacityValue: [0, 1, 0],
         });
-        const sphere = new TP.Sphere({
+        const sprite = new TP.Sprite({
             velocity: 1,
-            radius: 1,
-            life: 5
         });
-        const gravity = new TP.Gravity({
-            gravity: .1,
-            floor: new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
-        });
-        emitter.addParticle(sphere);
-        emitter.addPhysical(gravity);
-        emitter.anchor.y = 5;
+        emitter.addParticle(sprite);
         scene.add(emitter);
 
         camera.position.set(0, 0, 50);

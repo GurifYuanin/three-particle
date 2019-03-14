@@ -1,12 +1,12 @@
-# [three-particle](https://github.com/GurifYuanin/three-particle)
+# [Three-particle](https://github.com/GurifYuanin/three-particle)
 [![](https://img.shields.io/badge/Powered%20by-three%20particle-brightgreen.svg)](https://github.com/GurifYuanin/three-particle)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/GurifYuanin/three-particle/blob/master/LICENSE)
 [![Build Status](https://travis-ci.org/GurifYuanin/three-particle.svg?branch=master)](https://travis-ci.org/GurifYuanin/three-particle)
-[![npm](https://img.shields.io/badge/npm-5.6.0-orange.svg)](https://www.npmjs.com/package/three-particle)
+[![npm](https://img.shields.io/badge/npm-6.9.0-orange.svg)](https://www.npmjs.com/package/three-particle)
 [![NPM downloads](http://img.shields.io/npm/dm/three-particle.svg?style=flat-square)](http://www.npmtrends.com/three-particle)
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/GurifYuanin/three-particle.svg)](http://isitmaintained.com/project/GurifYuanin/three-particle "Percentage of issues still open")
 
-The best third party `JS|TS` library scaffold. By forking or cloning the repository, you can complete the basic framework for building a new library.
+A [three.js](https://github.com/mrdoob/three.js) based particle script to create particle system easily and efficiently.
 
 ## Compatibility
 Unit tests guarantee support on the following environment:
@@ -23,35 +23,52 @@ Unit tests guarantee support on the following environment:
 ├── dist - Compiler output code
 ├── doc - Project documents
 ├── src - Source code directory
+├── server - Start a local server when dev
 ├── test - Unit tests
 ├── CHANGELOG.md - Change log
 └── TODO.md - Planned features
 ```
 
-## Quick Start
+## Usage
 
 Using npm, download and install the code. 
 
 ```bash
-$ npm install --save three-particle
-```
-
-For node environment：
-
-```js
-var base = require('three-particle');
+$ npm install --save three three-particle
 ```
 
 For webpack or similar environment：
 
 ```js
-import base from 'three-particle';
+import * as THREE from 'three'; // based lib
+import TP from 'three-particle';
+
+// same as three.js
+// create renderer, scene, camera, etc...
+const renderer = new THREE.WebGLRenderer();
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// what you really need to do
+// create particle system by three-particle
+const emitter = new TP.ExplosionEmitter();
+const sphere = new TP.Sphere();
+emitter.addParticle(sphere);
+scene.add(emitter);
+
+(function render() {
+    requestAnimationFrame(render);
+    emitter.update(); // if not, particles will not be updated
+    renderer.render(scene, camera);
+})();
 ```
 
 For requirejs environment:
 
 ```js
-requirejs(['node_modules/three-particle/dist/index.aio.js'], function (base) {
+requirejs(['node_modules/three-particle/dist/index.aio.js'], function (TP) {
     // do something...
 })
 ```
@@ -61,14 +78,9 @@ For browser environment:
 ```html
 <script src="node_modules/three-particle/dist/index.aio.js"></script>
 ```
-### Warning
-Please don't update npm package `rollup-plugin-typescript2`, or you will get an error.
-```shell
-[!] Error: Entry module cannot be external
-```
 
 ## Documents
-[API](./doc/api.md)
++ [API](./doc/api.md)
 
 ## Contribution Guide
 
@@ -82,6 +94,17 @@ For the first time to run, you need to install dependencies firstly.
 
 ```bash
 $ npm install
+```
+
+To develop the project:
+```bash
+$ npm run dev
+```
+
+You can start up a local server to load some static resource (eg: font, img) when using font-loader or image-texture.
+Then visit `localhost:1234` in your browser.
+```bash
+$ npm run serve
 ```
 
 To build the project:
@@ -110,13 +133,11 @@ Publish the new version to NPM.
 $ npm publish
 ```
 
-For renaming project, you need change `fromName` and `toName` in `rename.js`, then run `npm run rename`, this command will auto renaming names for below files:
-
-- The messages in README.md
-- The messages in package.json
-- The messages in config/rollup.js
-- The repository name in test/browser/index.html
-- Library name in demo/demo-global.html
+### Warning
+Please don't update npm package `rollup-plugin-typescript2`, or you will get an error.
+```shell
+[!] Error: Entry module cannot be external
+```
 
 ## Contributors
 
@@ -134,3 +155,4 @@ For renaming project, you need change `fromName` and `toName` in `rename.js`, th
 ## Relative links
 
 - [typescript-library-template](https://github.com/jiumao-fe/typescript-library-template)
+- [jslib-base](https://github.com/yanhaijing/jslib-base)

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Particle } from './Particle';
 import Loader from '../util/Loader';
 
+/* 文本 */
 class Text extends THREE.Mesh {
   static readonly type: string = 'Text';
   text: string; // 文字内容
@@ -14,9 +15,10 @@ class Text extends THREE.Mesh {
   bevelThickness: number;
   bevelSize: number;
   bevelSegments: number;
+  options: object;
   constructor({
     text = 'Hello World',
-    font = '/font/helvetiker_regular.typeface.json',
+    font = '/demo/fonts/helvetiker_regular.typeface.json',
     size = 10,
     height = 50,
     curveSegments = 12,
@@ -29,7 +31,7 @@ class Text extends THREE.Mesh {
   } = {}) {
     super();
     Particle.prototype.constructor.call(this, options);
-    Loader.load(font, this.active.bind(this));
+    this.emitting = false; // 等待字体加载完才能运动
     this.text = text;
     this.font = font;
     this.height = height;
@@ -39,8 +41,9 @@ class Text extends THREE.Mesh {
     this.bevelThickness = bevelThickness;
     this.bevelSize = bevelSize;
     this.bevelSegments = bevelSegments;
+    this.options = options;
     this.type = 'Text';
-    this.emitting = false;
+    Loader.loadFont(font, this.active.bind(this));
   }
   active(font) {
     this.geometry = new THREE.TextBufferGeometry(this.text, {
@@ -66,7 +69,8 @@ class Text extends THREE.Mesh {
       bevelThickness: this.bevelThickness,
       bevelSize: this.bevelSize,
       bevelSegments: this.bevelSegments,
-      material: (this.material as THREE.Material).clone()
+      material: (this.material as THREE.Material).clone(),
+      ...this.options
     });
   }
 }

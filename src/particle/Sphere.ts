@@ -1,11 +1,14 @@
 import * as THREE from 'three';
 import { Particle } from './Particle';
 
+/* 球 */
 class Sphere extends THREE.Mesh {
   static readonly type: string = 'Sphere';
   radius: number;
   widthSegments: number;
   heightSegments: number;
+  border: number;
+  options: object;
   constructor({
     radius = 50,
     widthSegments = 32,
@@ -19,6 +22,8 @@ class Sphere extends THREE.Mesh {
     this.radius = radius;
     this.widthSegments = widthSegments;
     this.heightSegments = heightSegments;
+    this.border = radius;
+    this.options = options;
     this.type = 'Sphere';
   }
   clone(): Sphere | any {
@@ -26,7 +31,8 @@ class Sphere extends THREE.Mesh {
       radius: this.radius,
       heightSegments: this.heightSegments,
       widthSegments: this.widthSegments,
-      material: (this.material as THREE.Material).clone()
+      material: (this.material as THREE.Material).clone(),
+      ...this.options
     });
   }
 }

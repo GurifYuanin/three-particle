@@ -4,7 +4,7 @@ class Physcial {
   constructor({ } = {}) {
 
   }
-  effect(particle: ParticleInterface) {
+  effect(particle: ParticleInterface): void {
 
   }
 }
