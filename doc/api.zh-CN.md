@@ -1,24 +1,27 @@
-# 文档
-这是一个xxx库，有xxx功能
+# 接口文档
 
-## api模版
-函数简单介绍
+这是一个基于 three.js 的 3D 粒子插件库库，用于快速创建粒子系统。
 
-函数详细介绍
+## 粒子
 
-函数参数和返回值（要遵守下面的例子的规则）
+### 球
 
-- param {string} name1 name1描述
-- param {number} [name2] name2描述 ([]代表可选参数)
-- param {string|number} name3 name3描述 (| 代表多种类型)
-- param { * } name3 name3描述 (*代表任意类型)
-- param {boolean} obj.sex 复合参数定义
-- return {string} 返回值描述
+父类：TP.Particle & THREE.Mesh
 
-举个例子（要包含代码用例）
+创建一个圆球。
+
+实际上是通过调用 THREE.SphereBufferGeometry 和 THREE.MeshPhongMaterial 创建 THREE.Mesh 作为粒子。
+
+- param {number} [radius] 球半径，默认为 5
+- param {number} [widthSegments] 球纵切分片数，默认为 32
+- param {number} [heightSegments] 球横切分片数，默认为 32
+- param {THREE.Material} [material] 球材质，默认为 new THREE.MeshPhongMaterial
+- return {TP.Sphere} 球实例
+
+使用样例：
 
 ```js
-// 代码
+const sphere = new TP.Sphere({
+  radius: 5
+});
 ```
-
-特殊说明，比如特殊情况下会报错等

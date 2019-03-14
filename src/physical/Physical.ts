@@ -1,8 +1,9 @@
 import { ParticleInterface } from '../particle/Particle';
 
 class Physcial {
-  constructor({ } = {}) {
-
+  type: string;
+  constructor(options = {}) {
+    this.type = 'Physcial';
   }
   effect(particle: ParticleInterface): void {
 

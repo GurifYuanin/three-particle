@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Turbulent</title>
+</head>
+
+<body>
+    <script src="https://unpkg.com/three@0.102.1/build/three.js"></script>
+    <script src="../dist/index.js"></script>
+    <script src="./javascripts/common.js"></script>
+    <script>
+        const emitter = new TP.ExplosionEmitter({
+            emission: 100,
+        });
+        const line = new TP.Line({
+            verticesNumber: 5,
+        });
+        const turbulent = new TP.Turbulent({
+            intensity: 10
+        });
+        emitter.addParticle(line);
+        emitter.addEffect(turbulent);
+        scene.add(emitter);
+
+        camera.position.set(0, 0, 300);
+
+        (function render() {
+            requestAnimationFrame(render);
+            emitter.update();
+            renderer.render(scene, camera);
+        })();
+
+    </script>
+</body>
+
+</html>

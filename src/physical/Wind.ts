@@ -16,6 +16,7 @@ class Wind extends Physical {
     this.direction = direction;
     this.intensity = intensity;
     this.spread = spread;
+    this.type = 'Wind';
   }
 
   effect(particle: ParticleInterface): void {

@@ -18,3 +18,4 @@ export { default as Gravity } from './physical/Gravity';
 export { default as Wind } from './physical/Wind';
 
 // 特效
+export { default as Turbulent } from './effect/Turbulent';

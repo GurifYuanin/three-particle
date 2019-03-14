@@ -157,7 +157,7 @@ var TP = (function (exports,THREE) {
       __extends(Sphere, _super);
       function Sphere(_a) {
           if (_a === void 0) { _a = {}; }
-          var _b = _a.radius, radius = _b === void 0 ? 50 : _b, _c = _a.widthSegments, widthSegments = _c === void 0 ? 32 : _c, _d = _a.heightSegments, heightSegments = _d === void 0 ? 32 : _d, _e = _a.material, material = _e === void 0 ? new THREE.MeshPhongMaterial() : _e, options = __rest(_a, ["radius", "widthSegments", "heightSegments", "material"]);
+          var _b = _a.radius, radius = _b === void 0 ? 5 : _b, _c = _a.widthSegments, widthSegments = _c === void 0 ? 32 : _c, _d = _a.heightSegments, heightSegments = _d === void 0 ? 32 : _d, _e = _a.material, material = _e === void 0 ? new THREE.MeshPhongMaterial() : _e, options = __rest(_a, ["radius", "widthSegments", "heightSegments", "material"]);
           var _this = this;
           var geometry = new THREE.SphereBufferGeometry(radius, widthSegments, heightSegments);
           _this = _super.call(this, geometry, material) || this;
@@ -637,8 +637,9 @@ var TP = (function (exports,THREE) {
   }(Emitter));
 
   var Physcial = /** @class */ (function () {
-      function Physcial(_a) {
-          _a = {};
+      function Physcial(options) {
+          if (options === void 0) { options = {}; }
+          this.type = 'Physcial';
       }
       Physcial.prototype.effect = function (particle) {
       };
@@ -656,6 +657,7 @@ var TP = (function (exports,THREE) {
           _this.bounce = bounce;
           _this.firction = firction;
           _this.gravity = gravity;
+          _this.type = 'Gravity';
           return _this;
       }
       Gravity.prototype.effect = function (particle) {
@@ -742,6 +744,7 @@ var TP = (function (exports,THREE) {
           _this.direction = direction;
           _this.intensity = intensity;
           _this.spread = spread;
+          _this.type = 'Wind';
           return _this;
       }
       Wind.prototype.effect = function (particle) {
@@ -755,8 +758,48 @@ var TP = (function (exports,THREE) {
       return Wind;
   }(Physcial));
 
+  var Effect = /** @class */ (function () {
+      function Effect(options) {
+          this.type = 'Effect';
+      }
+      Effect.prototype.effect = function (particle) {
+      };
+      return Effect;
+  }());
+
+  // 湍流
+  var Turbulent = /** @class */ (function (_super) {
+      __extends(Turbulent, _super);
+      function Turbulent(_a) {
+          if (_a === void 0) { _a = {}; }
+          var _b = _a.intensity, intensity = _b === void 0 ? 10 : _b, options = __rest(_a, ["intensity"]);
+          var _this = _super.call(this, options || {}) || this;
+          _this.intensity = intensity;
+          _this.type = 'Turbulent';
+          return _this;
+      }
+      Turbulent.prototype.effect = function (particle) {
+          switch (particle.type) {
+              case Line.type:
+              case Points.type: {
+                  // 扰乱折线或者点集各个点的位置
+                  var position = particle.geometry.getAttribute('position');
+                  var positionArray = position.array;
+                  for (var i = positionArray.length - 1; i >= 0; i--) {
+                      positionArray[i] += THREE.Math.randFloatSpread(this.intensity);
+                  }
+                  position.needsUpdate = true;
+                  break;
+              }
+              default: {
+                  particle.position.addScalar(THREE.Math.randFloatSpread(this.intensity));
+              }
+          }
+      };
+      return Turbulent;
+  }(Effect));
+
   // polyfill
-  // 特效
 
   exports.Sphere = Sphere;
   exports.Line = Line;
@@ -767,6 +810,7 @@ var TP = (function (exports,THREE) {
   exports.DirectionEmitter = DirectionEmitter;
   exports.Gravity = Gravity;
   exports.Wind = Wind;
+  exports.Turbulent = Turbulent;
 
   return exports;
 

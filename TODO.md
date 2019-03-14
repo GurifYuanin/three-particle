@@ -1,8 +1,26 @@
-# 计划列表
-这里列出会在未来添加的新功能，和已经完成的功能
+# Todo List
 
-- [X] 已完成
-- [X] 升级babel7
-- [X] 增加typescript的支持
-- [X] 测试覆盖率
-- [ ] 提供CLI支持
+#### Here are features to implement or done.
+
+- [X] Particle
+  - [X] Sphere
+  - [X] Line
+  - [X] Text
+  - [X] Points
+  - [X] Sprite
+- [ ] Emitter
+  - [X] ExplosionEmitter
+  - [X] DirectionEmitter
+  - [ ] More...
+- [ ] Physical
+  - [X] Gravity
+  - [ ] Wind
+- [ ] Effect
+- [ ] Add unit test and test coverage
+
+#### Here is memo.
+
+- [X] Publish npm
+- [ ] Setup github page
+- [ ] API document
+- [ ] Usage document
