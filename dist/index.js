@@ -137,13 +137,13 @@ var TP = (function (exports,THREE) {
 
   var Particle = /** @class */ (function () {
       function Particle(_a) {
-          var _b = _a === void 0 ? {} : _a, _c = _b.life, life = _c === void 0 ? 3 : _c, _d = _b.velocity, velocity = _d === void 0 ? 10 : _d;
+          var _b = _a === void 0 ? {} : _a, _c = _b.life, life = _c === void 0 ? 3 : _c, _d = _b.velocity, velocity = _d === void 0 ? 10 : _d, _e = _b.border, border = _e === void 0 ? 5 : _e;
           this.clock = new THREE.Clock();
           this.clock.start();
           this.life = life;
           this.direction = new THREE.Vector3(0, 0, 0);
           this.velocity = velocity;
-          this.border = 1;
+          this.border = border;
           this.emitting = true;
       }
       Particle.TRANSFORM_LINEAR = 0; // 线性插值
@@ -165,7 +165,6 @@ var TP = (function (exports,THREE) {
           _this.radius = radius;
           _this.widthSegments = widthSegments;
           _this.heightSegments = heightSegments;
-          _this.border = radius;
           _this.options = options;
           _this.type = 'Sphere';
           return _this;
@@ -173,7 +172,7 @@ var TP = (function (exports,THREE) {
       Sphere.prototype.clone = function () {
           return new Sphere(__assign({ radius: this.radius, heightSegments: this.heightSegments, widthSegments: this.widthSegments, material: this.material.clone() }, this.options));
       };
-      Sphere.type = 'Sphere';
+      Sphere.TYPE = 'Sphere';
       return Sphere;
   }(THREE.Mesh));
 
@@ -186,14 +185,6 @@ var TP = (function (exports,THREE) {
           options = __rest(_a, ["verticesNumber", "verticesSize", "vertices", "colors", "material"]);
           var _this = this;
           var geometry = new THREE.BufferGeometry();
-          // 添加端点
-          var verticesArray = Array.from({ length: verticesNumber * verticesSize });
-          for (var i = 0; i < verticesArray.length; i++) {
-              verticesArray[i] = i < vertices.length ? vertices[i] : 0.0;
-          }
-          var positionAttribute = new THREE.BufferAttribute(new Float32Array(verticesArray), verticesSize);
-          positionAttribute.dynamic = true;
-          geometry.addAttribute('position', positionAttribute);
           // 添加颜色
           if (material.vertexColors === THREE.VertexColors) {
               var verticesColorArray = Array.from({ length: verticesNumber * verticesSize });
@@ -217,7 +208,7 @@ var TP = (function (exports,THREE) {
       Line.prototype.clone = function () {
           return new Line(__assign({ verticesNumber: this.verticesNumber, verticesSize: this.verticesSize, vertices: this.vertices, colors: this.colors, material: this.material.clone() }, this.options));
       };
-      Line.type = 'Line';
+      Line.TYPE = 'Line';
       return Line;
   }(THREE.Line));
 
@@ -261,7 +252,7 @@ var TP = (function (exports,THREE) {
       Points.prototype.clone = function () {
           return new Points(__assign({ verticesNumber: this.verticesNumber, verticesSize: this.verticesSize, vertices: this.vertices, spread: this.spread, colors: this.colors, material: this.material.clone() }, this.options));
       };
-      Points.type = 'Points';
+      Points.TYPE = 'Points';
       return Points;
   }(THREE.Points));
 
@@ -332,7 +323,7 @@ var TP = (function (exports,THREE) {
       Text.prototype.clone = function () {
           return new Text(__assign({ text: this.text, font: this.font, size: this.size, height: this.height, curveSegments: this.curveSegments, bevelEnabled: this.bevelEnabled, bevelThickness: this.bevelThickness, bevelSize: this.bevelSize, bevelSegments: this.bevelSegments, material: this.material.clone() }, this.options));
       };
-      Text.type = 'Text';
+      Text.TYPE = 'Text';
       return Text;
   }(THREE.Mesh));
 
@@ -351,7 +342,7 @@ var TP = (function (exports,THREE) {
       Sprite.prototype.clone = function () {
           return new Sprite(__assign({ image: this.image, material: this.material.clone() }, this.options));
       };
-      Sprite.type = 'Sprite';
+      Sprite.TYPE = 'Sprite';
       return Sprite;
   }(THREE.Sprite));
 
@@ -463,7 +454,34 @@ var TP = (function (exports,THREE) {
                   var randomIndex = THREE.Math.randInt(0, maxIndex);
                   var randomParticle = this.particles[randomIndex].clone();
                   if (randomParticle.emitting) {
-                      randomParticle.position.set(this.anchor.x + THREE.Math.randFloatSpread(this.radius.x), this.anchor.y + THREE.Math.randFloatSpread(this.radius.y), this.anchor.z + THREE.Math.randFloatSpread(this.radius.z));
+                      var randomParticlePosition = [
+                          this.anchor.x + THREE.Math.randFloatSpread(this.radius.x),
+                          this.anchor.y + THREE.Math.randFloatSpread(this.radius.y),
+                          this.anchor.z + THREE.Math.randFloatSpread(this.radius.z),
+                      ];
+                      switch (randomParticle.type) {
+                          case Line.TYPE: {
+                              var line = randomParticle;
+                              var geometry = line.geometry;
+                              var positionArray = Array.from({ length: line.verticesNumber * line.verticesSize });
+                              for (var m = 0; m < line.verticesNumber; m++) {
+                                  for (var n = 0; n < line.verticesSize; n++) {
+                                      var k = m * line.verticesSize + n;
+                                      positionArray[k] =
+                                          randomParticlePosition[n] +
+                                              (k < line.vertices.length ? line.vertices[k] : 0.0);
+                                  }
+                              }
+                              var positionAttribute = new THREE.BufferAttribute(new Float32Array(positionArray), line.verticesSize);
+                              positionAttribute.dynamic = true;
+                              positionAttribute.needsUpdate = true;
+                              geometry.addAttribute('position', positionAttribute);
+                              break;
+                          }
+                          default: {
+                              randomParticle.position.set(randomParticlePosition[0], randomParticlePosition[1], randomParticlePosition[2]);
+                          }
+                      }
                       generatedParticles.push(randomParticle);
                       this.add(randomParticle);
                   }
@@ -525,15 +543,15 @@ var TP = (function (exports,THREE) {
               }
               // 特效场影响
               for (var j = 0; j < this.effects.length; j++) {
-                  this.effects[j].effect(particle);
+                  this.effects[j].effect(particle, this);
               }
               // 物理场影响
               for (var j = 0; j < this.physicals.length; j++) {
-                  this.physicals[j].effect(particle);
+                  this.physicals[j].effect(particle, this);
               }
               // 进行移动
               switch (particle.type) {
-                  case Line.type: {
+                  case Line.TYPE: {
                       var position = particle.geometry.getAttribute('position');
                       var positionArray = position.array;
                       var verticesNumber = particle.verticesNumber;
@@ -557,24 +575,20 @@ var TP = (function (exports,THREE) {
               }
           }
       };
-      Emitter.prototype.clear = function () {
+      Emitter.prototype.clear = function (particle) {
+          // 清除指定的粒子
+          this.remove(particle);
+          Util.dispose(particle);
+      };
+      Emitter.prototype.clearAll = function () {
           // 清除生命周期已经结束的粒子
           for (var i = this.children.length - 1; i >= 0; i--) {
               var particle = this.children[i];
               if (particle.clock.getElapsedTime() > particle.life) {
                   // 这里调用了 getElapsedTime() ，将进行一次时间的打点
                   // 后续直接使用 elapsedTime 而不需要再次调用该方法
-                  this.remove(particle);
-                  Util.dispose(particle);
+                  this.clear(particle);
               }
-          }
-      };
-      Emitter.prototype.clearAll = function () {
-          // 清除所有粒子
-          for (var i = this.children.length - 1; i >= 0; i--) {
-              var particle = this.children[i];
-              this.remove(particle);
-              Util.dispose(particle);
           }
       };
       return Emitter;
@@ -598,7 +612,7 @@ var TP = (function (exports,THREE) {
           // 生成粒子
           this.generate();
           // 清除生命周期已经结束的粒子
-          _super.prototype.clear.call(this);
+          _super.prototype.clearAll.call(this);
           // 通用属性更新
           _super.prototype.update.call(this);
           // 特有属性更新
@@ -628,7 +642,7 @@ var TP = (function (exports,THREE) {
           // 生成粒子
           this.generate();
           // 清除生命周期已经结束的粒子
-          _super.prototype.clear.call(this);
+          _super.prototype.clearAll.call(this);
           // 通用属性更新
           _super.prototype.update.call(this);
           // 特有属性更新
@@ -641,7 +655,7 @@ var TP = (function (exports,THREE) {
           if (options === void 0) { options = {}; }
           this.type = 'Physcial';
       }
-      Physcial.prototype.effect = function (particle) {
+      Physcial.prototype.effect = function (particle, emitter) {
       };
       return Physcial;
   }());
@@ -650,88 +664,106 @@ var TP = (function (exports,THREE) {
       __extends(Gravity, _super);
       function Gravity(_a) {
           if (_a === void 0) { _a = {}; }
-          var _b = _a.direction, direction = _b === void 0 ? new THREE.Vector3(0, -1, 0) : _b, _c = _a.gravity, gravity = _c === void 0 ? 9.8 : _c, _d = _a.floor, floor = _d === void 0 ? null : _d, _e = _a.bounce, bounce = _e === void 0 ? .1 : _e, _f = _a.firction, firction = _f === void 0 ? 1 : _f, options = __rest(_a, ["direction", "gravity", "floor", "bounce", "firction"]);
+          var _b = _a.direction, direction = _b === void 0 ? new THREE.Vector3(0, -1, 0) : _b, _c = _a.gravity, gravity = _c === void 0 ? 9.8 : _c, _d = _a.floor, floor = _d === void 0 ? null : _d, _e = _a.bounce, bounce = _e === void 0 ? .1 : _e, _f = _a.firction, firction = _f === void 0 ? 1 : _f, _g = _a.event, event = _g === void 0 ? Gravity.NONE : _g, options = __rest(_a, ["direction", "gravity", "floor", "bounce", "firction", "event"]);
           var _this = _super.call(this, options || {}) || this;
           _this.direction = direction.normalize(); // 重力默认为 y 轴负方向
           _this.floor = floor;
           _this.bounce = bounce;
           _this.firction = firction;
           _this.gravity = gravity;
+          _this.event = event;
           _this.type = 'Gravity';
           return _this;
       }
-      Gravity.prototype.effect = function (particle) {
-          _super.prototype.effect.call(this, particle);
-          // 受重力影响，修正粒子运动方向
+      Gravity.prototype.effect = function (particle, emitter) {
           var elapsedTime = particle.clock.elapsedTime;
+          // 如果时间跨度为 0，则直接返回
+          if (elapsedTime === 0)
+              return;
+          _super.prototype.effect.call(this, particle, emitter);
+          // 受重力影响，修正粒子运动方向
           var originDirection = particle.direction.clone(); // 记录下受重力影响前的粒子运动方向
           var velocity = particle.direction.add(this.direction
               .clone()
               .multiplyScalar(this.gravity * elapsedTime)).length();
           particle.direction.divideScalar(velocity); // 单位向量化
-          // 存在地面
-          // 1、若已经无法弹起则产生摩擦
-          // 2、与地面进行碰撞后反弹
-          if (this.floor) {
+          // 存在地面且有碰撞事件
+          if (this.floor && this.event !== Gravity.NONE) {
               // 使用受重力影响前的粒子运动方向进行计算
               // 避免重力影响下方向产生重大变化（比如平行 -> 斜线）
-              var particlePosition = new THREE.Vector3(particle.position.x, particle.position.y, particle.position.z);
+              var particlePosition = particle.position.clone();
               // 当粒子是折线的时候
               // 折线的位置永远不变
               // 因此参考依据为折线第一个点的位置
-              if (particle.type === Line.type) {
+              if (particle.type === Line.TYPE) {
                   var positionArray = particle.geometry.getAttribute('position').array;
+                  particlePosition.set(positionArray[0], positionArray[1], positionArray[2]);
                   particlePosition.set(positionArray[0], positionArray[1], positionArray[2]);
               }
               var ray = new THREE.Ray(particlePosition, originDirection); // 粒子运动方向射线
               var distance = this.floor.distanceToPoint(particlePosition); // 粒子与地面的距离（地面上为正，地面下为负）
               var angle = originDirection.angleTo(this.floor.normal); // 粒子方向与地面法线的弧度
+              // 1、若事件为粒子消失，则直接移除
+              // 2、若为弹起事件
+              //   2.1、若已经无法弹起则产生摩擦
+              //   2.2、与地面进行碰撞后反弹
               // 如果和地面距离接近
               // 且粒子是射入平面方向
               // 则判定为与地面产生了碰撞
               if (ray.intersectsPlane(this.floor) &&
                   distance < particle.border &&
                   distance > -particle.border) {
-                  if (Math.abs(angle - 1.57) < .1) {
-                      // 如果粒子运动方向与地面接近平行
-                      // 则产生摩擦力
-                      var lostVelocity = particle.velocity * this.firction * elapsedTime; // 受摩擦力影响损失的速率
-                      var firctionedVelocity = particle.velocity - lostVelocity; // 减去损失的速率后的粒子最终速率
-                      // 既然粒子运动方向与地面
-                      // 且粒子运动方向与地面接近平行
-                      // 那么认为重力对物体不产生影响
-                      // 将原来的方向赋值回去
-                      particle.direction = originDirection;
-                      // 计算被重力作用之前的速度
-                      // 减去受摩擦力损失的速度
-                      // 判定若小于一定值则认为物体静止
-                      if (firctionedVelocity < .1) {
-                          velocity = 0;
+                  switch (this.event) {
+                      case Gravity.DISAPPEAR: {
+                          emitter.clear(particle);
+                          return;
                       }
-                      // 消除粒子运动垂直于平面的方向的分速度
-                      // else {
-                      //   particle.direction = this.floor.coplanarPoint(
-                      //     intersectPoint.clone().add(particle.direction)
-                      //   ).sub(intersectPoint).normalize();
-                      // }
-                  }
-                  else {
-                      // 粒子运动方向不与地面平行
-                      // 则产生反弹
-                      // https://blog.csdn.net/happy__888/article/details/1545432
-                      // 当法线为单位向量时，折线计算公式
-                      // v - 2 * (v * N) * N
-                      // const normal = this.floor.normal.clone();
-                      // const direction = particle.direction.clone();
-                      // particle.direction = direction.sub(normal.multiply(normal).multiply(direction).multiplyScalar(2));
-                      // 直接使用 THREE 内置的计算公式
-                      particle.direction.reflect(this.floor.normal);
-                      velocity = this.bounce * velocity;
+                      case Gravity.BOUNCE: {
+                          if (Math.abs(angle - 1.57) < .1) {
+                              // 如果粒子运动方向与地面接近平行
+                              // 则产生摩擦力
+                              var lostVelocity = particle.velocity * this.firction * elapsedTime; // 受摩擦力影响损失的速率
+                              var firctionedVelocity = particle.velocity - lostVelocity; // 减去损失的速率后的粒子最终速率
+                              // 既然粒子运动方向与地面
+                              // 且粒子运动方向与地面接近平行
+                              // 那么认为重力对物体不产生影响
+                              // 将原来的方向赋值回去
+                              particle.direction = originDirection;
+                              // 计算被重力作用之前的速度
+                              // 减去受摩擦力损失的速度
+                              // 判定若小于一定值则认为物体静止
+                              if (firctionedVelocity < .1) {
+                                  velocity = 0;
+                              }
+                              // 消除粒子运动垂直于平面的方向的分速度
+                              // else {
+                              //   particle.direction = this.floor.coplanarPoint(
+                              //     intersectPoint.clone().add(particle.direction)
+                              //   ).sub(intersectPoint).normalize();
+                              // }
+                          }
+                          else {
+                              // 粒子运动方向不与地面平行
+                              // 则产生反弹
+                              // https://blog.csdn.net/happy__888/article/details/1545432
+                              // 当法线为单位向量时，折线计算公式
+                              // v - 2 * (v * N) * N
+                              // const normal = this.floor.normal.clone();
+                              // const direction = particle.direction.clone();
+                              // particle.direction = direction.sub(normal.multiply(normal).multiply(direction).multiplyScalar(2));
+                              // 直接使用 THREE 内置的计算公式
+                              particle.direction.reflect(this.floor.normal);
+                              velocity = this.bounce * velocity;
+                          }
+                      }
                   }
               }
           }
           particle.velocity = velocity;
       };
+      Gravity.NONE = 0;
+      Gravity.BOUNCE = 1;
+      Gravity.DISAPPEAR = 2;
       return Gravity;
   }(Physcial));
 
@@ -747,12 +779,15 @@ var TP = (function (exports,THREE) {
           _this.type = 'Wind';
           return _this;
       }
-      Wind.prototype.effect = function (particle) {
-          _super.prototype.effect.call(this, particle);
+      Wind.prototype.effect = function (particle, emitter) {
+          _super.prototype.effect.call(this, particle, emitter);
           particle.velocity = particle.direction.add(this.direction
               .clone()
               .multiplyScalar(this.intensity)
               .addScalar(THREE.Math.randFloatSpread(this.spread))).length();
+          // 如果速度等于 0，直接返回，除数不能为 0
+          if (particle.velocity === 0)
+              return;
           particle.direction.divideScalar(particle.velocity); // 单位向量化
       };
       return Wind;
@@ -762,7 +797,7 @@ var TP = (function (exports,THREE) {
       function Effect(options) {
           this.type = 'Effect';
       }
-      Effect.prototype.effect = function (particle) {
+      Effect.prototype.effect = function (particle, emitter) {
       };
       return Effect;
   }());
@@ -778,10 +813,10 @@ var TP = (function (exports,THREE) {
           _this.type = 'Turbulent';
           return _this;
       }
-      Turbulent.prototype.effect = function (particle) {
+      Turbulent.prototype.effect = function (particle, emitter) {
           switch (particle.type) {
-              case Line.type:
-              case Points.type: {
+              case Line.TYPE:
+              case Points.TYPE: {
                   // 扰乱折线或者点集各个点的位置
                   var position = particle.geometry.getAttribute('position');
                   var positionArray = position.array;

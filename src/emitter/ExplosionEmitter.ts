@@ -23,7 +23,7 @@ class ExplosionEmitter extends Emitter {
     this.generate();
 
     // 清除生命周期已经结束的粒子
-    super.clear();
+    super.clearAll();
 
     // 通用属性更新
     super.update();

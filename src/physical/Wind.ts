@@ -19,14 +19,16 @@ class Wind extends Physical {
     this.type = 'Wind';
   }
 
-  effect(particle: ParticleInterface): void {
-    super.effect(particle);
+  effect(particle: ParticleInterface, emitter): void {
+    super.effect(particle, emitter);
     particle.velocity = particle.direction.add(
       this.direction
         .clone()
         .multiplyScalar(this.intensity)
         .addScalar(THREE.Math.randFloatSpread(this.spread))
     ).length();
+    // 如果速度等于 0，直接返回，除数不能为 0
+    if (particle.velocity === 0) return;
     particle.direction.divideScalar(particle.velocity); // 单位向量化
   }
 }

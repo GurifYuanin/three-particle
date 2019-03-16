@@ -3,7 +3,7 @@ import { Particle } from './Particle';
 
 /* 线段 */
 class Line extends THREE.Line {
-  static readonly type: string = 'Line';
+  static readonly TYPE: string = 'Line';
   verticesNumber: number; // 线段端点数
   verticesSize: number; // 线段维度
   vertices: number[]; // 自定义端点位置
@@ -18,14 +18,6 @@ class Line extends THREE.Line {
     ...options
   } = {}) {
     const geometry: THREE.BufferGeometry = new THREE.BufferGeometry();
-    // 添加端点
-    const verticesArray: number[] = Array.from({ length: verticesNumber * verticesSize });
-    for (let i = 0; i < verticesArray.length; i++) {
-      verticesArray[i] = i < vertices.length ? vertices[i] : 0.0;
-    }
-    const positionAttribute: THREE.BufferAttribute = new THREE.BufferAttribute(new Float32Array(verticesArray), verticesSize);
-    positionAttribute.dynamic = true;
-    geometry.addAttribute('position', positionAttribute);
     // 添加颜色
     if (material.vertexColors === THREE.VertexColors) {
       const verticesColorArray: number[] = Array.from({ length: verticesNumber * verticesSize });

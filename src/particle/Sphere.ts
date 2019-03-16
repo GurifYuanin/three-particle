@@ -3,7 +3,7 @@ import { Particle } from './Particle';
 
 /* 球 */
 class Sphere extends THREE.Mesh {
-  static readonly type: string = 'Sphere';
+  static readonly TYPE: string = 'Sphere';
   radius: number;
   widthSegments: number;
   heightSegments: number;
@@ -22,7 +22,6 @@ class Sphere extends THREE.Mesh {
     this.radius = radius;
     this.widthSegments = widthSegments;
     this.heightSegments = heightSegments;
-    this.border = radius;
     this.options = options;
     this.type = 'Sphere';
   }
