@@ -13,13 +13,14 @@ class Particle {
   constructor({
     life = 3,
     velocity = 10,
+    border = 5,
   } = {}) {
     this.clock = new THREE.Clock();
     this.clock.start();
     this.life = life;
     this.direction = new THREE.Vector3(0, 0, 0);
     this.velocity = velocity;
-    this.border = 1;
+    this.border = border;
     this.emitting = true;
   }
 }

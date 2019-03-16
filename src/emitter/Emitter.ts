@@ -107,11 +107,38 @@ class Emitter extends THREE.Object3D {
         const randomIndex: number = THREE.Math.randInt(0, maxIndex);
         let randomParticle: ParticleInterface = this.particles[randomIndex].clone();
         if (randomParticle.emitting) {
-          randomParticle.position.set(
+          const randomParticlePosition = [
             this.anchor.x + THREE.Math.randFloatSpread(this.radius.x),
             this.anchor.y + THREE.Math.randFloatSpread(this.radius.y),
             this.anchor.z + THREE.Math.randFloatSpread(this.radius.z),
-          );
+          ];
+          switch (randomParticle.type) {
+            case Line.TYPE: {
+              const line: Line = <unknown>randomParticle as Line;
+              const geometry: THREE.BufferGeometry = line.geometry as THREE.BufferGeometry;
+              const positionArray: number[] = Array.from({ length: line.verticesNumber * line.verticesSize });
+              for (let m: number = 0; m < line.verticesNumber; m++) {
+                for (let n: number = 0; n < line.verticesSize; n++) {
+                  const k = m * line.verticesSize + n;
+                  positionArray[k] =
+                    randomParticlePosition[n] +
+                    (k < line.vertices.length ? line.vertices[k] : 0.0);
+                }
+              }
+              const positionAttribute: THREE.BufferAttribute = new THREE.BufferAttribute(new Float32Array(positionArray), line.verticesSize);
+              positionAttribute.dynamic = true;
+              positionAttribute.needsUpdate = true;
+              geometry.addAttribute('position', positionAttribute);
+              break;
+            }
+            default: {
+              randomParticle.position.set(
+                randomParticlePosition[0],
+                randomParticlePosition[1],
+                randomParticlePosition[2],
+              );
+            }
+          }
           generatedParticles.push(randomParticle);
           this.add(randomParticle);
         } else {
@@ -190,17 +217,17 @@ class Emitter extends THREE.Object3D {
 
       // 特效场影响
       for (let j: number = 0; j < this.effects.length; j++) {
-        this.effects[j].effect(particle);
+        this.effects[j].effect(particle, this);
       }
 
       // 物理场影响
       for (let j: number = 0; j < this.physicals.length; j++) {
-        this.physicals[j].effect(particle);
+        this.physicals[j].effect(particle, this);
       }
 
       // 进行移动
       switch (particle.type) {
-        case Line.type: {
+        case Line.TYPE: {
           const position: THREE.BufferAttribute = (particle.geometry as THREE.BufferGeometry).getAttribute('position') as THREE.BufferAttribute;
           const positionArray: number[] = position.array as number[];
           const verticesNumber: number = (<unknown>particle as Line).verticesNumber;
@@ -224,26 +251,23 @@ class Emitter extends THREE.Object3D {
       }
     }
   }
-  clear(): void {
+  clear(particle: ParticleInterface): void {
+    // 清除指定的粒子
+    this.remove(particle);
+    Util.dispose(particle);
+  }
+  clearAll(): void {
     // 清除生命周期已经结束的粒子
     for (let i: number = this.children.length - 1; i >= 0; i--) {
       const particle: ParticleInterface = this.children[i] as ParticleInterface;
       if (particle.clock.getElapsedTime() > particle.life) {
         // 这里调用了 getElapsedTime() ，将进行一次时间的打点
         // 后续直接使用 elapsedTime 而不需要再次调用该方法
-        this.remove(particle);
-        Util.dispose(particle);
+        this.clear(particle);
       }
     }
   }
-  clearAll(): void {
-    // 清除所有粒子
-    for (let i: number = this.children.length - 1; i >= 0; i--) {
-      const particle: ParticleInterface = this.children[i] as ParticleInterface;
-      this.remove(particle);
-      Util.dispose(particle);
-    }
-  }
+
 }
 
 export default Emitter;

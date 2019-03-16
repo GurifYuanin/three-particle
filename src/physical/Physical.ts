@@ -1,11 +1,12 @@
 import { ParticleInterface } from '../particle/Particle';
+import Emitter from '../emitter/Emitter';
 
 class Physcial {
   type: string;
   constructor(options = {}) {
     this.type = 'Physcial';
   }
-  effect(particle: ParticleInterface): void {
+  effect(particle: ParticleInterface, emitter: Emitter): void {
 
   }
 }

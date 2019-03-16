@@ -3,6 +3,7 @@ import Effect from './Effect';
 import { ParticleInterface } from '../particle/Particle';
 import Line from '../particle/Line';
 import Points from '../particle/Points';
+import Emitter from '../emitter/Emitter';
 
 // 湍流
 class Turbulent extends Effect {
@@ -15,10 +16,10 @@ class Turbulent extends Effect {
     this.intensity = intensity;
     this.type = 'Turbulent';
   }
-  effect(particle: ParticleInterface): void {
+  effect(particle: ParticleInterface, emitter: Emitter): void {
     switch (particle.type) {
-      case Line.type: ;
-      case Points.type: {
+      case Line.TYPE: ;
+      case Points.TYPE: {
         // 扰乱折线或者点集各个点的位置
         const position: THREE.BufferAttribute = (particle.geometry as THREE.BufferGeometry).getAttribute('position') as THREE.BufferAttribute;
         const positionArray: number[] = position.array as number[];

@@ -3,7 +3,7 @@ import { Particle } from './Particle';
 
 /* 点集 */
 class Points extends THREE.Points {
-  static readonly type: string = 'Points';
+  static readonly TYPE: string = 'Points';
   verticesNumber: number; // 点数量
   verticesSize: number; // 点维度
   vertices: number[]; // 点位置

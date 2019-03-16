@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Sphere</title>
+    <title>Rain</title>
 </head>
 
 <body>
@@ -11,29 +11,31 @@
     <script src="../dist/index.js"></script>
     <script src="./javascripts/common.js"></script>
     <script>
-        const emitter = new TP.ExplosionEmitter({
-            emission: 100,
-            particlesOpacityKey: [0, .5, 1],
-            particlesOpacityValue: [0, 1, 0],
+        const emitter = new TP.DirectionEmitter({
+            radius: 200,
+            emission: 1000,
+            direction: new THREE.Vector3(0, -1, 0),
+            spread: 10
         });
-        const sphere = new TP.Sphere({
+        const line = new TP.Line({
             velocity: 1,
-            radius: 1,
-            life: 5,
             border: 5
         });
         const gravity = new TP.Gravity({
             gravity: .1,
-            floor: new THREE.Plane(new THREE.Vector3(0, 1, 0), 10),
-            event: TP.Gravity.BOUNCE
+            floor: new THREE.Plane(new THREE.Vector3(0, 1, 0), 5),
+            event: TP.Gravity.DISAPPEAR
         });
-        emitter.addParticle(sphere);
+        emitter.addParticle(line);
         emitter.addPhysical(gravity);
-        emitter.anchor.y = 5;
+        emitter.anchor.y = 100;
         scene.add(emitter);
 
-        camera.position.set(0, 0, 50);
-
+        camera.position.set(20, 10, 100);
+        const axesHelper = new THREE.AxesHelper(2000);
+        scene.add(axesHelper);
+        camera.near = 0;
+        camera.far = 10000;
         (function render() {
             requestAnimationFrame(render);
             emitter.update();

@@ -37,6 +37,13 @@
             <Content>
                 <Card style="margin: 25px;">
                     <p slot="title">Click below links to view demo</p>
+                    <div>
+                        <div>Based on three and three-particle,</div>
+                        <div>you only need to add several lines of code to implement
+                            these
+                            effects.</div>
+                        <Icon type="md-bulb" />
+                    </div>
                     <div class="demos-container">
                         <span v-for="demo in demos">
                             <Tooltip :content="demo.tip" placement="top-start">
@@ -64,6 +71,12 @@
                 }, {
                     url: 'sprite.html',
                     tip: 'Red sprite explode randomly'
+                }, {
+                    url: 'turbulent.html',
+                    tip: 'Turbulent effect'
+                }, {
+                    url: 'rain.html',
+                    tip: 'Simulation rain or snow'
                 }]
             },
         })

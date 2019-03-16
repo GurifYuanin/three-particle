@@ -3,7 +3,7 @@ import { Particle } from './Particle';
 import Loader from '../util/Loader';
 
 class Sprite extends THREE.Sprite {
-  static readonly type: string = 'Sprite';
+  static readonly TYPE: string = 'Sprite';
   options: object;
   image: string;
   constructor({

@@ -4,6 +4,7 @@ import * as THREE from 'three';
 
 class DirectionEmitter extends Emitter {
   direction: THREE.Vector3; // 方向
+  emitType: number; // 发射类型
   spread: number; // 粒子发散值
   constructor({
     direction = new THREE.Vector3(0, 0, -1),
@@ -31,7 +32,7 @@ class DirectionEmitter extends Emitter {
     this.generate();
 
     // 清除生命周期已经结束的粒子
-    super.clear();
+    super.clearAll();
 
     // 通用属性更新
     super.update();

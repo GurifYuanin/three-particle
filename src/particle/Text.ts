@@ -4,7 +4,7 @@ import Loader from '../util/Loader';
 
 /* 文本 */
 class Text extends THREE.Mesh {
-  static readonly type: string = 'Text';
+  static readonly TYPE: string = 'Text';
   text: string; // 文字内容
   emitting: boolean; // 粒子是否准备就绪
   font: string; // 字体
