@@ -8,7 +8,11 @@
  * Licensed under MIT(https://github.com/GurifYuanin/three-particle/blob/master/LICENSE)
  */
 
-import { MeshPhongMaterial, SphereBufferGeometry, Mesh, Clock, Vector3, LineBasicMaterial, BufferGeometry, VertexColors, BufferAttribute, Line, PointsMaterial, Math as Math$1, Points, TextBufferGeometry, FontLoader, TextureLoader, SpriteMaterial, Sprite, Color, Object3D, Ray } from 'three';
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
+var THREE = require('three');
 
 // from: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from
 // Production steps of ECMA-262, Edition 6, 22.1.2.1
@@ -140,10 +144,10 @@ function __rest(s, e) {
 var Particle = /** @class */ (function () {
     function Particle(_a) {
         var _b = _a === void 0 ? {} : _a, _c = _b.life, life = _c === void 0 ? 3 : _c, _d = _b.velocity, velocity = _d === void 0 ? 10 : _d, _e = _b.border, border = _e === void 0 ? 5 : _e;
-        this.clock = new Clock();
+        this.clock = new THREE.Clock();
         this.clock.start();
         this.life = life;
-        this.direction = new Vector3(0, 0, 0);
+        this.direction = new THREE.Vector3(0, 0, 0);
         this.velocity = velocity;
         this.border = border;
         this.emitting = true;
@@ -159,9 +163,9 @@ var Sphere = /** @class */ (function (_super) {
     __extends(Sphere, _super);
     function Sphere(_a) {
         if (_a === void 0) { _a = {}; }
-        var _b = _a.radius, radius = _b === void 0 ? 5 : _b, _c = _a.widthSegments, widthSegments = _c === void 0 ? 32 : _c, _d = _a.heightSegments, heightSegments = _d === void 0 ? 32 : _d, _e = _a.material, material = _e === void 0 ? new MeshPhongMaterial() : _e, options = __rest(_a, ["radius", "widthSegments", "heightSegments", "material"]);
+        var _b = _a.radius, radius = _b === void 0 ? 5 : _b, _c = _a.widthSegments, widthSegments = _c === void 0 ? 32 : _c, _d = _a.heightSegments, heightSegments = _d === void 0 ? 32 : _d, _e = _a.material, material = _e === void 0 ? new THREE.MeshPhongMaterial() : _e, options = __rest(_a, ["radius", "widthSegments", "heightSegments", "material"]);
         var _this = this;
-        var geometry = new SphereBufferGeometry(radius, widthSegments, heightSegments);
+        var geometry = new THREE.SphereBufferGeometry(radius, widthSegments, heightSegments);
         _this = _super.call(this, geometry, material) || this;
         Particle.prototype.constructor.call(_this, options);
         _this.radius = radius;
@@ -176,24 +180,24 @@ var Sphere = /** @class */ (function (_super) {
     };
     Sphere.TYPE = 'Sphere';
     return Sphere;
-}(Mesh));
+}(THREE.Mesh));
 
 /* 线段 */
-var Line$1 = /** @class */ (function (_super) {
-    __extends(Line$$1, _super);
-    function Line$$1(_a) {
+var Line = /** @class */ (function (_super) {
+    __extends(Line, _super);
+    function Line(_a) {
         if (_a === void 0) { _a = {}; }
-        var _b = _a.verticesNumber, verticesNumber = _b === void 0 ? 2 : _b, _c = _a.verticesSize, verticesSize = _c === void 0 ? 3 : _c, _d = _a.vertices, vertices = _d === void 0 ? [] : _d, _e = _a.colors, colors = _e === void 0 ? [] : _e, _f = _a.material, material = _f === void 0 ? new LineBasicMaterial() : _f, // LineBasicMaterial | LineDashMaterial
+        var _b = _a.verticesNumber, verticesNumber = _b === void 0 ? 2 : _b, _c = _a.verticesSize, verticesSize = _c === void 0 ? 3 : _c, _d = _a.vertices, vertices = _d === void 0 ? [] : _d, _e = _a.colors, colors = _e === void 0 ? [] : _e, _f = _a.material, material = _f === void 0 ? new THREE.LineBasicMaterial() : _f, // LineBasicMaterial | LineDashMaterial
         options = __rest(_a, ["verticesNumber", "verticesSize", "vertices", "colors", "material"]);
         var _this = this;
-        var geometry = new BufferGeometry();
+        var geometry = new THREE.BufferGeometry();
         // 添加颜色
-        if (material.vertexColors === VertexColors) {
+        if (material.vertexColors === THREE.VertexColors) {
             var verticesColorArray = Array.from({ length: verticesNumber * verticesSize });
             for (var i = 0; i < verticesColorArray.length; i++) {
                 verticesColorArray[i] = i < colors.length ? colors[i] : Math.random();
             }
-            var colorAttribute = new BufferAttribute(new Float32Array(verticesColorArray), verticesSize);
+            var colorAttribute = new THREE.BufferAttribute(new Float32Array(verticesColorArray), verticesSize);
             colorAttribute.dynamic = true;
             geometry.addAttribute('color', colorAttribute);
         }
@@ -207,36 +211,36 @@ var Line$1 = /** @class */ (function (_super) {
         _this.type = 'Line';
         return _this;
     }
-    Line$$1.prototype.clone = function () {
-        return new Line$$1(__assign({ verticesNumber: this.verticesNumber, verticesSize: this.verticesSize, vertices: this.vertices, colors: this.colors, material: this.material.clone() }, this.options));
+    Line.prototype.clone = function () {
+        return new Line(__assign({ verticesNumber: this.verticesNumber, verticesSize: this.verticesSize, vertices: this.vertices, colors: this.colors, material: this.material.clone() }, this.options));
     };
-    Line$$1.TYPE = 'Line';
-    return Line$$1;
-}(Line));
+    Line.TYPE = 'Line';
+    return Line;
+}(THREE.Line));
 
 /* 点集 */
-var Points$1 = /** @class */ (function (_super) {
-    __extends(Points$$1, _super);
-    function Points$$1(_a) {
+var Points = /** @class */ (function (_super) {
+    __extends(Points, _super);
+    function Points(_a) {
         if (_a === void 0) { _a = {}; }
-        var _b = _a.verticesNumber, verticesNumber = _b === void 0 ? 10 : _b, _c = _a.verticesSize, verticesSize = _c === void 0 ? 3 : _c, _d = _a.vertices, vertices = _d === void 0 ? [] : _d, _e = _a.spread, spread = _e === void 0 ? 10 : _e, _f = _a.colors, colors = _f === void 0 ? [] : _f, _g = _a.material, material = _g === void 0 ? new PointsMaterial() : _g, options = __rest(_a, ["verticesNumber", "verticesSize", "vertices", "spread", "colors", "material"]);
+        var _b = _a.verticesNumber, verticesNumber = _b === void 0 ? 10 : _b, _c = _a.verticesSize, verticesSize = _c === void 0 ? 3 : _c, _d = _a.vertices, vertices = _d === void 0 ? [] : _d, _e = _a.spread, spread = _e === void 0 ? 10 : _e, _f = _a.colors, colors = _f === void 0 ? [] : _f, _g = _a.material, material = _g === void 0 ? new THREE.PointsMaterial() : _g, options = __rest(_a, ["verticesNumber", "verticesSize", "vertices", "spread", "colors", "material"]);
         var _this = this;
-        var geometry = new BufferGeometry();
+        var geometry = new THREE.BufferGeometry();
         // 点位置
         var positionsArray = Array.from({ length: verticesNumber * verticesSize });
         for (var i = 0; i < positionsArray.length; i++) {
-            positionsArray[i] = i < vertices.length ? vertices[i] : Math$1.randFloatSpread(spread);
+            positionsArray[i] = i < vertices.length ? vertices[i] : THREE.Math.randFloatSpread(spread);
         }
-        var positionsAttribute = new BufferAttribute(new Float32Array(positionsArray), verticesSize);
+        var positionsAttribute = new THREE.BufferAttribute(new Float32Array(positionsArray), verticesSize);
         positionsAttribute.dynamic = true;
         geometry.addAttribute('position', positionsAttribute);
         // 点颜色
-        if (material.vertexColors === VertexColors) {
+        if (material.vertexColors === THREE.VertexColors) {
             var colorsArray = Array.from({ length: verticesNumber * verticesSize });
             for (var i = 0; i < colorsArray.length; i++) {
                 colorsArray[i] = i < colors.length ? colors[i] : Math.random();
             }
-            var colorsAttribute = new BufferAttribute(new Float32Array(colorsArray), verticesSize);
+            var colorsAttribute = new THREE.BufferAttribute(new Float32Array(colorsArray), verticesSize);
             colorsAttribute.dynamic = true;
             geometry.addAttribute('color', colorsAttribute);
         }
@@ -251,15 +255,15 @@ var Points$1 = /** @class */ (function (_super) {
         _this.type = 'Points';
         return _this;
     }
-    Points$$1.prototype.clone = function () {
-        return new Points$$1(__assign({ verticesNumber: this.verticesNumber, verticesSize: this.verticesSize, vertices: this.vertices, spread: this.spread, colors: this.colors, material: this.material.clone() }, this.options));
+    Points.prototype.clone = function () {
+        return new Points(__assign({ verticesNumber: this.verticesNumber, verticesSize: this.verticesSize, vertices: this.vertices, spread: this.spread, colors: this.colors, material: this.material.clone() }, this.options));
     };
-    Points$$1.TYPE = 'Points';
-    return Points$$1;
-}(Points));
+    Points.TYPE = 'Points';
+    return Points;
+}(THREE.Points));
 
-var fontLoader = new FontLoader();
-var textureLoader = new TextureLoader();
+var fontLoader = new THREE.FontLoader();
+var textureLoader = new THREE.TextureLoader();
 // cache
 var fonts = {};
 var textures = {};
@@ -291,7 +295,7 @@ var Text = /** @class */ (function (_super) {
     __extends(Text, _super);
     function Text(_a) {
         if (_a === void 0) { _a = {}; }
-        var _b = _a.text, text = _b === void 0 ? 'Hello World' : _b, _c = _a.font, font = _c === void 0 ? '/demo/fonts/helvetiker_regular.typeface.json' : _c, _d = _a.size, size = _d === void 0 ? 10 : _d, _e = _a.height, height = _e === void 0 ? 50 : _e, _f = _a.curveSegments, curveSegments = _f === void 0 ? 12 : _f, _g = _a.bevelEnabled, bevelEnabled = _g === void 0 ? false : _g, _h = _a.bevelThickness, bevelThickness = _h === void 0 ? 10 : _h, _j = _a.bevelSize, bevelSize = _j === void 0 ? 8 : _j, _k = _a.bevelSegments, bevelSegments = _k === void 0 ? 3 : _k, _l = _a.material, material = _l === void 0 ? new MeshPhongMaterial() : _l, options = __rest(_a, ["text", "font", "size", "height", "curveSegments", "bevelEnabled", "bevelThickness", "bevelSize", "bevelSegments", "material"]);
+        var _b = _a.text, text = _b === void 0 ? 'Hello World' : _b, _c = _a.font, font = _c === void 0 ? '/demo/fonts/helvetiker_regular.typeface.json' : _c, _d = _a.size, size = _d === void 0 ? 10 : _d, _e = _a.height, height = _e === void 0 ? 50 : _e, _f = _a.curveSegments, curveSegments = _f === void 0 ? 12 : _f, _g = _a.bevelEnabled, bevelEnabled = _g === void 0 ? false : _g, _h = _a.bevelThickness, bevelThickness = _h === void 0 ? 10 : _h, _j = _a.bevelSize, bevelSize = _j === void 0 ? 8 : _j, _k = _a.bevelSegments, bevelSegments = _k === void 0 ? 3 : _k, _l = _a.material, material = _l === void 0 ? new THREE.MeshPhongMaterial() : _l, options = __rest(_a, ["text", "font", "size", "height", "curveSegments", "bevelEnabled", "bevelThickness", "bevelSize", "bevelSegments", "material"]);
         var _this = _super.call(this) || this;
         Particle.prototype.constructor.call(_this, options);
         _this.emitting = false; // 等待字体加载完才能运动
@@ -310,7 +314,7 @@ var Text = /** @class */ (function (_super) {
         return _this;
     }
     Text.prototype.active = function (font) {
-        this.geometry = new TextBufferGeometry(this.text, {
+        this.geometry = new THREE.TextBufferGeometry(this.text, {
             font: font,
             size: this.size,
             height: this.height,
@@ -327,13 +331,13 @@ var Text = /** @class */ (function (_super) {
     };
     Text.TYPE = 'Text';
     return Text;
-}(Mesh));
+}(THREE.Mesh));
 
-var Sprite$1 = /** @class */ (function (_super) {
-    __extends(Sprite$$1, _super);
-    function Sprite$$1(_a) {
+var Sprite = /** @class */ (function (_super) {
+    __extends(Sprite, _super);
+    function Sprite(_a) {
         if (_a === void 0) { _a = {}; }
-        var _b = _a.image, image = _b === void 0 ? './images/star.png' : _b, _c = _a.material, material = _c === void 0 ? new SpriteMaterial({ map: Loader.loadTexture(image) }) : _c, options = __rest(_a, ["image", "material"]);
+        var _b = _a.image, image = _b === void 0 ? './images/star.png' : _b, _c = _a.material, material = _c === void 0 ? new THREE.SpriteMaterial({ map: Loader.loadTexture(image) }) : _c, options = __rest(_a, ["image", "material"]);
         var _this = _super.call(this, material) || this;
         Particle.prototype.constructor.call(_this, options);
         _this.image = image;
@@ -341,21 +345,21 @@ var Sprite$1 = /** @class */ (function (_super) {
         _this.type = 'Sprite';
         return _this;
     }
-    Sprite$$1.prototype.clone = function () {
-        return new Sprite$$1(__assign({ image: this.image, material: this.material.clone() }, this.options));
+    Sprite.prototype.clone = function () {
+        return new Sprite(__assign({ image: this.image, material: this.material.clone() }, this.options));
     };
-    Sprite$$1.TYPE = 'Sprite';
-    return Sprite$$1;
-}(Sprite));
+    Sprite.TYPE = 'Sprite';
+    return Sprite;
+}(THREE.Sprite));
 
 var Lut = /** @class */ (function () {
     function Lut() {
     }
     Lut.getInterpolationFunction = function (particlesTransformType) {
         switch (particlesTransformType) {
-            case Particle.TRANSFORM_LINEAR: return Math$1.lerp;
-            case Particle.TRANSFORM_SMOOTH: return Math$1.smoothstep;
-            case Particle.TRANSFORM_SMOOTHER: return Math$1.smootherstep;
+            case Particle.TRANSFORM_LINEAR: return THREE.Math.lerp;
+            case Particle.TRANSFORM_SMOOTH: return THREE.Math.smoothstep;
+            case Particle.TRANSFORM_SMOOTHER: return THREE.Math.smootherstep;
             default: return function () { return 0; };
         }
     };
@@ -396,17 +400,17 @@ var Util = /** @class */ (function () {
 var Emitter = /** @class */ (function (_super) {
     __extends(Emitter, _super);
     function Emitter(_a) {
-        var _b = _a === void 0 ? {} : _a, _c = _b.emission, emission = _c === void 0 ? 100 : _c, _d = _b.anchor, anchor = _d === void 0 ? new Vector3(0, 0, 0) : _d, _e = _b.radius, radius = _e === void 0 ? new Vector3(0, 0, 0) : _e, _f = _b.particlesPositionRandom, particlesPositionRandom = _f === void 0 ? null : _f, _g = _b.particlesOpacityRandom, particlesOpacityRandom = _g === void 0 ? 0 : _g, _h = _b.particlesOpacityKey, particlesOpacityKey = _h === void 0 ? [] : _h, _j = _b.particlesOpacityValue, particlesOpacityValue = _j === void 0 ? [] : _j, _k = _b.particlesColorRandom, particlesColorRandom = _k === void 0 ? [0, 0, 0] : _k, _l = _b.particlesColorKey, particlesColorKey = _l === void 0 ? [] : _l, _m = _b.particlesColorValue, particlesColorValue = _m === void 0 ? [] : _m, _o = _b.particlesRotationRandom, particlesRotationRandom = _o === void 0 ? new Vector3(0, 0, 0) : _o, _p = _b.particlesRotationKey, particlesRotationKey = _p === void 0 ? [] : _p, _q = _b.particlesRotationValue, particlesRotationValue = _q === void 0 ? [] : _q, _r = _b.particlesScaleRandom, particlesScaleRandom = _r === void 0 ? new Vector3(0, 0, 0) : _r, _s = _b.particlesScaleKey, particlesScaleKey = _s === void 0 ? [] : _s, _t = _b.particlesScaleValue, particlesScaleValue = _t === void 0 ? [] : _t;
+        var _b = _a === void 0 ? {} : _a, _c = _b.emission, emission = _c === void 0 ? 100 : _c, _d = _b.anchor, anchor = _d === void 0 ? new THREE.Vector3(0, 0, 0) : _d, _e = _b.radius, radius = _e === void 0 ? new THREE.Vector3(0, 0, 0) : _e, _f = _b.particlesPositionRandom, particlesPositionRandom = _f === void 0 ? null : _f, _g = _b.particlesOpacityRandom, particlesOpacityRandom = _g === void 0 ? 0 : _g, _h = _b.particlesOpacityKey, particlesOpacityKey = _h === void 0 ? [] : _h, _j = _b.particlesOpacityValue, particlesOpacityValue = _j === void 0 ? [] : _j, _k = _b.particlesColorRandom, particlesColorRandom = _k === void 0 ? [0, 0, 0] : _k, _l = _b.particlesColorKey, particlesColorKey = _l === void 0 ? [] : _l, _m = _b.particlesColorValue, particlesColorValue = _m === void 0 ? [] : _m, _o = _b.particlesRotationRandom, particlesRotationRandom = _o === void 0 ? new THREE.Vector3(0, 0, 0) : _o, _p = _b.particlesRotationKey, particlesRotationKey = _p === void 0 ? [] : _p, _q = _b.particlesRotationValue, particlesRotationValue = _q === void 0 ? [] : _q, _r = _b.particlesScaleRandom, particlesScaleRandom = _r === void 0 ? new THREE.Vector3(0, 0, 0) : _r, _s = _b.particlesScaleKey, particlesScaleKey = _s === void 0 ? [] : _s, _t = _b.particlesScaleValue, particlesScaleValue = _t === void 0 ? [] : _t;
         var _this = _super.call(this) || this;
         _this.emission = emission;
         _this.emitting = true;
-        _this.clock = new Clock();
+        _this.clock = new THREE.Clock();
         _this.clock.start();
         _this.particles = [];
         _this.physicals = [];
         _this.effects = [];
         _this.anchor = anchor;
-        _this.radius = radius instanceof Vector3 ? radius : new Vector3(radius, radius, radius);
+        _this.radius = radius instanceof THREE.Vector3 ? radius : new THREE.Vector3(radius, radius, radius);
         _this.particlesPositionRandom = particlesPositionRandom;
         _this.particlesOpacityRandom = particlesOpacityRandom;
         _this.particlesOpacityKey = particlesOpacityKey;
@@ -453,16 +457,16 @@ var Emitter = /** @class */ (function (_super) {
             // 新增粒子
             for (var i = 0; i < deltaEmission; i++) {
                 var maxIndex = this.particles.length - 1;
-                var randomIndex = Math$1.randInt(0, maxIndex);
+                var randomIndex = THREE.Math.randInt(0, maxIndex);
                 var randomParticle = this.particles[randomIndex].clone();
                 if (randomParticle.emitting) {
                     var randomParticlePosition = [
-                        this.anchor.x + Math$1.randFloatSpread(this.radius.x),
-                        this.anchor.y + Math$1.randFloatSpread(this.radius.y),
-                        this.anchor.z + Math$1.randFloatSpread(this.radius.z),
+                        this.anchor.x + THREE.Math.randFloatSpread(this.radius.x),
+                        this.anchor.y + THREE.Math.randFloatSpread(this.radius.y),
+                        this.anchor.z + THREE.Math.randFloatSpread(this.radius.z),
                     ];
                     switch (randomParticle.type) {
-                        case Line$1.TYPE: {
+                        case Line.TYPE: {
                             var line = randomParticle;
                             var geometry = line.geometry;
                             var positionArray = Array.from({ length: line.verticesNumber * line.verticesSize });
@@ -474,7 +478,7 @@ var Emitter = /** @class */ (function (_super) {
                                             (k < line.vertices.length ? line.vertices[k] : 0.0);
                                 }
                             }
-                            var positionAttribute = new BufferAttribute(new Float32Array(positionArray), line.verticesSize);
+                            var positionAttribute = new THREE.BufferAttribute(new Float32Array(positionArray), line.verticesSize);
                             positionAttribute.dynamic = true;
                             positionAttribute.needsUpdate = true;
                             geometry.addAttribute('position', positionAttribute);
@@ -505,7 +509,7 @@ var Emitter = /** @class */ (function (_super) {
             // 粒子透明度
             for (var j = 0; j < this.particlesOpacityKey.length - 1; j++) {
                 if (elapsedTimePercentage >= this.particlesOpacityKey[j] && elapsedTimePercentage < this.particlesOpacityKey[j + 1]) {
-                    Util.fill(particle.material, interpolationFunction(this.particlesOpacityValue[j], this.particlesOpacityValue[j + 1], elapsedTimePercentage) + Math$1.randFloatSpread(this.particlesOpacityRandom), 'opacity');
+                    Util.fill(particle.material, interpolationFunction(this.particlesOpacityValue[j], this.particlesOpacityValue[j + 1], elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesOpacityRandom), 'opacity');
                     break;
                 }
             }
@@ -514,21 +518,21 @@ var Emitter = /** @class */ (function (_super) {
                 if (elapsedTimePercentage >= this.particlesColorKey[j] && elapsedTimePercentage < this.particlesColorKey[j + 1]) {
                     var preColor = this.particlesColorValue[j];
                     var nextColor = this.particlesColorValue[j + 1];
-                    Util.fill(particle.material, new Color(interpolationFunction(preColor.r, nextColor.r, elapsedTimePercentage) + Math$1.randFloatSpread(this.particlesColorRandom[0]), interpolationFunction(preColor.g, nextColor.g, elapsedTimePercentage) + Math$1.randFloatSpread(this.particlesColorRandom[1]), interpolationFunction(preColor.b, nextColor.b, elapsedTimePercentage) + Math$1.randFloatSpread(this.particlesColorRandom[2])), 'color');
+                    Util.fill(particle.material, new THREE.Color(interpolationFunction(preColor.r, nextColor.r, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesColorRandom[0]), interpolationFunction(preColor.g, nextColor.g, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesColorRandom[1]), interpolationFunction(preColor.b, nextColor.b, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesColorRandom[2])), 'color');
                     break;
                 }
             }
             Util.fill(particle.material, true, 'needsUpdate');
             // 粒子位置
-            this.particlesPositionRandom && particle.position.add(new Vector3(Math$1.randFloatSpread(this.particlesPositionRandom.x), Math$1.randFloatSpread(this.particlesPositionRandom.y), Math$1.randFloatSpread(this.particlesPositionRandom.z)));
+            this.particlesPositionRandom && particle.position.add(new THREE.Vector3(THREE.Math.randFloatSpread(this.particlesPositionRandom.x), THREE.Math.randFloatSpread(this.particlesPositionRandom.y), THREE.Math.randFloatSpread(this.particlesPositionRandom.z)));
             // 粒子旋转
             for (var j = 0; j < this.particlesRotationKey.length - 1; j++) {
                 if (elapsedTimePercentage >= this.particlesRotationKey[j] && elapsedTimePercentage < this.particlesRotationKey[j + 1]) {
                     var preRotation = this.particlesRotationValue[j];
                     var nextRotation = this.particlesRotationValue[j + 1];
-                    particle.rotateX(interpolationFunction(preRotation.x, nextRotation.x, elapsedTimePercentage) + Math$1.randFloatSpread(this.particlesRotationRandom.x));
-                    particle.rotateY(interpolationFunction(preRotation.y, nextRotation.y, elapsedTimePercentage) + Math$1.randFloatSpread(this.particlesRotationRandom.y));
-                    particle.rotateZ(interpolationFunction(preRotation.z, nextRotation.z, elapsedTimePercentage) + Math$1.randFloatSpread(this.particlesRotationRandom.z));
+                    particle.rotateX(interpolationFunction(preRotation.x, nextRotation.x, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesRotationRandom.x));
+                    particle.rotateY(interpolationFunction(preRotation.y, nextRotation.y, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesRotationRandom.y));
+                    particle.rotateZ(interpolationFunction(preRotation.z, nextRotation.z, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesRotationRandom.z));
                     break;
                 }
             }
@@ -539,7 +543,7 @@ var Emitter = /** @class */ (function (_super) {
                     var nextScale = this.particlesScaleValue[j + 1];
                     // 缩放值不应该为 0 ,否则 three 无法计算 Matrix3 的逆，控制台报警告
                     // https://github.com/aframevr/aframe-inspector/issues/524
-                    particle.scale.set((interpolationFunction(preScale.x, nextScale.x, elapsedTimePercentage) + Math$1.randFloatSpread(this.particlesScaleRandom.x)) || 0.00001, (interpolationFunction(preScale.y, nextScale.y, elapsedTimePercentage) + Math$1.randFloatSpread(this.particlesScaleRandom.y)) || 0.00001, (interpolationFunction(preScale.z, nextScale.z, elapsedTimePercentage) + Math$1.randFloatSpread(this.particlesScaleRandom.z)) || 0.00001);
+                    particle.scale.set((interpolationFunction(preScale.x, nextScale.x, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesScaleRandom.x)) || 0.00001, (interpolationFunction(preScale.y, nextScale.y, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesScaleRandom.y)) || 0.00001, (interpolationFunction(preScale.z, nextScale.z, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesScaleRandom.z)) || 0.00001);
                     break;
                 }
             }
@@ -553,7 +557,7 @@ var Emitter = /** @class */ (function (_super) {
             }
             // 进行移动
             switch (particle.type) {
-                case Line$1.TYPE: {
+                case Line.TYPE: {
                     var position = particle.geometry.getAttribute('position');
                     var positionArray = position.array;
                     var verticesNumber = particle.verticesNumber;
@@ -594,7 +598,7 @@ var Emitter = /** @class */ (function (_super) {
         }
     };
     return Emitter;
-}(Object3D));
+}(THREE.Object3D));
 
 var ExplosionEmitter = /** @class */ (function (_super) {
     __extends(ExplosionEmitter, _super);
@@ -606,7 +610,7 @@ var ExplosionEmitter = /** @class */ (function (_super) {
     ExplosionEmitter.prototype.generate = function () {
         var generatedParticles = _super.prototype.generate.call(this);
         for (var i = 0; i < generatedParticles.length; i++) {
-            generatedParticles[i].direction = new Vector3(Math$1.randFloatSpread(1), Math$1.randFloatSpread(1), Math$1.randFloatSpread(1)).normalize();
+            generatedParticles[i].direction = new THREE.Vector3(THREE.Math.randFloatSpread(1), THREE.Math.randFloatSpread(1), THREE.Math.randFloatSpread(1)).normalize();
         }
         return generatedParticles;
     };
@@ -626,7 +630,7 @@ var DirectionEmitter = /** @class */ (function (_super) {
     __extends(DirectionEmitter, _super);
     function DirectionEmitter(_a) {
         if (_a === void 0) { _a = {}; }
-        var _b = _a.direction, direction = _b === void 0 ? new Vector3(0, 0, -1) : _b, _c = _a.spread, spread = _c === void 0 ? 10 : _c, options = __rest(_a, ["direction", "spread"]);
+        var _b = _a.direction, direction = _b === void 0 ? new THREE.Vector3(0, 0, -1) : _b, _c = _a.spread, spread = _c === void 0 ? 10 : _c, options = __rest(_a, ["direction", "spread"]);
         var _this = _super.call(this, options || {}) || this;
         _this.direction = direction.normalize();
         _this.spread = spread;
@@ -636,7 +640,7 @@ var DirectionEmitter = /** @class */ (function (_super) {
     DirectionEmitter.prototype.generate = function () {
         var generatedParticles = _super.prototype.generate.call(this);
         for (var i = 0; i < generatedParticles.length; i++) {
-            generatedParticles[i].direction = new Vector3(this.direction.x * this.spread + Math$1.randFloatSpread(this.spread), this.direction.y * this.spread + Math$1.randFloatSpread(this.spread), this.direction.z * this.spread + Math$1.randFloatSpread(this.spread)).normalize();
+            generatedParticles[i].direction = new THREE.Vector3(this.direction.x * this.spread + THREE.Math.randFloatSpread(this.spread), this.direction.y * this.spread + THREE.Math.randFloatSpread(this.spread), this.direction.z * this.spread + THREE.Math.randFloatSpread(this.spread)).normalize();
         }
         return generatedParticles;
     };
@@ -666,7 +670,7 @@ var Gravity = /** @class */ (function (_super) {
     __extends(Gravity, _super);
     function Gravity(_a) {
         if (_a === void 0) { _a = {}; }
-        var _b = _a.direction, direction = _b === void 0 ? new Vector3(0, -1, 0) : _b, _c = _a.gravity, gravity = _c === void 0 ? 9.8 : _c, _d = _a.floor, floor = _d === void 0 ? null : _d, _e = _a.bounce, bounce = _e === void 0 ? .1 : _e, _f = _a.firction, firction = _f === void 0 ? 1 : _f, _g = _a.event, event = _g === void 0 ? Gravity.NONE : _g, options = __rest(_a, ["direction", "gravity", "floor", "bounce", "firction", "event"]);
+        var _b = _a.direction, direction = _b === void 0 ? new THREE.Vector3(0, -1, 0) : _b, _c = _a.gravity, gravity = _c === void 0 ? 9.8 : _c, _d = _a.floor, floor = _d === void 0 ? null : _d, _e = _a.bounce, bounce = _e === void 0 ? .1 : _e, _f = _a.firction, firction = _f === void 0 ? 1 : _f, _g = _a.event, event = _g === void 0 ? Gravity.NONE : _g, options = __rest(_a, ["direction", "gravity", "floor", "bounce", "firction", "event"]);
         var _this = _super.call(this, options || {}) || this;
         _this.direction = direction.normalize(); // 重力默认为 y 轴负方向
         _this.floor = floor;
@@ -697,12 +701,12 @@ var Gravity = /** @class */ (function (_super) {
             // 当粒子是折线的时候
             // 折线的位置永远不变
             // 因此参考依据为折线第一个点的位置
-            if (particle.type === Line$1.TYPE) {
+            if (particle.type === Line.TYPE) {
                 var positionArray = particle.geometry.getAttribute('position').array;
                 particlePosition.set(positionArray[0], positionArray[1], positionArray[2]);
                 particlePosition.set(positionArray[0], positionArray[1], positionArray[2]);
             }
-            var ray = new Ray(particlePosition, originDirection); // 粒子运动方向射线
+            var ray = new THREE.Ray(particlePosition, originDirection); // 粒子运动方向射线
             var distance = this.floor.distanceToPoint(particlePosition); // 粒子与地面的距离（地面上为正，地面下为负）
             var angle = originDirection.angleTo(this.floor.normal); // 粒子方向与地面法线的弧度
             // 1、若事件为粒子消失，则直接移除
@@ -773,7 +777,7 @@ var Wind = /** @class */ (function (_super) {
     __extends(Wind, _super);
     function Wind(_a) {
         if (_a === void 0) { _a = {}; }
-        var _b = _a.direction, direction = _b === void 0 ? new Vector3(1, 0, 0) : _b, _c = _a.intensity, intensity = _c === void 0 ? 1 : _c, _d = _a.spread, spread = _d === void 0 ? 0 : _d, options = __rest(_a, ["direction", "intensity", "spread"]);
+        var _b = _a.direction, direction = _b === void 0 ? new THREE.Vector3(1, 0, 0) : _b, _c = _a.intensity, intensity = _c === void 0 ? 1 : _c, _d = _a.spread, spread = _d === void 0 ? 0 : _d, options = __rest(_a, ["direction", "intensity", "spread"]);
         var _this = _super.call(this, options || {}) || this;
         _this.direction = direction;
         _this.intensity = intensity;
@@ -786,7 +790,7 @@ var Wind = /** @class */ (function (_super) {
         particle.velocity = particle.direction.add(this.direction
             .clone()
             .multiplyScalar(this.intensity)
-            .addScalar(Math$1.randFloatSpread(this.spread))).length();
+            .addScalar(THREE.Math.randFloatSpread(this.spread))).length();
         // 如果速度等于 0，直接返回，除数不能为 0
         if (particle.velocity === 0)
             return;
@@ -817,19 +821,19 @@ var Turbulent = /** @class */ (function (_super) {
     }
     Turbulent.prototype.effect = function (particle, emitter) {
         switch (particle.type) {
-            case Line$1.TYPE:
-            case Points$1.TYPE: {
+            case Line.TYPE:
+            case Points.TYPE: {
                 // 扰乱折线或者点集各个点的位置
                 var position = particle.geometry.getAttribute('position');
                 var positionArray = position.array;
                 for (var i = positionArray.length - 1; i >= 0; i--) {
-                    positionArray[i] += Math$1.randFloatSpread(this.intensity);
+                    positionArray[i] += THREE.Math.randFloatSpread(this.intensity);
                 }
                 position.needsUpdate = true;
                 break;
             }
             default: {
-                particle.position.addScalar(Math$1.randFloatSpread(this.intensity));
+                particle.position.addScalar(THREE.Math.randFloatSpread(this.intensity));
             }
         }
     };
@@ -838,4 +842,13 @@ var Turbulent = /** @class */ (function (_super) {
 
 // polyfill
 
-export { Sphere, Line$1 as Line, Points$1 as Points, Text, Sprite$1 as Sprite, ExplosionEmitter, DirectionEmitter, Gravity, Wind, Turbulent };
+exports.Sphere = Sphere;
+exports.Line = Line;
+exports.Points = Points;
+exports.Text = Text;
+exports.Sprite = Sprite;
+exports.ExplosionEmitter = ExplosionEmitter;
+exports.DirectionEmitter = DirectionEmitter;
+exports.Gravity = Gravity;
+exports.Wind = Wind;
+exports.Turbulent = Turbulent;
