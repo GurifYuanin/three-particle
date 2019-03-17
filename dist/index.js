@@ -632,6 +632,22 @@ var TP = (function (exports,THREE) {
           return _this;
       }
       DirectionEmitter.prototype.generate = function () {
+          /**
+           * 已知平面法线 x1 y1 z1
+           * 已知点 x2 y2 z2
+           * radius 为 [0, emitter.radius]
+           * 求 x y z
+           *
+           * 显然可得：
+           * (x - x2, y - y2, z - z2) 垂直于 (x1, y1, z1)
+           * (x - x2) * x1 + (y - y2) * y1 + (z - z2) * z1 = 0
+           *
+           * 化为等式：
+           * (x - x2)^2 + (y - y2)^2 + (z - z2)^2 = radius^2
+           * x1 * sqrt(radius^2 - (y - y2)^2 + (z - z2)^2) + (y - y2) * y1 + (z - z2) * z1 = 0
+           *
+           * 但不知道如果解多项方程。。。
+           */
           var generatedParticles = _super.prototype.generate.call(this);
           for (var i = 0; i < generatedParticles.length; i++) {
               generatedParticles[i].direction = new THREE.Vector3(this.direction.x * this.spread + THREE.Math.randFloatSpread(this.spread), this.direction.y * this.spread + THREE.Math.randFloatSpread(this.spread), this.direction.z * this.spread + THREE.Math.randFloatSpread(this.spread)).normalize();

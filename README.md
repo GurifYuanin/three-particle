@@ -44,7 +44,7 @@ For webpack or similar environment：
 
 ```js
 import * as THREE from 'three'; // based lib
-import TP from 'three-particle';
+import * as TP from 'three-particle';
 
 // same as three.js
 // create renderer, scene, camera, etc...
@@ -68,18 +68,18 @@ scene.add(emitter);
 })();
 ```
 
-For requirejs environment:
+For commonjs environment:
 
 ```js
-requirejs(['node_modules/three-particle/dist/index.aio.js'], function (TP) {
-    // do something...
-})
+const THREE = require('three');
+const TP = require('three-particle');
 ```
 
 For browser environment:
 
 ```html
-<script src="node_modules/three-particle/dist/index.aio.js"></script>
+<script src="https://unpkg.com/three@0.102.1/build/three.js"></script>
+<script src="node_modules/three-particle/dist/index.js"></script>
 ```
 
 ## Documents
