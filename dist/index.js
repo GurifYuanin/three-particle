@@ -1,8 +1,11 @@
+
 /*!
- * jslib-base 0.1.0 (https://github.com/yanhaijing/jslib-base)
- * API https://github.com/yanhaijing/jslib-base/blob/master/doc/api.md
- * Copyright 2017-2019 yanhaijing. All Rights Reserved
- * Licensed under MIT (https://github.com/yanhaijing/jslib-base/blob/master/LICENSE)
+ * three-particle
+ 0.0.3(https://github.com/GurifYuanin/three-particle)
+ * API https://github.com/GurifYuanin/three-particle/blob/master/doc/api.md)
+ * Copyright 2017 - 2019
+ GurifYuanin.All Rights Reserved
+ * Licensed under MIT(https://github.com/GurifYuanin/three-particle/blob/master/LICENSE)
  */
 
 var TP = (function (exports,THREE) {

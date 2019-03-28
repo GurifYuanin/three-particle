@@ -366,6 +366,7 @@ var Lut = /** @class */ (function () {
     return Lut;
 }());
 
+// 通用工具包
 var Util = /** @class */ (function () {
     function Util() {
     }
@@ -400,7 +401,7 @@ var Util = /** @class */ (function () {
 var Emitter = /** @class */ (function (_super) {
     __extends(Emitter, _super);
     function Emitter(_a) {
-        var _b = _a === void 0 ? {} : _a, _c = _b.emission, emission = _c === void 0 ? 100 : _c, _d = _b.anchor, anchor = _d === void 0 ? new THREE.Vector3(0, 0, 0) : _d, _e = _b.radius, radius = _e === void 0 ? new THREE.Vector3(0, 0, 0) : _e, _f = _b.particlesPositionRandom, particlesPositionRandom = _f === void 0 ? null : _f, _g = _b.particlesOpacityRandom, particlesOpacityRandom = _g === void 0 ? 0 : _g, _h = _b.particlesOpacityKey, particlesOpacityKey = _h === void 0 ? [] : _h, _j = _b.particlesOpacityValue, particlesOpacityValue = _j === void 0 ? [] : _j, _k = _b.particlesColorRandom, particlesColorRandom = _k === void 0 ? [0, 0, 0] : _k, _l = _b.particlesColorKey, particlesColorKey = _l === void 0 ? [] : _l, _m = _b.particlesColorValue, particlesColorValue = _m === void 0 ? [] : _m, _o = _b.particlesRotationRandom, particlesRotationRandom = _o === void 0 ? new THREE.Vector3(0, 0, 0) : _o, _p = _b.particlesRotationKey, particlesRotationKey = _p === void 0 ? [] : _p, _q = _b.particlesRotationValue, particlesRotationValue = _q === void 0 ? [] : _q, _r = _b.particlesScaleRandom, particlesScaleRandom = _r === void 0 ? new THREE.Vector3(0, 0, 0) : _r, _s = _b.particlesScaleKey, particlesScaleKey = _s === void 0 ? [] : _s, _t = _b.particlesScaleValue, particlesScaleValue = _t === void 0 ? [] : _t;
+        var _b = _a === void 0 ? {} : _a, _c = _b.emission, emission = _c === void 0 ? 100 : _c, _d = _b.anchor, anchor = _d === void 0 ? new THREE.Vector3(0, 0, 0) : _d, _e = _b.particlesPositionRandom, particlesPositionRandom = _e === void 0 ? null : _e, _f = _b.particlesOpacityRandom, particlesOpacityRandom = _f === void 0 ? 0 : _f, _g = _b.particlesOpacityKey, particlesOpacityKey = _g === void 0 ? [] : _g, _h = _b.particlesOpacityValue, particlesOpacityValue = _h === void 0 ? [] : _h, _j = _b.particlesColorRandom, particlesColorRandom = _j === void 0 ? [0, 0, 0] : _j, _k = _b.particlesColorKey, particlesColorKey = _k === void 0 ? [] : _k, _l = _b.particlesColorValue, particlesColorValue = _l === void 0 ? [] : _l, _m = _b.particlesRotationRandom, particlesRotationRandom = _m === void 0 ? new THREE.Vector3(0, 0, 0) : _m, _o = _b.particlesRotationKey, particlesRotationKey = _o === void 0 ? [] : _o, _p = _b.particlesRotationValue, particlesRotationValue = _p === void 0 ? [] : _p, _q = _b.particlesScaleRandom, particlesScaleRandom = _q === void 0 ? new THREE.Vector3(0, 0, 0) : _q, _r = _b.particlesScaleKey, particlesScaleKey = _r === void 0 ? [] : _r, _s = _b.particlesScaleValue, particlesScaleValue = _s === void 0 ? [] : _s;
         var _this = _super.call(this) || this;
         _this.emission = emission;
         _this.emitting = true;
@@ -410,7 +411,6 @@ var Emitter = /** @class */ (function (_super) {
         _this.physicals = [];
         _this.effects = [];
         _this.anchor = anchor;
-        _this.radius = radius instanceof THREE.Vector3 ? radius : new THREE.Vector3(radius, radius, radius);
         _this.particlesPositionRandom = particlesPositionRandom;
         _this.particlesOpacityRandom = particlesOpacityRandom;
         _this.particlesOpacityKey = particlesOpacityKey;
@@ -456,46 +456,22 @@ var Emitter = /** @class */ (function (_super) {
         if (this.emitting) {
             // 新增粒子
             for (var i = 0; i < deltaEmission; i++) {
-                var maxIndex = this.particles.length - 1;
-                var randomIndex = THREE.Math.randInt(0, maxIndex);
-                var randomParticle = this.particles[randomIndex].clone();
+                var randomIndex = THREE.Math.randInt(0, this.particles.length - 1);
+                var randomParticle = this.particles[randomIndex].clone(); // 从 particles 内随机取出一个粒子作为样本
                 if (randomParticle.emitting) {
-                    var randomParticlePosition = [
-                        this.anchor.x + THREE.Math.randFloatSpread(this.radius.x),
-                        this.anchor.y + THREE.Math.randFloatSpread(this.radius.y),
-                        this.anchor.z + THREE.Math.randFloatSpread(this.radius.z),
-                    ];
-                    switch (randomParticle.type) {
-                        case Line.TYPE: {
-                            var line = randomParticle;
-                            var geometry = line.geometry;
-                            var positionArray = Array.from({ length: line.verticesNumber * line.verticesSize });
-                            for (var m = 0; m < line.verticesNumber; m++) {
-                                for (var n = 0; n < line.verticesSize; n++) {
-                                    var k = m * line.verticesSize + n;
-                                    positionArray[k] =
-                                        randomParticlePosition[n] +
-                                            (k < line.vertices.length ? line.vertices[k] : 0.0);
-                                }
-                            }
-                            var positionAttribute = new THREE.BufferAttribute(new Float32Array(positionArray), line.verticesSize);
-                            positionAttribute.dynamic = true;
-                            positionAttribute.needsUpdate = true;
-                            geometry.addAttribute('position', positionAttribute);
-                            break;
-                        }
-                        default: {
-                            randomParticle.position.set(randomParticlePosition[0], randomParticlePosition[1], randomParticlePosition[2]);
-                        }
-                    }
+                    // 这里是因为 Text 粒子需要加载字体
+                    // 字体未加载完成之前不能添加到场景中
+                    // 用粒子的 emitting 属性标记是否可以进行发射
                     generatedParticles.push(randomParticle);
                     this.add(randomParticle);
                 }
                 else {
+                    // 粒子无法进行发射，则清除掉
                     Util.dispose(randomParticle);
                 }
             }
         }
+        // 返回生成的粒子，用于在子类内进行二次修改
         return generatedParticles;
     };
     // 更新粒子
@@ -504,8 +480,11 @@ var Emitter = /** @class */ (function (_super) {
             var particle = this.children[i];
             if (!particle.emitting)
                 continue;
+            // 获得粒子距离上次更新的时间差
             var elapsedTimePercentage = particle.clock.elapsedTime % particle.life / particle.life;
+            // 获得插值函数
             var interpolationFunction = Lut.getInterpolationFunction(this.particlesTransformType);
+            // 设置粒子属性随机值
             // 粒子透明度
             for (var j = 0; j < this.particlesOpacityKey.length - 1; j++) {
                 if (elapsedTimePercentage >= this.particlesOpacityKey[j] && elapsedTimePercentage < this.particlesOpacityKey[j + 1]) {
@@ -558,16 +537,20 @@ var Emitter = /** @class */ (function (_super) {
             // 进行移动
             switch (particle.type) {
                 case Line.TYPE: {
+                    // 线段的运动是最前面的点更新值
+                    // 其后的所有点紧随前面一个的点的位置
                     var position = particle.geometry.getAttribute('position');
                     var positionArray = position.array;
                     var verticesNumber = particle.verticesNumber;
                     var verticesSize = particle.verticesSize;
                     var m = void 0, n = void 0;
+                    // 更新除了第一个点之外的所有点
                     for (m = 0; m < verticesNumber - 1; m++) {
                         for (n = 0; n < verticesSize; n++) {
                             positionArray[m * verticesSize + n] = positionArray[(m + 1) * verticesSize + n];
                         }
                     }
+                    // 更新第一个点
                     var directionArray = [particle.direction.x, particle.direction.y, particle.direction.z];
                     for (n = 0; n < verticesSize; n++) {
                         positionArray[m * verticesSize + n] += directionArray[n] * particle.velocity;
@@ -600,6 +583,8 @@ var Emitter = /** @class */ (function (_super) {
     return Emitter;
 }(THREE.Object3D));
 
+// 爆炸发射器
+// 发射类型固定位一个点
 var ExplosionEmitter = /** @class */ (function (_super) {
     __extends(ExplosionEmitter, _super);
     function ExplosionEmitter(_a) {
@@ -609,8 +594,31 @@ var ExplosionEmitter = /** @class */ (function (_super) {
     }
     ExplosionEmitter.prototype.generate = function () {
         var generatedParticles = _super.prototype.generate.call(this);
+        var generatedParticlePosition = [this.anchor.x, this.anchor.y, this.anchor.z];
         for (var i = 0; i < generatedParticles.length; i++) {
-            generatedParticles[i].direction = new THREE.Vector3(THREE.Math.randFloatSpread(1), THREE.Math.randFloatSpread(1), THREE.Math.randFloatSpread(1)).normalize();
+            var generatedParticle = generatedParticles[i];
+            switch (generatedParticle.type) {
+                case Line.TYPE: {
+                    var line = generatedParticle;
+                    var geometry = line.geometry;
+                    var positionArray = Array.from({ length: line.verticesNumber * line.verticesSize });
+                    for (var m = 0; m < line.verticesNumber; m++) {
+                        for (var n = 0; n < line.verticesSize; n++) {
+                            var index = m * line.verticesSize + n; // 获得索引，避免重复计算
+                            positionArray[index] = index < line.vertices.length ?
+                                line.vertices[index] :
+                                generatedParticlePosition[n];
+                        }
+                    }
+                    var positionAttribute = new THREE.BufferAttribute(new Float32Array(positionArray), line.verticesSize);
+                    positionAttribute.dynamic = true;
+                    positionAttribute.needsUpdate = true;
+                    geometry.addAttribute('position', positionAttribute);
+                    break;
+                }
+                default:
+            }
+            generatedParticle.direction = new THREE.Vector3(THREE.Math.randFloatSpread(1), THREE.Math.randFloatSpread(1), THREE.Math.randFloatSpread(1)).normalize();
         }
         return generatedParticles;
     };
@@ -630,17 +638,116 @@ var DirectionEmitter = /** @class */ (function (_super) {
     __extends(DirectionEmitter, _super);
     function DirectionEmitter(_a) {
         if (_a === void 0) { _a = {}; }
-        var _b = _a.direction, direction = _b === void 0 ? new THREE.Vector3(0, 0, -1) : _b, _c = _a.spread, spread = _c === void 0 ? 10 : _c, options = __rest(_a, ["direction", "spread"]);
+        var _b = _a.direction, direction = _b === void 0 ? new THREE.Vector3(0, 0, -1) : _b, _c = _a.spread, spread = _c === void 0 ? 0 : _c, _d = _a.radius, radius = _d === void 0 ? new THREE.Vector3(0, 0, 0) : _d, _e = _a.emitType, emitType = _e === void 0 ? DirectionEmitter.EMIT_TYPE_SHPERE : _e, options = __rest(_a, ["direction", "spread", "radius", "emitType"]);
         var _this = _super.call(this, options || {}) || this;
         _this.direction = direction.normalize();
         _this.spread = spread;
+        _this.radius = radius instanceof THREE.Vector3 ? radius : new THREE.Vector3(radius, radius, radius);
+        _this.emitType = emitType;
         _this.type = 'DirectionEmitter';
+        if (_this.emitType === DirectionEmitter.EMIT_TYPE_ROUND) {
+            // 解决方案二
+            // 旋转整个发射器
+            // this.lookAt(this.direction);
+            // 旋转后将粒子发射方向进行修正
+            // this.direction.applyEuler(this.rotation);
+            // this.direction.negate();
+            // 设置拦截器，因为此时发射器方向发生变化，
+            // 这里暂时将 anchor 的变更拦截到 position 上
+            _this.anchor = new Proxy(_this.anchor, {
+                get: function (target, key) { return target[key]; },
+                set: function (target, key, value) {
+                    _this.position[key] = value;
+                    return Boolean(value);
+                }
+            });
+        }
         return _this;
     }
     DirectionEmitter.prototype.generate = function () {
+        var baseVector3 = new THREE.Vector3(0, 0, 1);
+        var angle = this.direction.angleTo(baseVector3);
+        var axis = baseVector3.cross(this.direction);
         var generatedParticles = _super.prototype.generate.call(this);
         for (var i = 0; i < generatedParticles.length; i++) {
-            generatedParticles[i].direction = new THREE.Vector3(this.direction.x * this.spread + THREE.Math.randFloatSpread(this.spread), this.direction.y * this.spread + THREE.Math.randFloatSpread(this.spread), this.direction.z * this.spread + THREE.Math.randFloatSpread(this.spread)).normalize();
+            var generatedParticle = generatedParticles[i];
+            // 初始化粒子位置
+            // 设置为数组而不是 THREE.Vector3 是为了方便在循环体内操作
+            // 默认情况设置为球形
+            var generatedParticlePosition = [
+                this.anchor.x + THREE.Math.randFloatSpread(this.radius.x),
+                this.anchor.y + THREE.Math.randFloatSpread(this.radius.y),
+                this.anchor.z + THREE.Math.randFloatSpread(this.radius.z)
+            ];
+            switch (this.emitType) {
+                case DirectionEmitter.EMIT_TYPE_SHPERE: {
+                    // 发射类型为球形
+                    break;
+                }
+                case DirectionEmitter.EMIT_TYPE_ROUND: {
+                    // 发射类型为圆形
+                    // 解决方案一
+                    /**
+                    * 已知平面法线 x1 y1 z1
+                    * 已知发射器 anchor 为 x2 y2 z2
+                    * radius 为 [0, emitter.radius] 之间的一个随机值
+                    * 求 x y z
+                    *
+                    * 显然可得：
+                    * (x - x2, y - y2, z - z2) 垂直于 (x1, y1, z1)
+                    * (x - x2) * x1 + (y - y2) * y1 + (z - z2) * z1 = 0
+                    *
+                    * 化为等式：
+                    * (x - x2)^2 + (y - y2)^2 + (z - z2)^2 = radius^2
+                    * x1 * sqrt(radius^2 - (y - y2)^2 + (z - z2)^2) + (y - y2) * y1 + (z - z2) * z1 = 0
+                    *
+                    * 但不知道如果解多项方程。。。
+                    */
+                    // 解决方案二
+                    // 变用另一种实现方式
+                    // 在 x-y 面上生成粒子
+                    // 再旋转发射器，使其朝向发射器的 direction
+                    // 但直接变化了发射器的 localMatrix，anchor、physic、effect 都将受到影响
+                    // 解决方案三
+                    // 类似于解决方案二
+                    // 但旋转每个粒子
+                    // 缺陷是影响发射器的 anchor 设置
+                    // 
+                    var generatedParticleVector = new THREE.Vector3(generatedParticlePosition[0], generatedParticlePosition[1], this.anchor.z);
+                    generatedParticleVector.applyAxisAngle(axis, angle);
+                    generatedParticlePosition[0] = generatedParticleVector.x;
+                    generatedParticlePosition[1] = generatedParticleVector.y;
+                    generatedParticlePosition[2] = generatedParticleVector.z;
+                    break;
+                }
+                default:
+            }
+            switch (generatedParticle.type) {
+                case Line.TYPE: {
+                    // 对于线段来说，position 属性并不生效
+                    // 生效的是 geometry.getAttribute('position')
+                    var line = generatedParticle;
+                    var geometry = line.geometry;
+                    var positionArray = Array.from({ length: line.verticesNumber * line.verticesSize });
+                    for (var m = 0; m < line.verticesNumber; m++) {
+                        for (var n = 0; n < line.verticesSize; n++) {
+                            var index = m * line.verticesSize + n; // 获得索引，避免重复计算
+                            positionArray[index] = index < line.vertices.length ?
+                                line.vertices[index] :
+                                generatedParticlePosition[n];
+                        }
+                    }
+                    var positionAttribute = new THREE.BufferAttribute(new Float32Array(positionArray), line.verticesSize);
+                    positionAttribute.dynamic = true;
+                    positionAttribute.needsUpdate = true;
+                    geometry.addAttribute('position', positionAttribute);
+                    break;
+                }
+                default:
+            }
+            generatedParticle.position.set(generatedParticlePosition[0], generatedParticlePosition[1], generatedParticlePosition[2]);
+            // 初始化粒子方向
+            generatedParticles[i].direction = new THREE.Vector3(this.direction.x + THREE.Math.randFloatSpread(this.spread), this.direction.y + THREE.Math.randFloatSpread(this.spread), this.direction.z + THREE.Math.randFloatSpread(this.spread)).normalize();
         }
         return generatedParticles;
     };
@@ -653,6 +760,8 @@ var DirectionEmitter = /** @class */ (function (_super) {
         _super.prototype.update.call(this);
         // 特有属性更新
     };
+    DirectionEmitter.EMIT_TYPE_SHPERE = 0; // 球形发射
+    DirectionEmitter.EMIT_TYPE_ROUND = 1; // 圆形发射
     return DirectionEmitter;
 }(Emitter));
 
@@ -824,6 +933,8 @@ var Turbulent = /** @class */ (function (_super) {
             case Line.TYPE:
             case Points.TYPE: {
                 // 扰乱折线或者点集各个点的位置
+                // 而不是影响粒子位置
+                // 因为 particle.position 是整个粒子的位置属性
                 var position = particle.geometry.getAttribute('position');
                 var positionArray = position.array;
                 for (var i = positionArray.length - 1; i >= 0; i--) {
