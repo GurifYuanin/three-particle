@@ -11,31 +11,40 @@
     <script src="../dist/index.js"></script>
     <script src="./javascripts/common.js"></script>
     <script>
+        // add rain or snow
         const emitter = new TP.DirectionEmitter({
-            radius: 200,
+            radius: 100,
             emission: 1000,
             direction: new THREE.Vector3(0, -1, 0),
-            spread: 10
+            spread: 0,
+            emitType: TP.DirectionEmitter.EMIT_TYPE_ROUND
         });
         const line = new TP.Line({
-            velocity: 1,
-            border: 5
-        });
-        const gravity = new TP.Gravity({
-            gravity: .1,
-            floor: new THREE.Plane(new THREE.Vector3(0, 1, 0), 5),
-            event: TP.Gravity.DISAPPEAR
+            velocity: 5,
+            life: 1
         });
         emitter.addParticle(line);
-        emitter.addPhysical(gravity);
         emitter.anchor.y = 100;
         scene.add(emitter);
 
-        camera.position.set(20, 10, 100);
+        // add auxiliary objects
         const axesHelper = new THREE.AxesHelper(2000);
         scene.add(axesHelper);
+        const floor = new THREE.Mesh(
+            new THREE.PlaneBufferGeometry(500, 500),
+            new THREE.MeshPhongMaterial({
+                side: THREE.DoubleSide
+            })
+        );
+        floor.rotateX(Math.PI / 2);
+        scene.add(floor);
+
+        // config render
+        light.position.y = 100;
+        camera.position.set(20, 10, 100);
         camera.near = 0;
         camera.far = 10000;
+
         (function render() {
             requestAnimationFrame(render);
             emitter.update();
