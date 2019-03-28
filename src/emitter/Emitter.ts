@@ -11,7 +11,6 @@ class Emitter extends THREE.Object3D {
   emitting: boolean; // 是否发射粒子中
   clock: THREE.Clock; // 生命时钟
   anchor: THREE.Vector3; // 粒子发射原点
-  radius: THREE.Vector3; // 粒子发射起始点半径
   particles: ParticleInterface[]; // 发射粒子样板
   physicals: Physical[]; // 物理场
   effects: Effect[]; // 特效场
@@ -34,7 +33,6 @@ class Emitter extends THREE.Object3D {
   constructor({
     emission = 100,
     anchor = new THREE.Vector3(0, 0, 0),
-    radius = new THREE.Vector3(0, 0, 0),
     particlesPositionRandom = null,
     particlesOpacityRandom = 0,
     particlesOpacityKey = [],
@@ -58,7 +56,6 @@ class Emitter extends THREE.Object3D {
     this.physicals = [];
     this.effects = [];
     this.anchor = anchor;
-    this.radius = radius instanceof THREE.Vector3 ? radius : new THREE.Vector3(radius, radius, radius);
     this.particlesPositionRandom = particlesPositionRandom;
     this.particlesOpacityRandom = particlesOpacityRandom;
     this.particlesOpacityKey = particlesOpacityKey;
@@ -103,49 +100,21 @@ class Emitter extends THREE.Object3D {
     if (this.emitting) {
       // 新增粒子
       for (let i: number = 0; i < deltaEmission; i++) {
-        const maxIndex: number = this.particles.length - 1;
-        const randomIndex: number = THREE.Math.randInt(0, maxIndex);
-        let randomParticle: ParticleInterface = this.particles[randomIndex].clone();
+        const randomIndex: number = THREE.Math.randInt(0, this.particles.length - 1);
+        let randomParticle: ParticleInterface = this.particles[randomIndex].clone(); // 从 particles 内随机取出一个粒子作为样本
         if (randomParticle.emitting) {
-          const randomParticlePosition = [
-            this.anchor.x + THREE.Math.randFloatSpread(this.radius.x),
-            this.anchor.y + THREE.Math.randFloatSpread(this.radius.y),
-            this.anchor.z + THREE.Math.randFloatSpread(this.radius.z),
-          ];
-          switch (randomParticle.type) {
-            case Line.TYPE: {
-              const line: Line = <unknown>randomParticle as Line;
-              const geometry: THREE.BufferGeometry = line.geometry as THREE.BufferGeometry;
-              const positionArray: number[] = Array.from({ length: line.verticesNumber * line.verticesSize });
-              for (let m: number = 0; m < line.verticesNumber; m++) {
-                for (let n: number = 0; n < line.verticesSize; n++) {
-                  const k = m * line.verticesSize + n;
-                  positionArray[k] =
-                    randomParticlePosition[n] +
-                    (k < line.vertices.length ? line.vertices[k] : 0.0);
-                }
-              }
-              const positionAttribute: THREE.BufferAttribute = new THREE.BufferAttribute(new Float32Array(positionArray), line.verticesSize);
-              positionAttribute.dynamic = true;
-              positionAttribute.needsUpdate = true;
-              geometry.addAttribute('position', positionAttribute);
-              break;
-            }
-            default: {
-              randomParticle.position.set(
-                randomParticlePosition[0],
-                randomParticlePosition[1],
-                randomParticlePosition[2],
-              );
-            }
-          }
+          // 这里是因为 Text 粒子需要加载字体
+          // 字体未加载完成之前不能添加到场景中
+          // 用粒子的 emitting 属性标记是否可以进行发射
           generatedParticles.push(randomParticle);
           this.add(randomParticle);
         } else {
+          // 粒子无法进行发射，则清除掉
           Util.dispose(randomParticle);
         }
       }
     }
+    // 返回生成的粒子，用于在子类内进行二次修改
     return generatedParticles;
   }
   // 更新粒子
@@ -153,8 +122,12 @@ class Emitter extends THREE.Object3D {
     for (let i: number = this.children.length - 1; i >= 0; i--) {
       const particle: ParticleInterface = this.children[i] as ParticleInterface;
       if (!particle.emitting) continue;
+      // 获得粒子距离上次更新的时间差
       const elapsedTimePercentage: number = particle.clock.elapsedTime % particle.life / particle.life;
+      // 获得插值函数
       const interpolationFunction: (x: number, y: number, t: number) => number = Lut.getInterpolationFunction(this.particlesTransformType);
+
+      // 设置粒子属性随机值
       // 粒子透明度
       for (let j: number = 0; j < this.particlesOpacityKey.length - 1; j++) {
         if (elapsedTimePercentage >= this.particlesOpacityKey[j] && elapsedTimePercentage < this.particlesOpacityKey[j + 1]) {
@@ -168,6 +141,7 @@ class Emitter extends THREE.Object3D {
           break;
         }
       }
+      
       // 粒子颜色
       for (let j: number = 0; j < this.particlesColorKey.length - 1; j++) {
         if (elapsedTimePercentage >= this.particlesColorKey[j] && elapsedTimePercentage < this.particlesColorKey[j + 1]) {
@@ -182,12 +156,14 @@ class Emitter extends THREE.Object3D {
         }
       }
       Util.fill(particle.material, true, 'needsUpdate');
+      
       // 粒子位置
       this.particlesPositionRandom && particle.position.add(new THREE.Vector3(
         THREE.Math.randFloatSpread(this.particlesPositionRandom.x),
         THREE.Math.randFloatSpread(this.particlesPositionRandom.y),
         THREE.Math.randFloatSpread(this.particlesPositionRandom.z),
       ));
+
       // 粒子旋转
       for (let j: number = 0; j < this.particlesRotationKey.length - 1; j++) {
         if (elapsedTimePercentage >= this.particlesRotationKey[j] && elapsedTimePercentage < this.particlesRotationKey[j + 1]) {
@@ -228,16 +204,20 @@ class Emitter extends THREE.Object3D {
       // 进行移动
       switch (particle.type) {
         case Line.TYPE: {
+          // 线段的运动是最前面的点更新值
+          // 其后的所有点紧随前面一个的点的位置
           const position: THREE.BufferAttribute = (particle.geometry as THREE.BufferGeometry).getAttribute('position') as THREE.BufferAttribute;
           const positionArray: number[] = position.array as number[];
           const verticesNumber: number = (<unknown>particle as Line).verticesNumber;
           const verticesSize: number = (<unknown>particle as Line).verticesSize;
           let m: number, n: number;
+          // 更新除了第一个点之外的所有点
           for (m = 0; m < verticesNumber - 1; m++) {
             for (n = 0; n < verticesSize; n++) {
               positionArray[m * verticesSize + n] = positionArray[(m + 1) * verticesSize + n];
             }
           }
+          // 更新第一个点
           const directionArray: number[] = [particle.direction.x, particle.direction.y, particle.direction.z];
           for (n = 0; n < verticesSize; n++) {
             positionArray[m * verticesSize + n] += directionArray[n] * particle.velocity;
