@@ -4,10 +4,9 @@ import { Particle } from './Particle';
 /* 球 */
 class Sphere extends THREE.Mesh {
   static readonly TYPE: string = 'Sphere';
-  radius: number;
-  widthSegments: number;
-  heightSegments: number;
-  border: number;
+  radius: number; // 球半径
+  widthSegments: number; // 横切数
+  heightSegments: number; // 纵切数
   options: object;
   constructor({
     radius = 5,

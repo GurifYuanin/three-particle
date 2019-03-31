@@ -23,7 +23,7 @@
     "lint": "eslint -c .eslintrc.js src/**.js",
     "lint:fix": "eslint --fix -c .eslintrc.js src/**.js",
     "serve": "node server/index.js",
-    "dev": "rollup -c config/rollup.config.js -w",
+    "dev": "rollup -c config/rollup.config.iife.js -w",
     "build:cjs": "rollup -c config/rollup.config.cjs.js",
     "build:iife": "rollup -c config/rollup.config.iife.js",
     "build:esm": "rollup -c config/rollup.config.esm.js",

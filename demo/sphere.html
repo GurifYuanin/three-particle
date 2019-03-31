@@ -12,7 +12,7 @@
     <script src="./javascripts/common.js"></script>
     <script>
         const emitter = new TP.ExplosionEmitter({
-            emission: 100,
+            emission: 25,
             particlesOpacityKey: [0, .5, 1],
             particlesOpacityValue: [0, 1, 0],
         });
@@ -27,6 +27,8 @@
             floor: new THREE.Plane(new THREE.Vector3(0, 1, 0), 10),
             event: TP.Gravity.BOUNCE
         });
+        const ambientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
+        scene.add(ambientLight);
         emitter.addParticle(sphere);
         emitter.addPhysical(gravity);
         emitter.anchor.y = 5;

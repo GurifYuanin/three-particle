@@ -7,6 +7,8 @@ import Util from '../util/Util';
 import Effect from '../effect/Effect';
 
 class Emitter extends THREE.Object3D {
+  static readonly MODE_DURATIOIN: number = 0; // 持续发射
+  static readonly MODE_EXPLOSION: number = 1; // 爆炸失发射
   emission: number; // 每秒发射的粒子数
   emitting: boolean; // 是否发射粒子中
   clock: THREE.Clock; // 生命时钟
@@ -14,6 +16,7 @@ class Emitter extends THREE.Object3D {
   particles: ParticleInterface[]; // 发射粒子样板
   physicals: Physical[]; // 物理场
   effects: Effect[]; // 特效场
+  mode: number;
   particlesPositionRandom: null | THREE.Vector3; // 粒子位置随机数
   particlesOpacityRandom: number; // 粒子透明度随机数
   particlesOpacityKey: number[]; // 一个生命周期内，粒子透明度关键帧百分比
@@ -29,9 +32,13 @@ class Emitter extends THREE.Object3D {
   particlesScaleValue: THREE.Vector3[]; // 一个生命周期内，粒子缩放关键帧缩放值
   particlesTransformType: number; // 粒子关键帧之间的差值方式
   type: string;
+  // 发射器 update 时间差太小，导致发射 0 粒子，
+  // 统计这些时间差，将其累加起来
+  gap: number;
 
   constructor({
     emission = 100,
+    mode = Emitter.MODE_DURATIOIN,
     anchor = new THREE.Vector3(0, 0, 0),
     particlesPositionRandom = null,
     particlesOpacityRandom = 0,
@@ -49,6 +56,7 @@ class Emitter extends THREE.Object3D {
   } = {}) {
     super();
     this.emission = emission;
+    this.mode = mode;
     this.emitting = true;
     this.clock = new THREE.Clock();
     this.clock.start();
@@ -71,6 +79,7 @@ class Emitter extends THREE.Object3D {
     this.particlesScaleValue = particlesScaleValue;
     this.particlesTransformType = Particle.TRANSFORM_LINEAR;
     this.type = 'Emitter';
+    this.gap = 0;
   }
   // 新增样板粒子
   addParticle(particle: ParticleInterface): void {
@@ -94,11 +103,46 @@ class Emitter extends THREE.Object3D {
   }
   // 生成粒子
   generate(): ParticleInterface[] {
-    const delta: number = this.clock.getDelta(); // 距离上一次发射粒子过去的时间差
-    const deltaEmission: number = Math.round(delta * this.emission); // 该时间差需要发射多少粒子
+    // 发射器进行打点
+    let delta: number = this.clock.getDelta(); // 距离上一次发射粒子过去的时间差
+    let deltaEmission: number = 0; // 该时间差需要发射多少粒子
     const generatedParticles: ParticleInterface[] = [];
     if (this.emitting) {
+      switch(this.mode) {
+        case Emitter.MODE_DURATIOIN: {
+          // 持续发射模式
+          // 通过打点时间差计算得到本次 update 需要补充多少粒子
+          deltaEmission = Math.round((delta + this.gap) * this.emission);
+          if (deltaEmission === 0) {
+            if (this.children.length < this.emission) {
+              // 发射例子数量为 0，且已发射的例子数量过少
+              // 出现这种情况是因为每次发射器 update 消耗时间过小
+              // 进而导致 delta 过小，计算出来的 deltaEmission 为 0
+              this.gap += delta;
+            }
+          } else {
+            // 计算出来应发射粒子数大于 0
+            // 属于正常情况，所以清空 gap
+            this.gap = 0;
+          }
+          break;
+        }
+        case Emitter.MODE_EXPLOSION: {
+          // 爆炸式发射模式
+          // 当粒子全部清除干净的时候一次性发射所有粒子
+          if (this.children.length === 0) {
+            deltaEmission = this.emission;
+          }
+          break;
+        }
+        default: {
+          // 默认模式
+        }
+      }
+
       // 新增粒子
+      // 基类 Emitter 不会初始化粒子的位置和方向等参数，
+      // 只会负责生成例子，而由子类来实现粒子的参数
       for (let i: number = 0; i < deltaEmission; i++) {
         const randomIndex: number = THREE.Math.randInt(0, this.particles.length - 1);
         let randomParticle: ParticleInterface = this.particles[randomIndex].clone(); // 从 particles 内随机取出一个粒子作为样本
