@@ -10,8 +10,10 @@ export { default as Text } from './particle/Text';
 export { default as Sprite } from './particle/Sprite';
 
 // 发射器
+export { default as Emitter } from './emitter/Emitter';
 export { default as ExplosionEmitter } from './emitter/ExplosionEmitter';
 export { default as DirectionEmitter } from './emitter/DirectionEmitter';
+export { default as BoxEmitter } from './emitter/BoxEmitter';
 
 // 物理场
 export { default as Gravity } from './physical/Gravity';

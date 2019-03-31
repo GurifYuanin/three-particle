@@ -352,6 +352,7 @@ var TP = (function (exports,THREE) {
   var Lut = /** @class */ (function () {
       function Lut() {
       }
+      // 获得插值方程
       Lut.getInterpolationFunction = function (particlesTransformType) {
           switch (particlesTransformType) {
               case Particle.TRANSFORM_LINEAR: return THREE.Math.lerp;
@@ -398,9 +399,10 @@ var TP = (function (exports,THREE) {
   var Emitter = /** @class */ (function (_super) {
       __extends(Emitter, _super);
       function Emitter(_a) {
-          var _b = _a === void 0 ? {} : _a, _c = _b.emission, emission = _c === void 0 ? 100 : _c, _d = _b.anchor, anchor = _d === void 0 ? new THREE.Vector3(0, 0, 0) : _d, _e = _b.particlesPositionRandom, particlesPositionRandom = _e === void 0 ? null : _e, _f = _b.particlesOpacityRandom, particlesOpacityRandom = _f === void 0 ? 0 : _f, _g = _b.particlesOpacityKey, particlesOpacityKey = _g === void 0 ? [] : _g, _h = _b.particlesOpacityValue, particlesOpacityValue = _h === void 0 ? [] : _h, _j = _b.particlesColorRandom, particlesColorRandom = _j === void 0 ? [0, 0, 0] : _j, _k = _b.particlesColorKey, particlesColorKey = _k === void 0 ? [] : _k, _l = _b.particlesColorValue, particlesColorValue = _l === void 0 ? [] : _l, _m = _b.particlesRotationRandom, particlesRotationRandom = _m === void 0 ? new THREE.Vector3(0, 0, 0) : _m, _o = _b.particlesRotationKey, particlesRotationKey = _o === void 0 ? [] : _o, _p = _b.particlesRotationValue, particlesRotationValue = _p === void 0 ? [] : _p, _q = _b.particlesScaleRandom, particlesScaleRandom = _q === void 0 ? new THREE.Vector3(0, 0, 0) : _q, _r = _b.particlesScaleKey, particlesScaleKey = _r === void 0 ? [] : _r, _s = _b.particlesScaleValue, particlesScaleValue = _s === void 0 ? [] : _s;
+          var _b = _a === void 0 ? {} : _a, _c = _b.emission, emission = _c === void 0 ? 100 : _c, _d = _b.mode, mode = _d === void 0 ? Emitter.MODE_DURATIOIN : _d, _e = _b.anchor, anchor = _e === void 0 ? new THREE.Vector3(0, 0, 0) : _e, _f = _b.particlesPositionRandom, particlesPositionRandom = _f === void 0 ? null : _f, _g = _b.particlesOpacityRandom, particlesOpacityRandom = _g === void 0 ? 0 : _g, _h = _b.particlesOpacityKey, particlesOpacityKey = _h === void 0 ? [] : _h, _j = _b.particlesOpacityValue, particlesOpacityValue = _j === void 0 ? [] : _j, _k = _b.particlesColorRandom, particlesColorRandom = _k === void 0 ? [0, 0, 0] : _k, _l = _b.particlesColorKey, particlesColorKey = _l === void 0 ? [] : _l, _m = _b.particlesColorValue, particlesColorValue = _m === void 0 ? [] : _m, _o = _b.particlesRotationRandom, particlesRotationRandom = _o === void 0 ? new THREE.Vector3(0, 0, 0) : _o, _p = _b.particlesRotationKey, particlesRotationKey = _p === void 0 ? [] : _p, _q = _b.particlesRotationValue, particlesRotationValue = _q === void 0 ? [] : _q, _r = _b.particlesScaleRandom, particlesScaleRandom = _r === void 0 ? new THREE.Vector3(0, 0, 0) : _r, _s = _b.particlesScaleKey, particlesScaleKey = _s === void 0 ? [] : _s, _t = _b.particlesScaleValue, particlesScaleValue = _t === void 0 ? [] : _t;
           var _this = _super.call(this) || this;
           _this.emission = emission;
+          _this.mode = mode;
           _this.emitting = true;
           _this.clock = new THREE.Clock();
           _this.clock.start();
@@ -423,6 +425,7 @@ var TP = (function (exports,THREE) {
           _this.particlesScaleValue = particlesScaleValue;
           _this.particlesTransformType = Particle.TRANSFORM_LINEAR;
           _this.type = 'Emitter';
+          _this.gap = 0;
           return _this;
       }
       // 新增样板粒子
@@ -447,11 +450,44 @@ var TP = (function (exports,THREE) {
       };
       // 生成粒子
       Emitter.prototype.generate = function () {
+          // 发射器进行打点
           var delta = this.clock.getDelta(); // 距离上一次发射粒子过去的时间差
-          var deltaEmission = Math.round(delta * this.emission); // 该时间差需要发射多少粒子
+          var deltaEmission = 0; // 该时间差需要发射多少粒子
           var generatedParticles = [];
           if (this.emitting) {
+              switch (this.mode) {
+                  case Emitter.MODE_DURATIOIN: {
+                      // 持续发射模式
+                      // 通过打点时间差计算得到本次 update 需要补充多少粒子
+                      deltaEmission = Math.round((delta + this.gap) * this.emission);
+                      if (deltaEmission === 0) {
+                          if (this.children.length < this.emission) {
+                              // 发射例子数量为 0，且已发射的例子数量过少
+                              // 出现这种情况是因为每次发射器 update 消耗时间过小
+                              // 进而导致 delta 过小，计算出来的 deltaEmission 为 0
+                              this.gap += delta;
+                          }
+                      }
+                      else {
+                          // 计算出来应发射粒子数大于 0
+                          // 属于正常情况，所以清空 gap
+                          this.gap = 0;
+                      }
+                      break;
+                  }
+                  case Emitter.MODE_EXPLOSION: {
+                      // 爆炸式发射模式
+                      // 当粒子全部清除干净的时候一次性发射所有粒子
+                      if (this.children.length === 0) {
+                          deltaEmission = this.emission;
+                      }
+                      break;
+                  }
+                  default:
+              }
               // 新增粒子
+              // 基类 Emitter 不会初始化粒子的位置和方向等参数，
+              // 只会负责生成例子，而由子类来实现粒子的参数
               for (var i = 0; i < deltaEmission; i++) {
                   var randomIndex = THREE.Math.randInt(0, this.particles.length - 1);
                   var randomParticle = this.particles[randomIndex].clone(); // 从 particles 内随机取出一个粒子作为样本
@@ -577,6 +613,8 @@ var TP = (function (exports,THREE) {
               }
           }
       };
+      Emitter.MODE_DURATIOIN = 0; // 持续发射
+      Emitter.MODE_EXPLOSION = 1; // 爆炸失发射
       return Emitter;
   }(THREE.Object3D));
 
@@ -760,6 +798,54 @@ var TP = (function (exports,THREE) {
       DirectionEmitter.EMIT_TYPE_SHPERE = 0; // 球形发射
       DirectionEmitter.EMIT_TYPE_ROUND = 1; // 圆形发射
       return DirectionEmitter;
+  }(Emitter));
+
+  // 盒子发射器
+  var BoxEmitter = /** @class */ (function (_super) {
+      __extends(BoxEmitter, _super);
+      function BoxEmitter(_a) {
+          var _b = _a.width, width = _b === void 0 ? 5 : _b, _c = _a.height, height = _c === void 0 ? 5 : _c, _d = _a.thickness, thickness = _d === void 0 ? 5 : _d, _e = _a.side, side = _e === void 0 ? 0 : _e, options = __rest(_a, ["width", "height", "thickness", "side"]);
+          var _this = _super.call(this, options) || this;
+          _this.width = width;
+          _this.height = height;
+          _this.thickness = thickness;
+          _this.side = side;
+          return _this;
+      }
+      BoxEmitter.prototype.generate = function () {
+          var _this = this;
+          var generatedParticles = _super.prototype.generate.call(this);
+          // 设置随机函数
+          var randFn = function (range) {
+              switch (_this.side) {
+                  case BoxEmitter.SIDE_BOTH: return THREE.Math.randFloatSpread(range);
+                  case BoxEmitter.SIDE_TOP: return THREE.Math.randFloat(0, range);
+                  case BoxEmitter.SIDE_BOTTOM: return THREE.Math.randFloat(-range, 0);
+                  default: return 0;
+              }
+          };
+          for (var i = 0; i < generatedParticles.length; i++) {
+              var generatedParticle = generatedParticles[i];
+              // 初始化粒子位置
+              generatedParticle.position.set(this.anchor.x + randFn(this.width), this.anchor.y + randFn(this.height), this.anchor.z + randFn(this.thickness));
+              // 初始化粒子方向
+              generatedParticle.direction.set(THREE.Math.randFloatSpread(1), randFn(1), THREE.Math.randFloatSpread(1)).normalize();
+          }
+          return generatedParticles;
+      };
+      BoxEmitter.prototype.update = function () {
+          // 生成粒子
+          this.generate();
+          // 清除生命周期已经结束的粒子
+          _super.prototype.clearAll.call(this);
+          // 通用属性更新
+          _super.prototype.update.call(this);
+          // 特有属性更新
+      };
+      BoxEmitter.SIDE_BOTH = 0; // 两边发射
+      BoxEmitter.SIDE_TOP = 1; // 顶部发射
+      BoxEmitter.SIDE_BOTTOM = 2; // 底部发射
+      return BoxEmitter;
   }(Emitter));
 
   var Physcial = /** @class */ (function () {
@@ -955,8 +1041,10 @@ var TP = (function (exports,THREE) {
   exports.Points = Points;
   exports.Text = Text;
   exports.Sprite = Sprite;
+  exports.Emitter = Emitter;
   exports.ExplosionEmitter = ExplosionEmitter;
   exports.DirectionEmitter = DirectionEmitter;
+  exports.BoxEmitter = BoxEmitter;
   exports.Gravity = Gravity;
   exports.Wind = Wind;
   exports.Turbulent = Turbulent;
