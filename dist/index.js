@@ -146,7 +146,7 @@ var TP = (function (exports,THREE) {
           this.clock = new THREE.Clock();
           this.clock.start();
           this.life = life + THREE.Math.randFloatSpread(lifeRandom);
-          this.direction = new THREE.Vector3(0, 0, 0);
+          this.direction = new THREE.Vector3(0, 1, 0); // 粒子运动方向由发射器控制，不受参数影响
           this.velocity = velocity;
           this.border = border;
           this.emitting = true;
@@ -256,6 +256,7 @@ var TP = (function (exports,THREE) {
           // 只会执行一次，因为粒子生成使通过 Particle.clone 方法来生成的
           // 后续 clone 的时候会发现 material.map 不为 null
           if (!material.map && glow) {
+              // 参考 https://segmentfault.com/a/1190000015862604
               var canvasEl = document.createElement('canvas');
               var diameter = 16 * glow.size; // 画布宽高，也是径向渐变的直径
               var radius = diameter / 2; // 径向渐变的半径
@@ -359,7 +360,9 @@ var TP = (function (exports,THREE) {
           return _this;
       }
       Text.prototype.active = function (font) {
-          // 加载完字体会调用该方法，创建 geometry
+          // 加载字体是异步行为
+          // 因此需要向 Loader 传入回调函数
+          // 加载完字体会调用该方法，创建文字的 geometry
           var options = {
               font: font,
               size: this.size,
@@ -586,6 +589,8 @@ var TP = (function (exports,THREE) {
                   var randomIndex = THREE.Math.randInt(0, this.particles.length - 1);
                   var randomParticle = this.particles[randomIndex].clone(); // 从 particles 内随机取出一个粒子作为样本
                   if (randomParticle.emitting) {
+                      // 外层会进行一次 emitting 判断，控制发射器是否可以发射粒子
+                      // 这里也会进行一次判断，判断该粒子是否可以被发射器发射
                       // 这里是因为 Text 粒子需要加载字体
                       // 字体未加载完成之前不能添加到场景中
                       // 用粒子的 emitting 属性标记是否可以进行发射
@@ -725,7 +730,9 @@ var TP = (function (exports,THREE) {
       function ExplosionEmitter(_a) {
           if (_a === void 0) { _a = {}; }
           var options = __rest(_a, []);
-          return _super.call(this, options || {}) || this;
+          var _this = _super.call(this, options || {}) || this;
+          _this.type = 'ExplosionEmitter';
+          return _this;
       }
       ExplosionEmitter.prototype.generate = function () {
           var generatedParticles = _super.prototype.generate.call(this);
@@ -910,6 +917,7 @@ var TP = (function (exports,THREE) {
           _this.height = height;
           _this.thickness = thickness;
           _this.side = side;
+          _this.type = 'BoxEmitter';
           return _this;
       }
       BoxEmitter.prototype.generate = function () {
@@ -946,6 +954,93 @@ var TP = (function (exports,THREE) {
       BoxEmitter.SIDE_TOP = 1; // 顶部发射
       BoxEmitter.SIDE_BOTTOM = 2; // 底部发射
       return BoxEmitter;
+  }(Emitter));
+
+  var TextEmitter = /** @class */ (function (_super) {
+      __extends(TextEmitter, _super);
+      function TextEmitter(_a) {
+          var _b = _a.text, text = _b === void 0 ? 'Hello World' : _b, _c = _a.font, font = _c === void 0 ? '/demo/fonts/helvetiker_regular.typeface.json' : _c, _d = _a.size, size = _d === void 0 ? 10 : _d, _e = _a.height, height = _e === void 0 ? 10 : _e, _f = _a.curveSegments, curveSegments = _f === void 0 ? 12 : _f, _g = _a.bevelEnabled, bevelEnabled = _g === void 0 ? false : _g, _h = _a.bevelThickness, bevelThickness = _h === void 0 ? 10 : _h, _j = _a.bevelSize, bevelSize = _j === void 0 ? 8 : _j, _k = _a.bevelSegments, bevelSegments = _k === void 0 ? 3 : _k, options = __rest(_a, ["text", "font", "size", "height", "curveSegments", "bevelEnabled", "bevelThickness", "bevelSize", "bevelSegments"]);
+          var _this = _super.call(this, options) || this;
+          _this.emitting = false; // 等待字体加载完才能运动
+          _this.text = text;
+          _this.font = font;
+          _this.height = height;
+          _this.size = size;
+          _this.curveSegments = curveSegments;
+          _this.bevelEnabled = bevelEnabled;
+          _this.bevelThickness = bevelThickness;
+          _this.bevelSize = bevelSize;
+          _this.bevelSegments = bevelSegments;
+          _this.geometry = null;
+          _this.type = 'TextEmitter';
+          Loader.loadFont(font, function (font) {
+              _this.geometry = new THREE.TextBufferGeometry(_this.text, {
+                  font: font,
+                  size: _this.size,
+                  height: _this.height,
+                  curveSegments: _this.curveSegments,
+                  bevelEnabled: _this.bevelEnabled,
+                  bevelThickness: _this.bevelThickness,
+                  bevelSize: _this.bevelSize,
+                  bevelSegments: _this.bevelSegments,
+              });
+              _this.emitting = true;
+          });
+          return _this;
+      }
+      TextEmitter.prototype.generate = function () {
+          // 存在用户手动将 emitting 打开的情况
+          // 若不加控制，则会产生异常
+          if (!this.geometry) {
+              return [];
+          }
+          var generatedParticles = _super.prototype.generate.call(this);
+          var positionArray = this.geometry.getAttribute('position').array;
+          var positionArrayLength = positionArray.length;
+          for (var i = 0; i < generatedParticles.length; i++) {
+              var generatedParticle = generatedParticles[i];
+              // 初始化粒子位置
+              // 获得倍数为 3 的随机 index
+              var randomIndex = Math.floor(THREE.Math.randInt(0, positionArrayLength) / 3) * 3;
+              switch (generatedParticle.type) {
+                  case Line.TYPE: {
+                      // Line 的情况，将 Line 的所有端点的所有位置放在随机取得的点上
+                      var line = generatedParticle;
+                      var geometry = line.geometry;
+                      var linePositionArray = Array.from({ length: line.verticesNumber * line.verticesSize });
+                      for (var m = 0; m < line.verticesNumber; m++) {
+                          for (var n = 0; n < line.verticesSize; n++) {
+                              var index = m * line.verticesSize + n; // 获得索引，避免重复计算
+                              linePositionArray[index] = index < line.vertices.length ?
+                                  line.vertices[index] :
+                                  positionArray[randomIndex + n];
+                          }
+                      }
+                      var positionAttribute = new THREE.BufferAttribute(new Float32Array(linePositionArray), line.verticesSize);
+                      positionAttribute.dynamic = true;
+                      positionAttribute.needsUpdate = true;
+                      geometry.addAttribute('position', positionAttribute);
+                      break;
+                  }
+                  default: {
+                      generatedParticle.position.set(this.anchor.x + positionArray[randomIndex], this.anchor.y + positionArray[randomIndex + 1], this.anchor.z + positionArray[randomIndex + 2]);
+                  }
+              }
+              // 初始化粒子方向
+              generatedParticle.direction = new THREE.Vector3(THREE.Math.randFloatSpread(1), THREE.Math.randFloatSpread(1), THREE.Math.randFloatSpread(1)).normalize();
+          }
+          return generatedParticles;
+      };
+      TextEmitter.prototype.update = function () {
+          // 生成粒子
+          this.generate();
+          // 清除生命周期已经结束的粒子
+          _super.prototype.clearAll.call(this);
+          // 通用属性更新
+          _super.prototype.update.call(this);
+          // 特有属性更新
+      };
+      return TextEmitter;
   }(Emitter));
 
   var Physcial = /** @class */ (function () {
@@ -1184,6 +1279,7 @@ var TP = (function (exports,THREE) {
   exports.ExplosionEmitter = ExplosionEmitter;
   exports.DirectionEmitter = DirectionEmitter;
   exports.BoxEmitter = BoxEmitter;
+  exports.TextEmitter = TextEmitter;
   exports.Gravity = Gravity;
   exports.Wind = Wind;
   exports.Turbulent = Turbulent;

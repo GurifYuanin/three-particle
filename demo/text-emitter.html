@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Glow</title>
+    <title>TextEmitter</title>
 </head>
 
 <body>
@@ -13,16 +13,16 @@
     <script>
 
         const sphere = new TP.Sphere({
-            glow: new TP.Glow(),
-            velocity: 1
+            radius: 0.2,
+            velocity: 0
         });
-        const emitter = new TP.ExplosionEmitter({
-            emission: 5
+        const emitter = new TP.TextEmitter({
+            emission: 100
         });
 
 
         emitter.addParticle(sphere);
-        emitter.anchor.y = 50;
+        emitter.anchor.x = -50;
         scene.add(emitter);
 
         camera.position.set(0, 0, 50);

@@ -22,7 +22,8 @@ class BoxEmitter extends Emitter {
     this.width = width;
     this.height = height;
     this.thickness = thickness;
-    this.side = side;
+		this.side = side;
+		this.type = 'BoxEmitter';
   }
   generate(): ParticleInterface[] {
   	const generatedParticles: ParticleInterface[] = super.generate();

@@ -14,6 +14,7 @@ export { default as Emitter } from './emitter/Emitter';
 export { default as ExplosionEmitter } from './emitter/ExplosionEmitter';
 export { default as DirectionEmitter } from './emitter/DirectionEmitter';
 export { default as BoxEmitter } from './emitter/BoxEmitter';
+export { default as TextEmitter } from './emitter/TextEmitter';
 
 // 物理场
 export { default as Gravity } from './physical/Gravity';

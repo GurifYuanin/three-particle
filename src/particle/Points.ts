@@ -52,6 +52,7 @@ class Points extends THREE.Points {
     // 只会执行一次，因为粒子生成使通过 Particle.clone 方法来生成的
     // 后续 clone 的时候会发现 material.map 不为 null
     if (!material.map && glow) {
+      // 参考 https://segmentfault.com/a/1190000015862604
       const canvasEl = document.createElement('canvas');
       const diameter = 16 * glow.size; // 画布宽高，也是径向渐变的直径
       const radius = diameter / 2; // 径向渐变的半径
