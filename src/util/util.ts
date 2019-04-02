@@ -1,4 +1,5 @@
-import { ParticleInterface } from '../particle/Particle';
+import * as THREE from 'three';
+import { ParticleInterface, Particle } from '../particle/Particle';
 
 // 通用工具包
 class Util {
@@ -19,10 +20,20 @@ class Util {
       }
     }
   }
-  static dispose(particle: ParticleInterface): void {
-    particle.geometry.dispose();
-    particle.material.dispose();
-    particle = null;
+  static dispose(object: any): void {
+    if (object.dispose) {
+      object.dispose();
+    }
+    if (object instanceof Particle) {
+      (object as ParticleInterface).geometry.dispose();
+      (object as ParticleInterface).material.dispose();
+    }
+    if (Array.isArray(object.children)) {
+      for (let i: number = object.children.length - 1; i >= 0; i--) {
+        Util.dispose(object.children[i]);
+      }
+    }
+    object = null;
   }
 }
 

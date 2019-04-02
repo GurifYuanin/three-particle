@@ -46,6 +46,7 @@ class Text extends THREE.Mesh {
     Loader.loadFont(font, this.active.bind(this));
   }
   active(font) {
+    // 加载完字体会调用该方法，创建 geometry
     this.geometry = new THREE.TextBufferGeometry(this.text, {
       font,
       size: this.size,

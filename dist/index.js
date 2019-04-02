@@ -140,10 +140,12 @@ var TP = (function (exports,THREE) {
 
   var Particle = /** @class */ (function () {
       function Particle(_a) {
-          var _b = _a === void 0 ? {} : _a, _c = _b.life, life = _c === void 0 ? 3 : _c, _d = _b.velocity, velocity = _d === void 0 ? 10 : _d, _e = _b.border, border = _e === void 0 ? 5 : _e;
+          var _b = _a === void 0 ? {} : _a, _c = _b.life, life = _c === void 0 ? 3 : _c, _d = _b.lifeRandom, lifeRandom = _d === void 0 ? 0 : _d, // 生命随机比例
+          _e = _b.velocity, // 生命随机比例
+          velocity = _e === void 0 ? 10 : _e, _f = _b.border, border = _f === void 0 ? 5 : _f;
           this.clock = new THREE.Clock();
           this.clock.start();
-          this.life = life;
+          this.life = life + THREE.Math.randFloatSpread(lifeRandom);
           this.direction = new THREE.Vector3(0, 0, 0);
           this.velocity = velocity;
           this.border = border;
@@ -155,12 +157,26 @@ var TP = (function (exports,THREE) {
       return Particle;
   }());
 
+  var Glow = /** @class */ (function () {
+      function Glow(_a) {
+          var _b = _a === void 0 ? {} : _a, _c = _b.rate, rate = _c === void 0 ? 1.2 : _c, _d = _b.scale, scale = _d === void 0 ? -1.0 : _d, _e = _b.basic, basic = _e === void 0 ? 1.0 : _e, _f = _b.power, power = _f === void 0 ? 2.0 : _f, _g = _b.color, color = _g === void 0 ? new THREE.Color(0x00ffff) : _g;
+          this.rate = rate;
+          this.color = color;
+          this.scale = scale;
+          this.basic = basic;
+          this.power = power;
+      }
+      Glow.vertexShader = "\n\t\tvarying vec3 vNormal;\n\t\tvarying vec3 vPositionNormal;\n\t\tvoid main() \n\t\t{\n\t\t  vNormal = normalize( normalMatrix * normal ); // \u8F6C\u6362\u5230\u89C6\u56FE\u7A7A\u95F4\n\t\t  vPositionNormal = normalize(( modelViewMatrix * vec4(position, 1.0) ).xyz);\n\t\t  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n\t\t}\n\t";
+      Glow.fragmentShader = "\n\t\tuniform vec3 color;\n\t\tuniform float basic;\n\t\tuniform float power;\n\t\tuniform float scale;\n\t\tvarying vec3 vNormal;\n\t\tvarying vec3 vPositionNormal;\n\t\tvoid main() \n\t\t{\n\t\t  // \u83F2\u6D85\u5C14\u8FD1\u4F3C\u7B49\u5F0F\u8BA1\u7B97\u5F97\u5230\u7247\u6BB5\u7740\u8272\u7684\u900F\u660E\u5EA6\n\t\t  float alpha = pow( basic + scale * abs(dot(vNormal, vPositionNormal)), power );\n\t\t  gl_FragColor = vect4( color, alpha );\n\t\t}\n\t";
+      return Glow;
+  }());
+
   /* 球 */
   var Sphere = /** @class */ (function (_super) {
       __extends(Sphere, _super);
       function Sphere(_a) {
           if (_a === void 0) { _a = {}; }
-          var _b = _a.radius, radius = _b === void 0 ? 5 : _b, _c = _a.widthSegments, widthSegments = _c === void 0 ? 32 : _c, _d = _a.heightSegments, heightSegments = _d === void 0 ? 32 : _d, _e = _a.material, material = _e === void 0 ? new THREE.MeshPhongMaterial() : _e, options = __rest(_a, ["radius", "widthSegments", "heightSegments", "material"]);
+          var _b = _a.radius, radius = _b === void 0 ? 5 : _b, _c = _a.widthSegments, widthSegments = _c === void 0 ? 32 : _c, _d = _a.heightSegments, heightSegments = _d === void 0 ? 32 : _d, _e = _a.glow, glow = _e === void 0 ? null : _e, _f = _a.material, material = _f === void 0 ? new THREE.MeshPhongMaterial() : _f, options = __rest(_a, ["radius", "widthSegments", "heightSegments", "glow", "material"]);
           var _this = this;
           var geometry = new THREE.SphereBufferGeometry(radius, widthSegments, heightSegments);
           _this = _super.call(this, geometry, material) || this;
@@ -169,11 +185,30 @@ var TP = (function (exports,THREE) {
           _this.widthSegments = widthSegments;
           _this.heightSegments = heightSegments;
           _this.options = options;
+          _this.glow = glow;
+          // 设置 glow
+          if (_this.glow) {
+              _this.add(new THREE.Mesh(new THREE.SphereBufferGeometry(radius * _this.glow.rate, widthSegments, heightSegments), new THREE.ShaderMaterial({
+                  uniforms: {
+                      'scale': { type: 'f', value: _this.glow.scale },
+                      'basic': { type: 'f', value: _this.glow.basic },
+                      'power': { type: 'f', value: _this.glow.power },
+                      color: { type: 'c', value: _this.glow.color }
+                  },
+                  opacity: .5,
+                  vertexShader: Glow.vertexShader,
+                  fragmentShader: Glow.fragmentShader,
+                  side: THREE.FrontSide,
+                  blending: THREE.AdditiveBlending,
+                  transparent: true
+              })));
+          }
           _this.type = 'Sphere';
           return _this;
       }
       Sphere.prototype.clone = function () {
-          return new Sphere(__assign({ radius: this.radius, heightSegments: this.heightSegments, widthSegments: this.widthSegments, material: this.material.clone() }, this.options));
+          var sphere = new Sphere(__assign({ radius: this.radius, heightSegments: this.heightSegments, widthSegments: this.widthSegments, material: this.material.clone(), glow: this.glow }, this.options));
+          return sphere;
       };
       Sphere.TYPE = 'Sphere';
       return Sphere;
@@ -311,6 +346,7 @@ var TP = (function (exports,THREE) {
           return _this;
       }
       Text.prototype.active = function (font) {
+          // 加载完字体会调用该方法，创建 geometry
           this.geometry = new THREE.TextBufferGeometry(this.text, {
               font: font,
               size: this.size,
@@ -388,10 +424,20 @@ var TP = (function (exports,THREE) {
               }
           }
       };
-      Util.dispose = function (particle) {
-          particle.geometry.dispose();
-          particle.material.dispose();
-          particle = null;
+      Util.dispose = function (object) {
+          if (object.dispose) {
+              object.dispose();
+          }
+          if (object instanceof Particle) {
+              object.geometry.dispose();
+              object.material.dispose();
+          }
+          if (Array.isArray(object.children)) {
+              for (var i = object.children.length - 1; i >= 0; i--) {
+                  Util.dispose(object.children[i]);
+              }
+          }
+          object = null;
       };
       return Util;
   }());
@@ -1048,6 +1094,7 @@ var TP = (function (exports,THREE) {
   exports.Gravity = Gravity;
   exports.Wind = Wind;
   exports.Turbulent = Turbulent;
+  exports.Glow = Glow;
 
   return exports;
 
