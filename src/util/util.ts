@@ -1,8 +1,9 @@
-import * as THREE from 'three';
 import { ParticleInterface, Particle } from '../particle/Particle';
 
 // 通用工具包
 class Util {
+  // 填充函数，用于将源头赋值给目标
+  // 当目标是数组的时候，源头将同时赋值给数组内的每个元素
   static fill(target: any | any[], source: any, propertyName?: string): void {
     if (Array.isArray(target)) {
       for (let i: number = target.length - 1; i >= 0; i--) {
@@ -20,6 +21,8 @@ class Util {
       }
     }
   }
+
+  // threejs 对象清除函数
   static dispose(object: any): void {
     if (object.dispose) {
       object.dispose();
@@ -36,8 +39,9 @@ class Util {
     object = null;
   }
 
+  // 深拷贝
+  // 与一般深拷贝不同，该方法会优先认同传入对象的 clone 方法
   static clone(anything: any): any {
-    // deep clone
     if (anything && anything.clone) {
       return anything.clone();
     }
