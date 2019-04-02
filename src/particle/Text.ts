@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { Particle } from './Particle';
-import Util from '../util/Util';
 import Loader from '../util/Loader';
 import Glow from '../effect/Glow';
 
@@ -54,7 +53,9 @@ class Text extends THREE.Mesh {
     Loader.loadFont(font, this.active.bind(this));
   }
   active(font: THREE.Font) {
-    // 加载完字体会调用该方法，创建 geometry
+    // 加载字体是异步行为
+    // 因此需要向 Loader 传入回调函数
+    // 加载完字体会调用该方法，创建文字的 geometry
     const options = {
       font,
       size: this.size,

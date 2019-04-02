@@ -152,6 +152,8 @@ class Emitter extends THREE.Object3D {
         const randomIndex: number = THREE.Math.randInt(0, this.particles.length - 1);
         let randomParticle: ParticleInterface = this.particles[randomIndex].clone(); // 从 particles 内随机取出一个粒子作为样本
         if (randomParticle.emitting) {
+          // 外层会进行一次 emitting 判断，控制发射器是否可以发射粒子
+          // 这里也会进行一次判断，判断该粒子是否可以被发射器发射
           // 这里是因为 Text 粒子需要加载字体
           // 字体未加载完成之前不能添加到场景中
           // 用粒子的 emitting 属性标记是否可以进行发射

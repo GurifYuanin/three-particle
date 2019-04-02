@@ -8,11 +8,12 @@ import { ParticleInterface } from '../particle/Particle';
 class ExplosionEmitter extends Emitter {
   constructor({ ...options } = {}) {
     super(options || {});
+    this.type = 'ExplosionEmitter';
   }
   generate(): ParticleInterface[] {
     const generatedParticles: ParticleInterface[] = super.generate();
     const generatedParticlePosition: number[] = [this.anchor.x, this.anchor.y, this.anchor.z];
-    for (let i = 0; i < generatedParticles.length; i++) {
+    for (let i: number = 0; i < generatedParticles.length; i++) {
       const generatedParticle: ParticleInterface = generatedParticles[i];
       switch(generatedParticle.type) {
         case Line.TYPE: {
