@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { Particle } from './Particle';
+import Util from '../util/Util';
 import Loader from '../util/Loader';
+import Glow from '../effect/Glow';
 
 /* 文本 */
 class Text extends THREE.Mesh {
@@ -8,25 +10,30 @@ class Text extends THREE.Mesh {
   text: string; // 文字内容
   emitting: boolean; // 粒子是否准备就绪
   font: string; // 字体
-  height: number; // 文字高度
+  height: number; // 文字高度/厚度
   size: number; // 文字大小
-  curveSegments: number;
-  bevelEnabled: boolean;
-  bevelThickness: number;
-  bevelSize: number;
-  bevelSegments: number;
+  curveSegments: number; // 文字圆滑度
+
+  // 文字倒角
+  bevelEnabled: boolean; // 是否开启倒角
+  bevelThickness: number; // 倒角厚度
+  bevelSize: number; // 倒角大小
+  bevelSegments: number; // 倒角圆滑度
+  
   options: object;
+  glow: Glow | null;
   constructor({
     text = 'Hello World',
     font = '/demo/fonts/helvetiker_regular.typeface.json',
     size = 10,
-    height = 50,
+    height = 10,
     curveSegments = 12,
     bevelEnabled = false,
     bevelThickness = 10,
     bevelSize = 8,
     bevelSegments = 3,
     material = new THREE.MeshPhongMaterial() as THREE.Material,
+    glow = null,
     ...options
   } = {}) {
     super();
@@ -42,11 +49,13 @@ class Text extends THREE.Mesh {
     this.bevelSize = bevelSize;
     this.bevelSegments = bevelSegments;
     this.options = options;
+    this.glow = glow;
     this.type = 'Text';
     Loader.loadFont(font, this.active.bind(this));
   }
-  active(font) {
-    this.geometry = new THREE.TextBufferGeometry(this.text, {
+  active(font: THREE.Font) {
+    // 加载完字体会调用该方法，创建 geometry
+    const options = {
       font,
       size: this.size,
       height: this.height,
@@ -55,7 +64,15 @@ class Text extends THREE.Mesh {
       bevelThickness: this.bevelThickness,
       bevelSize: this.bevelSize,
       bevelSegments: this.bevelSegments,
-    });
+    };
+    this.geometry = new THREE.TextBufferGeometry(this.text, options);
+    if (this.glow) {
+      options.size *= this.glow.size;
+      this.add(new THREE.Mesh(
+        new THREE.TextBufferGeometry(this.text, options),
+        this.glow.getShaderMaterial()
+      ));
+    }
     this.emitting = true;
   }
   clone(): Text | any {
@@ -70,6 +87,7 @@ class Text extends THREE.Mesh {
       bevelSize: this.bevelSize,
       bevelSegments: this.bevelSegments,
       material: (this.material as THREE.Material).clone(),
+      glow: this.glow,
       ...this.options
     });
   }

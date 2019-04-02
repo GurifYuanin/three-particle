@@ -55,7 +55,7 @@ class Gravity extends Physical {
       // 折线的位置永远不变
       // 因此参考依据为折线第一个点的位置
       if (particle.type === Line.TYPE) {
-        const positionArray = (particle.geometry as THREE.BufferGeometry).getAttribute('position').array;
+        const positionArray: number[] | ArrayLike<number> = (particle.geometry as THREE.BufferGeometry).getAttribute('position').array;
         particlePosition.set(positionArray[0], positionArray[1], positionArray[2]);
         particlePosition.set(positionArray[0], positionArray[1], positionArray[2]);
       }

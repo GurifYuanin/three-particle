@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Particle } from './Particle';
+import Glow from '../effect/Glow';
 
 /* 球 */
 class Sphere extends THREE.Mesh {
@@ -8,10 +9,12 @@ class Sphere extends THREE.Mesh {
   widthSegments: number; // 横切数
   heightSegments: number; // 纵切数
   options: object;
+  glow: Glow | null;
   constructor({
     radius = 5,
     widthSegments = 32,
     heightSegments = 32,
+    glow = null,
     material = new THREE.MeshPhongMaterial() as THREE.Material,
     ...options
   } = {}) {
@@ -22,6 +25,14 @@ class Sphere extends THREE.Mesh {
     this.widthSegments = widthSegments;
     this.heightSegments = heightSegments;
     this.options = options;
+    this.glow = glow;
+    // 设置 glow
+    if (this.glow) {
+      this.add(new THREE.Mesh(
+        new THREE.SphereBufferGeometry(radius * this.glow.size, widthSegments, heightSegments),
+        this.glow.getShaderMaterial()
+      ));
+    }
     this.type = 'Sphere';
   }
   clone(): Sphere | any {
@@ -30,8 +41,10 @@ class Sphere extends THREE.Mesh {
       heightSegments: this.heightSegments,
       widthSegments: this.widthSegments,
       material: (this.material as THREE.Material).clone(),
+      glow: this.glow,
       ...this.options
     });
   }
 }
 export default Sphere;
+

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Sphere</title>
+</head>
+
+<body>
+    <script src="https://unpkg.com/three@0.102.1/build/three.js"></script>
+    <script src="../dist/index.js"></script>
+    <script src="./javascripts/common.js"></script>
+    <script>
+
+        const sphere = new TP.Points({
+            glow: new TP.Glow(),
+            velocity: 1
+        });
+        const emitter = new TP.ExplosionEmitter({
+            emission: 5
+        });
+
+
+        emitter.addParticle(sphere);
+        emitter.anchor.y = 50;
+        scene.add(emitter);
+
+        camera.position.set(0, 0, 50);
+
+        (function render() {
+            requestAnimationFrame(render);
+            emitter.update();
+            renderer.render(scene, camera);
+        })();
+
+    </script>
+</body>
+
+</html>
