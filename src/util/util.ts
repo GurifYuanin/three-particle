@@ -35,6 +35,30 @@ class Util {
     }
     object = null;
   }
+
+  static clone(anything: any): any {
+    // deep clone
+    if (anything && anything.clone) {
+      return anything.clone();
+    }
+    if (Array.isArray(anything)) {
+      const array = [];
+      for (let thing of anything) {
+        array.push(Util.clone(thing));
+      }
+      return array;
+    } else if (Object.prototype.toString.call(anything).toLowerCase() === '[object object]') {
+      const object = {};
+      for (let key in anything) {
+        Object.assign(object, {
+          [key]: Util.clone(object[key])
+        });
+      }
+      return object;
+    } else {
+      return anything;
+    }
+  }
 }
 
 export default Util;

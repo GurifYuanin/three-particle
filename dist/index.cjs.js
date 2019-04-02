@@ -143,10 +143,12 @@ function __rest(s, e) {
 
 var Particle = /** @class */ (function () {
     function Particle(_a) {
-        var _b = _a === void 0 ? {} : _a, _c = _b.life, life = _c === void 0 ? 3 : _c, _d = _b.velocity, velocity = _d === void 0 ? 10 : _d, _e = _b.border, border = _e === void 0 ? 5 : _e;
+        var _b = _a === void 0 ? {} : _a, _c = _b.life, life = _c === void 0 ? 3 : _c, _d = _b.lifeRandom, lifeRandom = _d === void 0 ? 0 : _d, // 生命随机比例
+        _e = _b.velocity, // 生命随机比例
+        velocity = _e === void 0 ? 10 : _e, _f = _b.border, border = _f === void 0 ? 5 : _f;
         this.clock = new THREE.Clock();
         this.clock.start();
-        this.life = life;
+        this.life = life + THREE.Math.randFloatSpread(lifeRandom);
         this.direction = new THREE.Vector3(0, 0, 0);
         this.velocity = velocity;
         this.border = border;
@@ -163,7 +165,7 @@ var Sphere = /** @class */ (function (_super) {
     __extends(Sphere, _super);
     function Sphere(_a) {
         if (_a === void 0) { _a = {}; }
-        var _b = _a.radius, radius = _b === void 0 ? 5 : _b, _c = _a.widthSegments, widthSegments = _c === void 0 ? 32 : _c, _d = _a.heightSegments, heightSegments = _d === void 0 ? 32 : _d, _e = _a.material, material = _e === void 0 ? new THREE.MeshPhongMaterial() : _e, options = __rest(_a, ["radius", "widthSegments", "heightSegments", "material"]);
+        var _b = _a.radius, radius = _b === void 0 ? 5 : _b, _c = _a.widthSegments, widthSegments = _c === void 0 ? 32 : _c, _d = _a.heightSegments, heightSegments = _d === void 0 ? 32 : _d, _e = _a.glow, glow = _e === void 0 ? null : _e, _f = _a.material, material = _f === void 0 ? new THREE.MeshPhongMaterial() : _f, options = __rest(_a, ["radius", "widthSegments", "heightSegments", "glow", "material"]);
         var _this = this;
         var geometry = new THREE.SphereBufferGeometry(radius, widthSegments, heightSegments);
         _this = _super.call(this, geometry, material) || this;
@@ -172,11 +174,16 @@ var Sphere = /** @class */ (function (_super) {
         _this.widthSegments = widthSegments;
         _this.heightSegments = heightSegments;
         _this.options = options;
+        _this.glow = glow;
+        // 设置 glow
+        if (_this.glow) {
+            _this.add(new THREE.Mesh(new THREE.SphereBufferGeometry(radius * _this.glow.size, widthSegments, heightSegments), _this.glow.getShaderMaterial()));
+        }
         _this.type = 'Sphere';
         return _this;
     }
     Sphere.prototype.clone = function () {
-        return new Sphere(__assign({ radius: this.radius, heightSegments: this.heightSegments, widthSegments: this.widthSegments, material: this.material.clone() }, this.options));
+        return new Sphere(__assign({ radius: this.radius, heightSegments: this.heightSegments, widthSegments: this.widthSegments, material: this.material.clone(), glow: this.glow }, this.options));
     };
     Sphere.TYPE = 'Sphere';
     return Sphere;
@@ -223,10 +230,10 @@ var Points = /** @class */ (function (_super) {
     __extends(Points, _super);
     function Points(_a) {
         if (_a === void 0) { _a = {}; }
-        var _b = _a.verticesNumber, verticesNumber = _b === void 0 ? 10 : _b, _c = _a.verticesSize, verticesSize = _c === void 0 ? 3 : _c, _d = _a.vertices, vertices = _d === void 0 ? [] : _d, _e = _a.spread, spread = _e === void 0 ? 10 : _e, _f = _a.colors, colors = _f === void 0 ? [] : _f, _g = _a.material, material = _g === void 0 ? new THREE.PointsMaterial() : _g, options = __rest(_a, ["verticesNumber", "verticesSize", "vertices", "spread", "colors", "material"]);
+        var _b = _a.verticesNumber, verticesNumber = _b === void 0 ? 10 : _b, _c = _a.verticesSize, verticesSize = _c === void 0 ? 3 : _c, _d = _a.vertices, vertices = _d === void 0 ? [] : _d, _e = _a.spread, spread = _e === void 0 ? 10 : _e, _f = _a.colors, colors = _f === void 0 ? [] : _f, _g = _a.glow, glow = _g === void 0 ? null : _g, _h = _a.material, material = _h === void 0 ? new THREE.PointsMaterial() : _h, options = __rest(_a, ["verticesNumber", "verticesSize", "vertices", "spread", "colors", "glow", "material"]);
         var _this = this;
         var geometry = new THREE.BufferGeometry();
-        // 点位置
+        // 设置点位置
         var positionsArray = Array.from({ length: verticesNumber * verticesSize });
         for (var i = 0; i < positionsArray.length; i++) {
             positionsArray[i] = i < vertices.length ? vertices[i] : THREE.Math.randFloatSpread(spread);
@@ -234,8 +241,10 @@ var Points = /** @class */ (function (_super) {
         var positionsAttribute = new THREE.BufferAttribute(new Float32Array(positionsArray), verticesSize);
         positionsAttribute.dynamic = true;
         geometry.addAttribute('position', positionsAttribute);
-        // 点颜色
+        // 设置每个点的颜色（纯色）
         if (material.vertexColors === THREE.VertexColors) {
+            // 每个点单独着色
+            // 可以通过 color 参数传入，省略部分设置为随机颜色
             var colorsArray = Array.from({ length: verticesNumber * verticesSize });
             for (var i = 0; i < colorsArray.length; i++) {
                 colorsArray[i] = i < colors.length ? colors[i] : Math.random();
@@ -244,6 +253,43 @@ var Points = /** @class */ (function (_super) {
             colorsAttribute.dynamic = true;
             geometry.addAttribute('color', colorsAttribute);
         }
+        // 设置每个点的发光
+        // 点发光通过材质的 map 来实现
+        // 如果已经存在 map，则不会进行覆盖
+        // 只会执行一次，因为粒子生成使通过 Particle.clone 方法来生成的
+        // 后续 clone 的时候会发现 material.map 不为 null
+        if (!material.map && glow) {
+            var canvasEl = document.createElement('canvas');
+            var diameter = 16 * glow.size; // 画布宽高，也是径向渐变的直径
+            var radius = diameter / 2; // 径向渐变的半径
+            canvasEl.width = diameter;
+            canvasEl.height = diameter;
+            var context = canvasEl.getContext('2d');
+            // 从中心点且半径为 0 的圆渐变到半径为 radius 的圆
+            var radioGradient = context.createRadialGradient(radius, radius, 0, radius, radius, radius);
+            // 颜色（白色）增加率，将 intensity 反映到材质的 color 上
+            // 当 intensity 大于 1 时，发光偏白（亮）
+            // 当 intensity 小于 1 时，发光偏黑（暗）
+            var incrementsRate = glow.intensity > 1 ?
+                glow.intensity * 0.2 :
+                glow.intensity - 1;
+            var red = THREE.Math.clamp(glow.color.r * 255 * (1 + incrementsRate), 0, 255);
+            var green = THREE.Math.clamp(glow.color.g * 255 * (1 + incrementsRate), 0, 255);
+            var blue = THREE.Math.clamp(glow.color.b * 255 * (1 + incrementsRate), 0, 255);
+            var rgbColor = "rgba(" + red + "," + green + "," + blue; // 计算出来 rgb 颜色，减少重复计算
+            // 注意，glow 的 opacity 表示透明度
+            // 而 rgba 的 alpha 表示不透明度
+            radioGradient.addColorStop(0, rgbColor + ",1)");
+            radioGradient.addColorStop(THREE.Math.mapLinear(diameter - glow.feature, 0, diameter, 1.0, 0.0), rgbColor + ",1)");
+            radioGradient.addColorStop(1, rgbColor + ",0)");
+            context.fillStyle = radioGradient;
+            context.fillRect(0, 0, diameter, diameter);
+            // 创建径向渐变的 2d canvas，作为点集的颜色贴图
+            // 该贴图会作用给每个点
+            var glowTexture = new THREE.CanvasTexture(canvasEl);
+            glowTexture.needsUpdate = true;
+            material.map = glowTexture;
+        }
         _this = _super.call(this, geometry, material) || this;
         Particle.prototype.constructor.call(_this, options);
         _this.verticesNumber = verticesNumber;
@@ -251,12 +297,13 @@ var Points = /** @class */ (function (_super) {
         _this.vertices = vertices;
         _this.spread = spread;
         _this.colors = colors;
+        _this.glow = glow;
         _this.options = options;
         _this.type = 'Points';
         return _this;
     }
     Points.prototype.clone = function () {
-        return new Points(__assign({ verticesNumber: this.verticesNumber, verticesSize: this.verticesSize, vertices: this.vertices, spread: this.spread, colors: this.colors, material: this.material.clone() }, this.options));
+        return new Points(__assign({ verticesNumber: this.verticesNumber, verticesSize: this.verticesSize, vertices: this.vertices, spread: this.spread, colors: this.colors, material: this.material.clone(), glow: this.glow }, this.options));
     };
     Points.TYPE = 'Points';
     return Points;
@@ -295,7 +342,7 @@ var Text = /** @class */ (function (_super) {
     __extends(Text, _super);
     function Text(_a) {
         if (_a === void 0) { _a = {}; }
-        var _b = _a.text, text = _b === void 0 ? 'Hello World' : _b, _c = _a.font, font = _c === void 0 ? '/demo/fonts/helvetiker_regular.typeface.json' : _c, _d = _a.size, size = _d === void 0 ? 10 : _d, _e = _a.height, height = _e === void 0 ? 50 : _e, _f = _a.curveSegments, curveSegments = _f === void 0 ? 12 : _f, _g = _a.bevelEnabled, bevelEnabled = _g === void 0 ? false : _g, _h = _a.bevelThickness, bevelThickness = _h === void 0 ? 10 : _h, _j = _a.bevelSize, bevelSize = _j === void 0 ? 8 : _j, _k = _a.bevelSegments, bevelSegments = _k === void 0 ? 3 : _k, _l = _a.material, material = _l === void 0 ? new THREE.MeshPhongMaterial() : _l, options = __rest(_a, ["text", "font", "size", "height", "curveSegments", "bevelEnabled", "bevelThickness", "bevelSize", "bevelSegments", "material"]);
+        var _b = _a.text, text = _b === void 0 ? 'Hello World' : _b, _c = _a.font, font = _c === void 0 ? '/demo/fonts/helvetiker_regular.typeface.json' : _c, _d = _a.size, size = _d === void 0 ? 10 : _d, _e = _a.height, height = _e === void 0 ? 10 : _e, _f = _a.curveSegments, curveSegments = _f === void 0 ? 12 : _f, _g = _a.bevelEnabled, bevelEnabled = _g === void 0 ? false : _g, _h = _a.bevelThickness, bevelThickness = _h === void 0 ? 10 : _h, _j = _a.bevelSize, bevelSize = _j === void 0 ? 8 : _j, _k = _a.bevelSegments, bevelSegments = _k === void 0 ? 3 : _k, _l = _a.material, material = _l === void 0 ? new THREE.MeshPhongMaterial() : _l, _m = _a.glow, glow = _m === void 0 ? null : _m, options = __rest(_a, ["text", "font", "size", "height", "curveSegments", "bevelEnabled", "bevelThickness", "bevelSize", "bevelSegments", "material", "glow"]);
         var _this = _super.call(this) || this;
         Particle.prototype.constructor.call(_this, options);
         _this.emitting = false; // 等待字体加载完才能运动
@@ -309,12 +356,14 @@ var Text = /** @class */ (function (_super) {
         _this.bevelSize = bevelSize;
         _this.bevelSegments = bevelSegments;
         _this.options = options;
+        _this.glow = glow;
         _this.type = 'Text';
         Loader.loadFont(font, _this.active.bind(_this));
         return _this;
     }
     Text.prototype.active = function (font) {
-        this.geometry = new THREE.TextBufferGeometry(this.text, {
+        // 加载完字体会调用该方法，创建 geometry
+        var options = {
             font: font,
             size: this.size,
             height: this.height,
@@ -323,11 +372,16 @@ var Text = /** @class */ (function (_super) {
             bevelThickness: this.bevelThickness,
             bevelSize: this.bevelSize,
             bevelSegments: this.bevelSegments,
-        });
+        };
+        this.geometry = new THREE.TextBufferGeometry(this.text, options);
+        if (this.glow) {
+            options.size *= this.glow.size;
+            this.add(new THREE.Mesh(new THREE.TextBufferGeometry(this.text, options), this.glow.getShaderMaterial()));
+        }
         this.emitting = true;
     };
     Text.prototype.clone = function () {
-        return new Text(__assign({ text: this.text, font: this.font, size: this.size, height: this.height, curveSegments: this.curveSegments, bevelEnabled: this.bevelEnabled, bevelThickness: this.bevelThickness, bevelSize: this.bevelSize, bevelSegments: this.bevelSegments, material: this.material.clone() }, this.options));
+        return new Text(__assign({ text: this.text, font: this.font, size: this.size, height: this.height, curveSegments: this.curveSegments, bevelEnabled: this.bevelEnabled, bevelThickness: this.bevelThickness, bevelSize: this.bevelSize, bevelSegments: this.bevelSegments, material: this.material.clone(), glow: this.glow }, this.options));
     };
     Text.TYPE = 'Text';
     return Text;
@@ -337,7 +391,9 @@ var Sprite = /** @class */ (function (_super) {
     __extends(Sprite, _super);
     function Sprite(_a) {
         if (_a === void 0) { _a = {}; }
-        var _b = _a.image, image = _b === void 0 ? './images/star.png' : _b, _c = _a.material, material = _c === void 0 ? new THREE.SpriteMaterial({ map: Loader.loadTexture(image) }) : _c, options = __rest(_a, ["image", "material"]);
+        var _b = _a.image, image = _b === void 0 ? './images/star.png' : _b, _c = _a.material, material = _c === void 0 ? new THREE.SpriteMaterial({
+            map: Loader.loadTexture(image)
+        }) : _c, options = __rest(_a, ["image", "material"]);
         var _this = _super.call(this, material) || this;
         Particle.prototype.constructor.call(_this, options);
         _this.image = image;
@@ -355,6 +411,7 @@ var Sprite = /** @class */ (function (_super) {
 var Lut = /** @class */ (function () {
     function Lut() {
     }
+    // 获得插值方程
     Lut.getInterpolationFunction = function (particlesTransformType) {
         switch (particlesTransformType) {
             case Particle.TRANSFORM_LINEAR: return THREE.Math.lerp;
@@ -390,10 +447,45 @@ var Util = /** @class */ (function () {
             }
         }
     };
-    Util.dispose = function (particle) {
-        particle.geometry.dispose();
-        particle.material.dispose();
-        particle = null;
+    Util.dispose = function (object) {
+        if (object.dispose) {
+            object.dispose();
+        }
+        if (object instanceof Particle) {
+            object.geometry.dispose();
+            object.material.dispose();
+        }
+        if (Array.isArray(object.children)) {
+            for (var i = object.children.length - 1; i >= 0; i--) {
+                Util.dispose(object.children[i]);
+            }
+        }
+        object = null;
+    };
+    Util.clone = function (anything) {
+        var _a;
+        // deep clone
+        if (anything && anything.clone) {
+            return anything.clone();
+        }
+        if (Array.isArray(anything)) {
+            var array = [];
+            for (var _i = 0, anything_1 = anything; _i < anything_1.length; _i++) {
+                var thing = anything_1[_i];
+                array.push(Util.clone(thing));
+            }
+            return array;
+        }
+        else if (Object.prototype.toString.call(anything).toLowerCase() === '[object object]') {
+            var object = {};
+            for (var key in anything) {
+                Object.assign(object, (_a = {}, _a[key] = Util.clone(object[key]), _a));
+            }
+            return object;
+        }
+        else {
+            return anything;
+        }
     };
     return Util;
 }());
@@ -401,9 +493,11 @@ var Util = /** @class */ (function () {
 var Emitter = /** @class */ (function (_super) {
     __extends(Emitter, _super);
     function Emitter(_a) {
-        var _b = _a === void 0 ? {} : _a, _c = _b.emission, emission = _c === void 0 ? 100 : _c, _d = _b.anchor, anchor = _d === void 0 ? new THREE.Vector3(0, 0, 0) : _d, _e = _b.particlesPositionRandom, particlesPositionRandom = _e === void 0 ? null : _e, _f = _b.particlesOpacityRandom, particlesOpacityRandom = _f === void 0 ? 0 : _f, _g = _b.particlesOpacityKey, particlesOpacityKey = _g === void 0 ? [] : _g, _h = _b.particlesOpacityValue, particlesOpacityValue = _h === void 0 ? [] : _h, _j = _b.particlesColorRandom, particlesColorRandom = _j === void 0 ? [0, 0, 0] : _j, _k = _b.particlesColorKey, particlesColorKey = _k === void 0 ? [] : _k, _l = _b.particlesColorValue, particlesColorValue = _l === void 0 ? [] : _l, _m = _b.particlesRotationRandom, particlesRotationRandom = _m === void 0 ? new THREE.Vector3(0, 0, 0) : _m, _o = _b.particlesRotationKey, particlesRotationKey = _o === void 0 ? [] : _o, _p = _b.particlesRotationValue, particlesRotationValue = _p === void 0 ? [] : _p, _q = _b.particlesScaleRandom, particlesScaleRandom = _q === void 0 ? new THREE.Vector3(0, 0, 0) : _q, _r = _b.particlesScaleKey, particlesScaleKey = _r === void 0 ? [] : _r, _s = _b.particlesScaleValue, particlesScaleValue = _s === void 0 ? [] : _s;
+        var _b = _a === void 0 ? {} : _a, _c = _b.emission, emission = _c === void 0 ? 100 : _c, _d = _b.isVerticalToDirection, isVerticalToDirection = _d === void 0 ? false : _d, _e = _b.mode, mode = _e === void 0 ? Emitter.MODE_DURATIOIN : _e, _f = _b.anchor, anchor = _f === void 0 ? new THREE.Vector3(0, 0, 0) : _f, _g = _b.particlesPositionRandom, particlesPositionRandom = _g === void 0 ? null : _g, _h = _b.particlesOpacityRandom, particlesOpacityRandom = _h === void 0 ? 0 : _h, _j = _b.particlesOpacityKey, particlesOpacityKey = _j === void 0 ? [] : _j, _k = _b.particlesOpacityValue, particlesOpacityValue = _k === void 0 ? [] : _k, _l = _b.particlesColorRandom, particlesColorRandom = _l === void 0 ? [0, 0, 0] : _l, _m = _b.particlesColorKey, particlesColorKey = _m === void 0 ? [] : _m, _o = _b.particlesColorValue, particlesColorValue = _o === void 0 ? [] : _o, _p = _b.particlesRotationRandom, particlesRotationRandom = _p === void 0 ? new THREE.Vector3(0, 0, 0) : _p, _q = _b.particlesRotationKey, particlesRotationKey = _q === void 0 ? [] : _q, _r = _b.particlesRotationValue, particlesRotationValue = _r === void 0 ? [] : _r, _s = _b.particlesScaleRandom, particlesScaleRandom = _s === void 0 ? new THREE.Vector3(0, 0, 0) : _s, _t = _b.particlesScaleKey, particlesScaleKey = _t === void 0 ? [] : _t, _u = _b.particlesScaleValue, particlesScaleValue = _u === void 0 ? [] : _u;
         var _this = _super.call(this) || this;
         _this.emission = emission;
+        _this.isVerticalToDirection = isVerticalToDirection;
+        _this.mode = mode;
         _this.emitting = true;
         _this.clock = new THREE.Clock();
         _this.clock.start();
@@ -426,6 +520,7 @@ var Emitter = /** @class */ (function (_super) {
         _this.particlesScaleValue = particlesScaleValue;
         _this.particlesTransformType = Particle.TRANSFORM_LINEAR;
         _this.type = 'Emitter';
+        _this.gap = 0;
         return _this;
     }
     // 新增样板粒子
@@ -450,11 +545,46 @@ var Emitter = /** @class */ (function (_super) {
     };
     // 生成粒子
     Emitter.prototype.generate = function () {
+        // 发射器进行打点
         var delta = this.clock.getDelta(); // 距离上一次发射粒子过去的时间差
-        var deltaEmission = Math.round(delta * this.emission); // 该时间差需要发射多少粒子
+        var deltaEmission = 0; // 该时间差需要发射多少粒子
         var generatedParticles = [];
         if (this.emitting) {
+            switch (this.mode) {
+                case Emitter.MODE_DURATIOIN: {
+                    // 持续发射模式
+                    // 通过打点时间差计算得到本次 update 需要补充多少粒子
+                    deltaEmission = Math.round((delta + this.gap) * this.emission);
+                    if (deltaEmission === 0) {
+                        var randomParticle = this.particles[THREE.Math.randInt(0, this.particles.length)];
+                        var randomParticleLife = randomParticle ? randomParticle.life : 1;
+                        if (this.children.length < this.emission * randomParticleLife) {
+                            // 发射例子数量为 0，且已发射的例子数量过少
+                            // 出现这种情况是因为每次发射器 update 消耗时间过小
+                            // 进而导致 delta 过小，计算出来的 deltaEmission 为 0
+                            this.gap += delta;
+                        }
+                    }
+                    else {
+                        // 计算出来应发射粒子数大于 0
+                        // 属于正常情况，所以清空 gap
+                        this.gap = 0;
+                    }
+                    break;
+                }
+                case Emitter.MODE_EXPLOSION: {
+                    // 爆炸式发射模式
+                    // 当粒子全部清除干净的时候一次性发射所有粒子
+                    if (this.children.length === 0) {
+                        deltaEmission = this.emission;
+                    }
+                    break;
+                }
+                default:
+            }
             // 新增粒子
+            // 基类 Emitter 不会初始化粒子的位置和方向等参数，
+            // 只会负责生成例子，而由子类来实现粒子的参数
             for (var i = 0; i < deltaEmission; i++) {
                 var randomIndex = THREE.Math.randInt(0, this.particles.length - 1);
                 var randomParticle = this.particles[randomIndex].clone(); // 从 particles 内随机取出一个粒子作为样本
@@ -562,6 +692,12 @@ var Emitter = /** @class */ (function (_super) {
                     particle.position.addScaledVector(particle.direction, particle.velocity);
                 }
             }
+            if (this.isVerticalToDirection) {
+                // 修改粒子朝向，使其垂直于运动方向
+                var angle = particle.up.angleTo(particle.direction) + 1.5707963267948966; // 1.57 即 90deg
+                var axis = particle.direction.clone().cross(particle.up);
+                particle.setRotationFromAxisAngle(axis, angle);
+            }
         }
     };
     Emitter.prototype.clear = function (particle) {
@@ -580,6 +716,8 @@ var Emitter = /** @class */ (function (_super) {
             }
         }
     };
+    Emitter.MODE_DURATIOIN = 0; // 持续发射
+    Emitter.MODE_EXPLOSION = 1; // 爆炸失发射
     return Emitter;
 }(THREE.Object3D));
 
@@ -665,9 +803,9 @@ var DirectionEmitter = /** @class */ (function (_super) {
         return _this;
     }
     DirectionEmitter.prototype.generate = function () {
-        var baseVector3 = new THREE.Vector3(0, 0, 1);
-        var angle = this.direction.angleTo(baseVector3);
-        var axis = baseVector3.cross(this.direction);
+        var baseVector3 = new THREE.Vector3(0, 0, 1); // 将粒子放在 x-y 平面上
+        var angle = this.direction.angleTo(baseVector3); // 发生器发射方向和 x-y 平面的夹角
+        var axis = baseVector3.cross(this.direction); // 垂直于 direction 和 baseVector3 的法线
         var generatedParticles = _super.prototype.generate.call(this);
         for (var i = 0; i < generatedParticles.length; i++) {
             var generatedParticle = generatedParticles[i];
@@ -763,6 +901,54 @@ var DirectionEmitter = /** @class */ (function (_super) {
     DirectionEmitter.EMIT_TYPE_SHPERE = 0; // 球形发射
     DirectionEmitter.EMIT_TYPE_ROUND = 1; // 圆形发射
     return DirectionEmitter;
+}(Emitter));
+
+// 盒子发射器
+var BoxEmitter = /** @class */ (function (_super) {
+    __extends(BoxEmitter, _super);
+    function BoxEmitter(_a) {
+        var _b = _a.width, width = _b === void 0 ? 5 : _b, _c = _a.height, height = _c === void 0 ? 5 : _c, _d = _a.thickness, thickness = _d === void 0 ? 5 : _d, _e = _a.side, side = _e === void 0 ? 0 : _e, options = __rest(_a, ["width", "height", "thickness", "side"]);
+        var _this = _super.call(this, options) || this;
+        _this.width = width;
+        _this.height = height;
+        _this.thickness = thickness;
+        _this.side = side;
+        return _this;
+    }
+    BoxEmitter.prototype.generate = function () {
+        var _this = this;
+        var generatedParticles = _super.prototype.generate.call(this);
+        // 设置随机函数
+        var randFn = function (range) {
+            switch (_this.side) {
+                case BoxEmitter.SIDE_BOTH: return THREE.Math.randFloatSpread(range);
+                case BoxEmitter.SIDE_TOP: return THREE.Math.randFloat(0, range);
+                case BoxEmitter.SIDE_BOTTOM: return THREE.Math.randFloat(-range, 0);
+                default: return 0;
+            }
+        };
+        for (var i = 0; i < generatedParticles.length; i++) {
+            var generatedParticle = generatedParticles[i];
+            // 初始化粒子位置
+            generatedParticle.position.set(this.anchor.x + randFn(this.width), this.anchor.y + randFn(this.height), this.anchor.z + randFn(this.thickness));
+            // 初始化粒子方向
+            generatedParticle.direction.set(THREE.Math.randFloatSpread(1), randFn(1), THREE.Math.randFloatSpread(1)).normalize();
+        }
+        return generatedParticles;
+    };
+    BoxEmitter.prototype.update = function () {
+        // 生成粒子
+        this.generate();
+        // 清除生命周期已经结束的粒子
+        _super.prototype.clearAll.call(this);
+        // 通用属性更新
+        _super.prototype.update.call(this);
+        // 特有属性更新
+    };
+    BoxEmitter.SIDE_BOTH = 0; // 两边发射
+    BoxEmitter.SIDE_TOP = 1; // 顶部发射
+    BoxEmitter.SIDE_BOTTOM = 2; // 底部发射
+    return BoxEmitter;
 }(Emitter));
 
 var Physcial = /** @class */ (function () {
@@ -951,6 +1137,45 @@ var Turbulent = /** @class */ (function (_super) {
     return Turbulent;
 }(Effect));
 
+var Glow = /** @class */ (function () {
+    function Glow(_a) {
+        var _b = _a === void 0 ? {} : _a, _c = _b.opacity, opacity = _c === void 0 ? 0.5 : _c, _d = _b.intensity, intensity = _d === void 0 ? 1 : _d, _e = _b.feature, feature = _e === void 0 ? 5 : _e, _f = _b.size, size = _f === void 0 ? 1.1 : _f, _g = _b.color, color = _g === void 0 ? new THREE.Color(0x00ffff) : _g;
+        this.opacity = opacity;
+        this.intensity = intensity;
+        this.size = size;
+        this.color = color;
+        this.feature = feature;
+        // intensity 应该为 [-5, 5]
+        // abs(intensity) > 5 时，值再大变化效果也不明显
+        this.scale = -intensity;
+        // 当 scale 为 5 时，不透明度基本上都为 1
+        // 因此将 bias 根据 scale ，让 scale 从区间 0 - 5 映射到 bias 从区间 1 - 0
+        this.bias = THREE.Math.mapLinear(intensity, 0, 5, 1.0, 0.0);
+        this.power = 5 / feature;
+    }
+    // 根据 glow 的参数生成着色器材质
+    // 并不是很好的解决方法，目前是为了减少重复编码
+    Glow.prototype.getShaderMaterial = function () {
+        return new THREE.ShaderMaterial({
+            uniforms: {
+                'scale': { type: 'f', value: this.scale },
+                'bias': { type: 'f', value: this.bias },
+                'power': { type: 'f', value: this.power },
+                'opacity': { type: 'f', value: this.opacity },
+                color: { type: 'c', value: this.color }
+            },
+            vertexShader: Glow.vertexShader,
+            fragmentShader: Glow.fragmentShader,
+            blending: THREE.AdditiveBlending,
+            transparent: true
+        });
+    };
+    // from: https://zhuanlan.zhihu.com/p/38548428
+    Glow.vertexShader = "\n\t\tvarying vec3 vNormal;\n\t\tvarying vec3 vPositionNormal;\n\t\tvoid main() \n\t\t{\n\t\t  vNormal = normalize( normalMatrix * normal ); // \u8F6C\u6362\u5230\u89C6\u56FE\u7A7A\u95F4\n\t\t  vPositionNormal = normalize(( modelViewMatrix * vec4( position, 1.0) ).xyz);\n\t\t  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n\t\t}\n\t";
+    Glow.fragmentShader = "\n\t\tuniform vec3 color;\n\t\tuniform float opacity;\n\t\tuniform float bias;\n\t\tuniform float power;\n\t\tuniform float scale;\n\t\tvarying vec3 vNormal;\n\t\tvarying vec3 vPositionNormal;\n\t\tvoid main() \n\t\t{\n      // Empricial \u83F2\u6D85\u5C14\u8FD1\u4F3C\u7B49\u5F0F\n      // \u8BA1\u7B97\u5F97\u5230\u7247\u6BB5\u7740\u8272\u7684\u900F\u660E\u5EA6\n      float alpha = pow( bias + scale * abs(dot(vNormal, vPositionNormal)), power );\n\t\t  gl_FragColor = vec4( color, alpha * opacity );\n\t\t}\n\t";
+    return Glow;
+}());
+
 // polyfill
 
 exports.Sphere = Sphere;
@@ -958,8 +1183,11 @@ exports.Line = Line;
 exports.Points = Points;
 exports.Text = Text;
 exports.Sprite = Sprite;
+exports.Emitter = Emitter;
 exports.ExplosionEmitter = ExplosionEmitter;
 exports.DirectionEmitter = DirectionEmitter;
+exports.BoxEmitter = BoxEmitter;
 exports.Gravity = Gravity;
 exports.Wind = Wind;
 exports.Turbulent = Turbulent;
+exports.Glow = Glow;

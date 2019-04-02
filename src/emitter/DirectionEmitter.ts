@@ -43,9 +43,9 @@ class DirectionEmitter extends Emitter {
     }
   }
   generate(): ParticleInterface[] {
-    const baseVector3: THREE.Vector3 = new THREE.Vector3(0, 0, 1);
-    const angle: number = this.direction.angleTo(baseVector3);
-    const axis: THREE.Vector3 = baseVector3.cross(this.direction);
+    const baseVector3: THREE.Vector3 = new THREE.Vector3(0, 0, 1); // 将粒子放在 x-y 平面上
+    const angle: number = this.direction.angleTo(baseVector3); // 发生器发射方向和 x-y 平面的夹角
+    const axis: THREE.Vector3 = baseVector3.cross(this.direction); // 垂直于 direction 和 baseVector3 的法线
 
     const generatedParticles: ParticleInterface[] = super.generate();
     for (let i: number = 0; i < generatedParticles.length; i++) {

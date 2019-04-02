@@ -29,27 +29,14 @@ class Sphere extends THREE.Mesh {
     // 设置 glow
     if (this.glow) {
       this.add(new THREE.Mesh(
-        new THREE.SphereBufferGeometry(radius * this.glow.rate, widthSegments, heightSegments),
-        new THREE.ShaderMaterial({
-          uniforms: { 
-            'scale': { type: 'f', value: this.glow.scale},
-            'basic': { type: 'f', value: this.glow.basic},
-            'power': { type: 'f', value: this.glow.power },
-            color: { type: 'c', value: this.glow.color }
-          },
-          opacity: .5,
-          vertexShader: Glow.vertexShader,
-          fragmentShader: Glow.fragmentShader,
-          side: THREE.FrontSide,
-          blending: THREE.AdditiveBlending,
-          transparent: true
-        })
+        new THREE.SphereBufferGeometry(radius * this.glow.size, widthSegments, heightSegments),
+        this.glow.getShaderMaterial()
       ));
     }
     this.type = 'Sphere';
   }
   clone(): Sphere | any {
-    const sphere = new Sphere({
+    return new Sphere({
       radius: this.radius,
       heightSegments: this.heightSegments,
       widthSegments: this.widthSegments,
@@ -57,8 +44,6 @@ class Sphere extends THREE.Mesh {
       glow: this.glow,
       ...this.options
     });
-
-    return sphere;
   }
 }
 export default Sphere;

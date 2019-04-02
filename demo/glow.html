@@ -12,15 +12,17 @@
     <script src="./javascripts/common.js"></script>
     <script>
 
-        const sphere = new TP.Sphere({
+        const sphere = new TP.Points({
             glow: new TP.Glow(),
             velocity: 1
         });
         const emitter = new TP.ExplosionEmitter({
-            emission: 10
+            emission: 5
         });
 
+
         emitter.addParticle(sphere);
+        emitter.anchor.y = 50;
         scene.add(emitter);
 
         camera.position.set(0, 0, 50);

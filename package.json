@@ -65,7 +65,7 @@
     "rollup-plugin-babel": "^4.3.2",
     "rollup-plugin-commonjs": "^8.4.1",
     "rollup-plugin-node-resolve": "^4.0.1",
-    "rollup-plugin-typescript2": "^0.19.3",
+    "rollup-plugin-typescript2": "^0.20.1",
     "rollup-plugin-uglify": "1.0.0",
     "source-map-support": "0.5.9",
     "ts-node": "7.0.1",

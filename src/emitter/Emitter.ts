@@ -16,7 +16,8 @@ class Emitter extends THREE.Object3D {
   particles: ParticleInterface[]; // 发射粒子样板
   physicals: Physical[]; // 物理场
   effects: Effect[]; // 特效场
-  mode: number;
+  isVerticalToDirection: boolean; // 粒子朝向是否垂直于运动方向
+  mode: number; // 发射模式
   particlesPositionRandom: null | THREE.Vector3; // 粒子位置随机数
   particlesOpacityRandom: number; // 粒子透明度随机数
   particlesOpacityKey: number[]; // 一个生命周期内，粒子透明度关键帧百分比
@@ -38,6 +39,7 @@ class Emitter extends THREE.Object3D {
 
   constructor({
     emission = 100,
+    isVerticalToDirection = false,
     mode = Emitter.MODE_DURATIOIN,
     anchor = new THREE.Vector3(0, 0, 0),
     particlesPositionRandom = null,
@@ -56,6 +58,7 @@ class Emitter extends THREE.Object3D {
   } = {}) {
     super();
     this.emission = emission;
+    this.isVerticalToDirection = isVerticalToDirection;
     this.mode = mode;
     this.emitting = true;
     this.clock = new THREE.Clock();
@@ -114,7 +117,9 @@ class Emitter extends THREE.Object3D {
           // 通过打点时间差计算得到本次 update 需要补充多少粒子
           deltaEmission = Math.round((delta + this.gap) * this.emission);
           if (deltaEmission === 0) {
-            if (this.children.length < this.emission) {
+            const randomParticle: ParticleInterface = this.particles[THREE.Math.randInt(0, this.particles.length)];
+            const randomParticleLife: number = randomParticle ? randomParticle.life : 1;
+            if (this.children.length < this.emission * randomParticleLife) {
               // 发射例子数量为 0，且已发射的例子数量过少
               // 出现这种情况是因为每次发射器 update 消耗时间过小
               // 进而导致 delta 过小，计算出来的 deltaEmission 为 0
@@ -272,6 +277,13 @@ class Emitter extends THREE.Object3D {
         default: {
           particle.position.addScaledVector(particle.direction, particle.velocity);
         }
+      }
+      
+      if (this.isVerticalToDirection) {
+        // 修改粒子朝向，使其垂直于运动方向
+        const angle: number = particle.up.angleTo(particle.direction) + 1.5707963267948966; // 1.57 即 90deg
+        const axis: THREE.Vector3 = particle.direction.clone().cross(particle.up);
+        particle.setRotationFromAxisAngle(axis, angle);
       }
     }
   }
