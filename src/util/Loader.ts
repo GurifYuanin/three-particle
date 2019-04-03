@@ -12,6 +12,7 @@ const textures: {
 } = {};
 
 class Loader {
+  // 加载字体
   static loadFont(path: string, callback?: (args: any) => any): void {
     const font: THREE.Font | undefined = fonts[path];
     if (font && callback) {
@@ -25,6 +26,8 @@ class Loader {
       });
     }
   }
+  
+  // 加载材质
   static loadTexture(path: string): THREE.Texture {
     return textures[path] = textures[path] || textureLoader.load(path);
   }

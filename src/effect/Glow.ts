@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 
+// 粒子发光特效
 class Glow {
 	// from: https://zhuanlan.zhihu.com/p/38548428
 	static readonly vertexShader = `

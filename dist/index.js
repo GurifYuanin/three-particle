@@ -142,13 +142,15 @@ var TP = (function (exports,THREE) {
       function Particle(_a) {
           var _b = _a === void 0 ? {} : _a, _c = _b.life, life = _c === void 0 ? 3 : _c, _d = _b.lifeRandom, lifeRandom = _d === void 0 ? 0 : _d, // 生命随机比例
           _e = _b.velocity, // 生命随机比例
-          velocity = _e === void 0 ? 10 : _e, _f = _b.border, border = _f === void 0 ? 5 : _f;
+          velocity = _e === void 0 ? 10 : _e, _f = _b.border, border = _f === void 0 ? 5 : _f, _g = _b.afterimage, afterimage = _g === void 0 ? null : _g;
           this.clock = new THREE.Clock();
           this.clock.start();
           this.life = life + THREE.Math.randFloatSpread(lifeRandom);
           this.direction = new THREE.Vector3(0, 1, 0); // 粒子运动方向由发射器控制，不受参数影响
           this.velocity = velocity;
           this.border = border;
+          this.afterimage = afterimage ? afterimage.clone() : afterimage;
+          this.afterimageMatrixWorldIndex = 0;
           this.emitting = true;
       }
       Particle.TRANSFORM_LINEAR = 0; // 线性插值
@@ -186,6 +188,77 @@ var TP = (function (exports,THREE) {
       return Sphere;
   }(THREE.Mesh));
 
+  // 通用工具包
+  var Util = /** @class */ (function () {
+      function Util() {
+      }
+      // 填充函数，用于将源头赋值给目标
+      // 当目标是数组的时候，源头将同时赋值给数组内的每个元素
+      Util.fill = function (target, source, propertyName) {
+          if (Array.isArray(target)) {
+              for (var i = target.length - 1; i >= 0; i--) {
+                  if (propertyName) {
+                      target[i][propertyName] = source;
+                  }
+                  else {
+                      target[i] = source;
+                  }
+              }
+          }
+          else {
+              if (propertyName) {
+                  target[propertyName] = source;
+              }
+              else {
+                  target = source;
+              }
+          }
+          return target;
+      };
+      // threejs 对象清除函数
+      Util.dispose = function (object) {
+          if (object.dispose) {
+              object.dispose();
+          }
+          if (object instanceof Particle) {
+              object.geometry.dispose();
+              object.material.dispose();
+          }
+          if (Array.isArray(object.children)) {
+              for (var i = object.children.length - 1; i >= 0; i--) {
+                  Util.dispose(object.children[i]);
+              }
+          }
+          object = null;
+      };
+      // 深拷贝
+      // 与一般深拷贝不同，该方法会优先认同传入对象的 clone 方法
+      Util.clone = function (anything) {
+          var _a;
+          if (anything && anything.clone) {
+              return anything.clone();
+          }
+          if (Array.isArray(anything)) {
+              var array = Array.from({ length: anything.length });
+              for (var i = anything.length - 1; i >= 0; i--) {
+                  array[i] = Util.clone(anything[i]);
+              }
+              return array;
+          }
+          else if (Object.prototype.toString.call(anything).toLowerCase() === '[object object]') {
+              var object = {};
+              for (var key in anything) {
+                  Object.assign(object, (_a = {}, _a[key] = Util.clone(object[key]), _a));
+              }
+              return object;
+          }
+          else {
+              return anything;
+          }
+      };
+      return Util;
+  }());
+
   /* 线段 */
   var Line = /** @class */ (function (_super) {
       __extends(Line, _super);
@@ -205,12 +278,14 @@ var TP = (function (exports,THREE) {
               colorAttribute.dynamic = true;
               geometry.addAttribute('color', colorAttribute);
           }
+          geometry.addAttribute('position', new THREE.BufferAttribute(new Float32Array(Util.fill(Array.from({ length: verticesNumber * verticesSize }), 0.0)), verticesSize));
           _this = _super.call(this, geometry, material) || this;
           Particle.prototype.constructor.call(_this, options);
           _this.verticesNumber = verticesNumber;
           _this.verticesSize = verticesSize;
           _this.vertices = vertices;
           _this.colors = colors;
+          _this.afterimagePositionArrayIndex = 0;
           _this.options = options;
           _this.type = 'Line';
           return _this;
@@ -315,6 +390,7 @@ var TP = (function (exports,THREE) {
   var Loader = /** @class */ (function () {
       function Loader() {
       }
+      // 加载字体
       Loader.loadFont = function (path, callback) {
           var font = fonts[path];
           if (font && callback) {
@@ -329,6 +405,7 @@ var TP = (function (exports,THREE) {
               });
           }
       };
+      // 加载材质
       Loader.loadTexture = function (path) {
           return textures[path] = textures[path] || textureLoader.load(path);
       };
@@ -421,73 +498,6 @@ var TP = (function (exports,THREE) {
           }
       };
       return Lut;
-  }());
-
-  // 通用工具包
-  var Util = /** @class */ (function () {
-      function Util() {
-      }
-      Util.fill = function (target, source, propertyName) {
-          if (Array.isArray(target)) {
-              for (var i = target.length - 1; i >= 0; i--) {
-                  if (propertyName) {
-                      target[i][propertyName] = source;
-                  }
-                  else {
-                      target[i] = source;
-                  }
-              }
-          }
-          else {
-              if (propertyName) {
-                  target[propertyName] = source;
-              }
-              else {
-                  target = source;
-              }
-          }
-      };
-      Util.dispose = function (object) {
-          if (object.dispose) {
-              object.dispose();
-          }
-          if (object instanceof Particle) {
-              object.geometry.dispose();
-              object.material.dispose();
-          }
-          if (Array.isArray(object.children)) {
-              for (var i = object.children.length - 1; i >= 0; i--) {
-                  Util.dispose(object.children[i]);
-              }
-          }
-          object = null;
-      };
-      Util.clone = function (anything) {
-          var _a;
-          // deep clone
-          if (anything && anything.clone) {
-              return anything.clone();
-          }
-          if (Array.isArray(anything)) {
-              var array = [];
-              for (var _i = 0, anything_1 = anything; _i < anything_1.length; _i++) {
-                  var thing = anything_1[_i];
-                  array.push(Util.clone(thing));
-              }
-              return array;
-          }
-          else if (Object.prototype.toString.call(anything).toLowerCase() === '[object object]') {
-              var object = {};
-              for (var key in anything) {
-                  Object.assign(object, (_a = {}, _a[key] = Util.clone(object[key]), _a));
-              }
-              return object;
-          }
-          else {
-              return anything;
-          }
-      };
-      return Util;
   }());
 
   var Emitter = /** @class */ (function (_super) {
@@ -612,8 +622,10 @@ var TP = (function (exports,THREE) {
               var particle = this.children[i];
               if (!particle.emitting)
                   continue;
+              // 粒子从出生到现在所经过的时间（单位：秒）
+              var elapsedTime = particle.clock.elapsedTime;
               // 获得粒子距离上次更新的时间差
-              var elapsedTimePercentage = particle.clock.elapsedTime % particle.life / particle.life;
+              var elapsedTimePercentage = elapsedTime % particle.life / particle.life;
               // 获得插值函数
               var interpolationFunction = Lut.getInterpolationFunction(this.particlesTransformType);
               // 设置粒子属性随机值
@@ -694,11 +706,82 @@ var TP = (function (exports,THREE) {
                       particle.position.addScaledVector(particle.direction, particle.velocity);
                   }
               }
+              // 粒子朝向
               if (this.isVerticalToDirection) {
                   // 修改粒子朝向，使其垂直于运动方向
                   var angle = particle.up.angleTo(particle.direction) + 1.5707963267948966; // 1.57 即 90deg
                   var axis = particle.direction.clone().cross(particle.up);
                   particle.setRotationFromAxisAngle(axis, angle);
+              }
+              // 生成与更新残影
+              if (particle.afterimage && particle.afterimage.number > 0) {
+                  var isLine = particle.type === Line.TYPE; // 当粒子类型是线段时，有另一套处理方法
+                  if (elapsedTime > particle.afterimage.delay - particle.afterimage.interval) {
+                      if (isLine) {
+                          // 当粒子类型是线段时，直接将每个端点的位置复制下来
+                          var positionArray = particle.geometry.getAttribute('position').array;
+                          var cloneArray = Array.from({ length: positionArray.length });
+                          for (var j = 0; j < positionArray.length; j++) {
+                              cloneArray[j] = positionArray[j];
+                          }
+                          particle.afterimage.positionArrays.push(cloneArray);
+                      }
+                      else {
+                          // 将粒子的世界矩阵记录下来，作为残影的运动轨迹
+                          particle.afterimage.matrixWorlds.push(particle.matrixWorld.clone());
+                      }
+                  }
+                  if (elapsedTime > particle.afterimage.delay) {
+                      // 先计算还需要生成的残影的数量
+                      // 用总共需要生成的残影数量减去已经生成的残影数量
+                      var generatedGlowNumber = particle.glow ? 1 : 0;
+                      var generatedAfterimageNumber = particle.children.length - generatedGlowNumber; // 已经生成的残影数量
+                      var needGeneratedAfterimageNumber = Math.min(Math.floor((elapsedTime - particle.afterimage.delay) / particle.afterimage.interval) + 1, particle.afterimage.number)
+                          - generatedAfterimageNumber;
+                      // 生成新的残影粒子
+                      for (var j = 0; j < needGeneratedAfterimageNumber; j++) {
+                          var afterimageParticle = particle.clone();
+                          Util.dispose(afterimageParticle.children.splice(generatedGlowNumber)); // 只保留残影子物体中的发光物体就行
+                          // 残影形变（位置、缩放、旋转）直接设置，不需要通过 position scale rotation 计算
+                          // afterimageParticle.matrixWorldNeedsUpdate = false;
+                          afterimageParticle.matrixAutoUpdate = false;
+                          // 设置残影的不透明度
+                          afterimageParticle.material.transparent = true;
+                          afterimageParticle.material.opacity = Math.max(0, particle.material.opacity - particle.afterimage.attenuation * (j + 1 + generatedAfterimageNumber));
+                          particle.add(afterimageParticle);
+                      }
+                      // 更新残影粒子位置
+                      if (isLine) {
+                          for (var j = particle.children.length - 1; j >= generatedGlowNumber; j--) {
+                              var afterimageParticle = particle.children[j];
+                              var afterimageParticlePositionAttribute = afterimageParticle.geometry.getAttribute('position');
+                              var afterimageParticlePositionArray = afterimageParticlePositionAttribute.array;
+                              var positionArray = particle.afterimage.positionArrays[afterimageParticle.afterimagePositionArrayIndex];
+                              for (var m = 0; m < afterimageParticle.verticesNumber; m++) {
+                                  for (var n = 0; n < afterimageParticle.verticesSize; n++) {
+                                      var index = m * afterimageParticle.verticesSize + n;
+                                      afterimageParticlePositionArray[index] = positionArray[index];
+                                  }
+                              }
+                              afterimageParticlePositionAttribute.needsUpdate = true;
+                              afterimageParticle.afterimagePositionArrayIndex++;
+                          }
+                      }
+                      else {
+                          // 无法直接设置残影粒子的世界矩阵，只能通过设置本地矩阵后与父物体的世界矩阵相乘得到
+                          // matrix 代表物体的形变，matrixWorld 表示自身形变加上父物体形变的最终结果
+                          // matrix * parent.matrixWorld = matrixWorld
+                          // => matrix = matrixWorld * (parent.matrixWorld 的逆矩阵)
+                          // 表示意义为：残影此刻的本地矩阵 * 父物体此刻的世界矩阵 = 若干秒前物体的世界矩阵
+                          // "父物体此刻的世界矩阵" 和 "若干秒前物体的世界矩阵" 已知，便可求物体当前时刻的本地矩阵
+                          for (var j = particle.children.length - 1; j >= generatedGlowNumber; j--) {
+                              var afterimageParticle = particle.children[j];
+                              afterimageParticle.matrix.copy(particle.afterimage.matrixWorlds[afterimageParticle.afterimageMatrixWorldIndex].clone()
+                                  .multiply(new THREE.Matrix4().getInverse(particle.matrixWorld)));
+                              afterimageParticle.afterimageMatrixWorldIndex++; // 残影行迹轨迹向前一步
+                          }
+                      }
+                  }
               }
           }
       };
@@ -742,8 +825,8 @@ var TP = (function (exports,THREE) {
               switch (generatedParticle.type) {
                   case Line.TYPE: {
                       var line = generatedParticle;
-                      var geometry = line.geometry;
-                      var positionArray = Array.from({ length: line.verticesNumber * line.verticesSize });
+                      var positionAttribute = line.geometry.getAttribute('position');
+                      var positionArray = positionAttribute.array;
                       for (var m = 0; m < line.verticesNumber; m++) {
                           for (var n = 0; n < line.verticesSize; n++) {
                               var index = m * line.verticesSize + n; // 获得索引，避免重复计算
@@ -752,10 +835,8 @@ var TP = (function (exports,THREE) {
                                   generatedParticlePosition[n];
                           }
                       }
-                      var positionAttribute = new THREE.BufferAttribute(new Float32Array(positionArray), line.verticesSize);
                       positionAttribute.dynamic = true;
                       positionAttribute.needsUpdate = true;
-                      geometry.addAttribute('position', positionAttribute);
                       break;
                   }
                   default:
@@ -869,8 +950,8 @@ var TP = (function (exports,THREE) {
                       // 对于线段来说，position 属性并不生效
                       // 生效的是 geometry.getAttribute('position')
                       var line = generatedParticle;
-                      var geometry = line.geometry;
-                      var positionArray = Array.from({ length: line.verticesNumber * line.verticesSize });
+                      var positionAttribute = line.geometry.getAttribute('position');
+                      var positionArray = positionAttribute.array;
                       for (var m = 0; m < line.verticesNumber; m++) {
                           for (var n = 0; n < line.verticesSize; n++) {
                               var index = m * line.verticesSize + n; // 获得索引，避免重复计算
@@ -879,10 +960,8 @@ var TP = (function (exports,THREE) {
                                   generatedParticlePosition[n];
                           }
                       }
-                      var positionAttribute = new THREE.BufferAttribute(new Float32Array(positionArray), line.verticesSize);
                       positionAttribute.dynamic = true;
                       positionAttribute.needsUpdate = true;
-                      geometry.addAttribute('position', positionAttribute);
                       break;
                   }
                   default:
@@ -1006,20 +1085,18 @@ var TP = (function (exports,THREE) {
                   case Line.TYPE: {
                       // Line 的情况，将 Line 的所有端点的所有位置放在随机取得的点上
                       var line = generatedParticle;
-                      var geometry = line.geometry;
-                      var linePositionArray = Array.from({ length: line.verticesNumber * line.verticesSize });
+                      var positionAttribute = line.geometry.getAttribute('position');
+                      var positionArray_1 = positionAttribute.array;
                       for (var m = 0; m < line.verticesNumber; m++) {
                           for (var n = 0; n < line.verticesSize; n++) {
                               var index = m * line.verticesSize + n; // 获得索引，避免重复计算
-                              linePositionArray[index] = index < line.vertices.length ?
+                              positionArray_1[index] = index < line.vertices.length ?
                                   line.vertices[index] :
-                                  positionArray[randomIndex + n];
+                                  positionArray_1[randomIndex + n];
                           }
                       }
-                      var positionAttribute = new THREE.BufferAttribute(new Float32Array(linePositionArray), line.verticesSize);
                       positionAttribute.dynamic = true;
                       positionAttribute.needsUpdate = true;
-                      geometry.addAttribute('position', positionAttribute);
                       break;
                   }
                   default: {
@@ -1229,6 +1306,7 @@ var TP = (function (exports,THREE) {
       return Turbulent;
   }(Effect));
 
+  // 粒子发光特效
   var Glow = /** @class */ (function () {
       function Glow(_a) {
           var _b = _a === void 0 ? {} : _a, _c = _b.opacity, opacity = _c === void 0 ? 0.5 : _c, _d = _b.intensity, intensity = _d === void 0 ? 1 : _d, _e = _b.feature, feature = _e === void 0 ? 5 : _e, _f = _b.size, size = _f === void 0 ? 1.1 : _f, _g = _b.color, color = _g === void 0 ? new THREE.Color(0x00ffff) : _g;
@@ -1268,6 +1346,28 @@ var TP = (function (exports,THREE) {
       return Glow;
   }());
 
+  // 残影特效
+  var Afterimage = /** @class */ (function () {
+      function Afterimage(_a) {
+          var _b = _a === void 0 ? {} : _a, _c = _b.delay, delay = _c === void 0 ? 0.2 : _c, _d = _b.interval, interval = _d === void 0 ? 0.2 : _d, _e = _b.attenuation, attenuation = _e === void 0 ? 0.2 : _e, _f = _b.number, number = _f === void 0 ? 2 : _f;
+          this.delay = delay;
+          this.interval = interval;
+          this.number = number;
+          this.attenuation = attenuation;
+          this.matrixWorlds = [];
+          this.positionArrays = [];
+      }
+      Afterimage.prototype.clone = function () {
+          return new Afterimage({
+              delay: this.delay,
+              interval: this.interval,
+              number: this.number,
+              attenuation: this.attenuation
+          });
+      };
+      return Afterimage;
+  }());
+
   // polyfill
 
   exports.Sphere = Sphere;
@@ -1284,6 +1384,7 @@ var TP = (function (exports,THREE) {
   exports.Wind = Wind;
   exports.Turbulent = Turbulent;
   exports.Glow = Glow;
+  exports.Afterimage = Afterimage;
 
   return exports;
 

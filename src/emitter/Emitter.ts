@@ -173,8 +173,10 @@ class Emitter extends THREE.Object3D {
     for (let i: number = this.children.length - 1; i >= 0; i--) {
       const particle: ParticleInterface = this.children[i] as ParticleInterface;
       if (!particle.emitting) continue;
+      // 粒子从出生到现在所经过的时间（单位：秒）
+      const elapsedTime: number = particle.clock.elapsedTime;
       // 获得粒子距离上次更新的时间差
-      const elapsedTimePercentage: number = particle.clock.elapsedTime % particle.life / particle.life;
+      const elapsedTimePercentage: number = elapsedTime % particle.life / particle.life;
       // 获得插值函数
       const interpolationFunction: (x: number, y: number, t: number) => number = Lut.getInterpolationFunction(this.particlesTransformType);
 
@@ -226,6 +228,7 @@ class Emitter extends THREE.Object3D {
           break;
         }
       }
+
       // 粒子缩放调整
       for (let j: number = 0; j < this.particlesScaleKey.length - 1; j++) {
         if (elapsedTimePercentage >= this.particlesScaleKey[j] && elapsedTimePercentage < this.particlesScaleKey[j + 1]) {
@@ -281,11 +284,87 @@ class Emitter extends THREE.Object3D {
         }
       }
       
+      // 粒子朝向
       if (this.isVerticalToDirection) {
         // 修改粒子朝向，使其垂直于运动方向
         const angle: number = particle.up.angleTo(particle.direction) + 1.5707963267948966; // 1.57 即 90deg
         const axis: THREE.Vector3 = particle.direction.clone().cross(particle.up);
         particle.setRotationFromAxisAngle(axis, angle);
+      }
+
+      // 生成与更新残影
+      if (particle.afterimage && particle.afterimage.number > 0) {
+        const isLine = particle.type === Line.TYPE; // 当粒子类型是线段时，有另一套处理方法
+
+        if (elapsedTime > particle.afterimage.delay - particle.afterimage.interval) {
+          if (isLine) {
+            // 当粒子类型是线段时，直接将每个端点的位置复制下来
+            const positionArray: number[] | ArrayLike<number> = (particle.geometry as THREE.BufferGeometry).getAttribute('position').array;
+            const cloneArray: number[] = Array.from({ length: positionArray.length });
+            for (let j: number = 0; j < positionArray.length; j++) {
+              cloneArray[j] = positionArray[j];
+            }
+            particle.afterimage.positionArrays.push(cloneArray);
+          } else {
+            // 将粒子的世界矩阵记录下来，作为残影的运动轨迹
+            particle.afterimage.matrixWorlds.push(particle.matrixWorld.clone());
+          }
+        }
+
+        if (elapsedTime > particle.afterimage.delay) {
+          // 先计算还需要生成的残影的数量
+          // 用总共需要生成的残影数量减去已经生成的残影数量
+          const generatedGlowNumber: number = particle.glow ? 1 : 0;
+          const generatedAfterimageNumber: number = particle.children.length - generatedGlowNumber; // 已经生成的残影数量
+          const needGeneratedAfterimageNumber: number =
+            Math.min(Math.floor((elapsedTime - particle.afterimage.delay) / particle.afterimage.interval) + 1, particle.afterimage.number)
+            - generatedAfterimageNumber;
+          // 生成新的残影粒子
+          for (let j: number = 0; j < needGeneratedAfterimageNumber; j++) {
+            const afterimageParticle: ParticleInterface = particle.clone();
+            Util.dispose(afterimageParticle.children.splice(generatedGlowNumber)); // 只保留残影子物体中的发光物体就行
+            // 残影形变（位置、缩放、旋转）直接设置，不需要通过 position scale rotation 计算
+            // afterimageParticle.matrixWorldNeedsUpdate = false;
+            afterimageParticle.matrixAutoUpdate = false;
+            // 设置残影的不透明度
+            afterimageParticle.material.transparent = true;
+            afterimageParticle.material.opacity = Math.max(0, particle.material.opacity - particle.afterimage.attenuation * (j + 1 + generatedAfterimageNumber));
+            particle.add(afterimageParticle);
+          }
+
+          // 更新残影粒子位置
+          if (isLine) {
+            for (let j: number = particle.children.length - 1; j >= generatedGlowNumber; j--) {
+              const afterimageParticle: Line = particle.children[j] as Line;
+              const afterimageParticlePositionAttribute: THREE.BufferAttribute = afterimageParticle.geometry.getAttribute('position') as THREE.BufferAttribute;
+              const afterimageParticlePositionArray: number[] = afterimageParticlePositionAttribute.array as number[];
+              const positionArray: number[] = particle.afterimage.positionArrays[afterimageParticle.afterimagePositionArrayIndex]; 
+              for (let m: number = 0; m < afterimageParticle.verticesNumber; m++) {
+                for (let n: number = 0; n < afterimageParticle.verticesSize; n++) {
+                  const index: number = m * afterimageParticle.verticesSize + n;
+                  afterimageParticlePositionArray[index] = positionArray[index];
+                }
+              }
+              afterimageParticlePositionAttribute.needsUpdate = true;
+              afterimageParticle.afterimagePositionArrayIndex++;
+            }
+          } else {
+            // 无法直接设置残影粒子的世界矩阵，只能通过设置本地矩阵后与父物体的世界矩阵相乘得到
+            // matrix 代表物体的形变，matrixWorld 表示自身形变加上父物体形变的最终结果
+            // matrix * parent.matrixWorld = matrixWorld
+            // => matrix = matrixWorld * (parent.matrixWorld 的逆矩阵)
+            // 表示意义为：残影此刻的本地矩阵 * 父物体此刻的世界矩阵 = 若干秒前物体的世界矩阵
+            // "父物体此刻的世界矩阵" 和 "若干秒前物体的世界矩阵" 已知，便可求物体当前时刻的本地矩阵
+            for (let j: number = particle.children.length - 1; j >= generatedGlowNumber; j--) {
+              const afterimageParticle: ParticleInterface = particle.children[j] as ParticleInterface;
+              afterimageParticle.matrix.copy(
+                particle.afterimage.matrixWorlds[afterimageParticle.afterimageMatrixWorldIndex].clone()
+                  .multiply(new THREE.Matrix4().getInverse(particle.matrixWorld))
+              );
+              afterimageParticle.afterimageMatrixWorldIndex++; // 残影行迹轨迹向前一步
+            }
+          }
+        }
       }
     }
   }
