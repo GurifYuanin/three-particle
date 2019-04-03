@@ -4,7 +4,7 @@ import { ParticleInterface, Particle } from '../particle/Particle';
 class Util {
   // 填充函数，用于将源头赋值给目标
   // 当目标是数组的时候，源头将同时赋值给数组内的每个元素
-  static fill(target: any | any[], source: any, propertyName?: string): void {
+  static fill(target: any | any[], source: any, propertyName?: string): any {
     if (Array.isArray(target)) {
       for (let i: number = target.length - 1; i >= 0; i--) {
         if (propertyName) {
@@ -20,6 +20,7 @@ class Util {
         target = source;
       }
     }
+    return target;
   }
 
   // threejs 对象清除函数
@@ -46,9 +47,9 @@ class Util {
       return anything.clone();
     }
     if (Array.isArray(anything)) {
-      const array = [];
-      for (let thing of anything) {
-        array.push(Util.clone(thing));
+      const array = Array.from({ length: anything.length });
+      for (let i: number = anything.length - 1; i >= 0; i--) {
+        array[i] = Util.clone(anything[i]);
       }
       return array;
     } else if (Object.prototype.toString.call(anything).toLowerCase() === '[object object]') {

@@ -12,6 +12,8 @@ class Points extends THREE.Points {
   color: THREE.Color; // 点统一颜色
   colors: number[]; //点颜色
   glow: Glow | null;
+  geometry: THREE.BufferGeometry;
+  material: THREE.PointsMaterial;
   options: object;
   constructor({
     verticesNumber = 10,
@@ -108,7 +110,7 @@ class Points extends THREE.Points {
       vertices: this.vertices,
       spread: this.spread,
       colors: this.colors,
-      material: (this.material as THREE.PointsMaterial).clone(),
+      material: this.material.clone(),
       glow: this.glow,
       ...this.options
     });

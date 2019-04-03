@@ -80,20 +80,18 @@ class TextEmitter extends Emitter {
         case Line.TYPE: {
           // Line 的情况，将 Line 的所有端点的所有位置放在随机取得的点上
           const line: Line = <unknown>generatedParticle as Line;
-          const geometry: THREE.BufferGeometry = line.geometry as THREE.BufferGeometry;
-          const linePositionArray: number[] = Array.from({ length: line.verticesNumber * line.verticesSize });
+          const positionAttribute: THREE.BufferAttribute = line.geometry.getAttribute('position') as THREE.BufferAttribute;
+          const positionArray: number[] = positionAttribute.array as number[];
           for (let m: number = 0; m < line.verticesNumber; m++) {
             for (let n: number = 0; n < line.verticesSize; n++) {
               const index = m * line.verticesSize + n; // 获得索引，避免重复计算
-              linePositionArray[index] = index < line.vertices.length ?
+              positionArray[index] = index < line.vertices.length ?
                 line.vertices[index] :
                 positionArray[randomIndex + n];
             }
           }
-          const positionAttribute: THREE.BufferAttribute = new THREE.BufferAttribute(new Float32Array(linePositionArray), line.verticesSize);
           positionAttribute.dynamic = true;
           positionAttribute.needsUpdate = true;
-          geometry.addAttribute('position', positionAttribute);
           break;
         }
         default: {

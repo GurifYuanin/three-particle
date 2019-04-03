@@ -23,3 +23,4 @@ export { default as Wind } from './physical/Wind';
 // 特效
 export { default as Turbulent } from './effect/Turbulent';
 export { default as Glow } from './effect/Glow';
+export { default as Afterimage } from './effect/Afterimage'

@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import Afterimage from '../effect/Afterimage';
+import Glow from '../effect/Glow';
 
 class Particle {
   static readonly TRANSFORM_LINEAR: number = 0; // 线性插值
@@ -10,11 +12,14 @@ class Particle {
   direction: THREE.Vector3; // 粒子运动方向
   border: number; // 边界半径，用于碰撞检测
   emitting: boolean; // 该粒子是否可以被发射
+  afterimage: Afterimage | null; // 是否有粒子残影
+  afterimageMatrixWorldIndex: number;
   constructor({
     life = 3,
     lifeRandom = 0, // 生命随机比例
     velocity = 10,
     border = 5,
+    afterimage = null,
   } = {}) {
     this.clock = new THREE.Clock();
     this.clock.start();
@@ -22,14 +27,17 @@ class Particle {
     this.direction = new THREE.Vector3(0, 1, 0); // 粒子运动方向由发射器控制，不受参数影响
     this.velocity = velocity;
     this.border = border;
+    this.afterimage = afterimage ? afterimage.clone() : afterimage;
+    this.afterimageMatrixWorldIndex = 0;
     this.emitting = true;
   }
 }
 
 // Particle 接口，用于解决 ts 不识别 Particle.prototype.call 而报错的尴尬情况
 interface ParticleInterface extends THREE.Object3D, Particle {
-  geometry: THREE.Geometry | THREE.BufferGeometry,
-  material: THREE.Material
+  geometry: THREE.Geometry | THREE.BufferGeometry;
+  material: THREE.Material;
+  glow: Glow | null;
 }
 
 

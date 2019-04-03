@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>TextEmitter</title>
+    <title>Afterimage</title>
 </head>
 
 <body>
@@ -11,18 +11,23 @@
     <script src="../dist/index.js"></script>
     <script src="./javascripts/common.js"></script>
     <script>
-
         const sphere = new TP.Sphere({
-            radius: 0.2,
-            velocity: 0
+            afterimage: new TP.Afterimage(),
+            velocity: 1
         });
-        const emitter = new TP.TextEmitter({
-            emission: 100
+        const emitter = new TP.ExplosionEmitter({
+            emission: 5
+        });
+        const gravity = new TP.Gravity({
+            gravity: 0.1
         });
 
 
         emitter.addParticle(sphere);
-        emitter.anchor.x = -50;
+        emitter.addPhysical(gravity);
+        const ambientLight = new THREE.AmbientLight(0x404040); // soft white light
+        scene.add(ambientLight);
+
         scene.add(emitter);
 
         camera.position.set(0, 0, 50);

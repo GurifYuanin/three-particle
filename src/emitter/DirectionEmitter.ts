@@ -118,8 +118,8 @@ class DirectionEmitter extends Emitter {
           // 对于线段来说，position 属性并不生效
           // 生效的是 geometry.getAttribute('position')
           const line: Line = <unknown>generatedParticle as Line;
-          const geometry: THREE.BufferGeometry = line.geometry as THREE.BufferGeometry;
-          const positionArray: number[] = Array.from({ length: line.verticesNumber * line.verticesSize });
+          const positionAttribute: THREE.BufferAttribute = line.geometry.getAttribute('position') as THREE.BufferAttribute;
+          const positionArray: number[] = positionAttribute.array as number[];
           for (let m: number = 0; m < line.verticesNumber; m++) {
             for (let n: number = 0; n < line.verticesSize; n++) {
               const index = m * line.verticesSize + n; // 获得索引，避免重复计算
@@ -128,10 +128,8 @@ class DirectionEmitter extends Emitter {
                                   generatedParticlePosition[n];
             }
           }
-          const positionAttribute: THREE.BufferAttribute = new THREE.BufferAttribute(new Float32Array(positionArray), line.verticesSize);
           positionAttribute.dynamic = true;
           positionAttribute.needsUpdate = true;
-          geometry.addAttribute('position', positionAttribute);
           break;
         }
         default: {
