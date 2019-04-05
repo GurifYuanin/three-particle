@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { Particle } from './Particle';
-import Util from '../util/Util';
 
 /* 线段 */
 class Line extends THREE.Line {
@@ -18,14 +17,15 @@ class Line extends THREE.Line {
     verticesSize = 3,
     vertices = [],
     colors = [],
-    material = new THREE.LineBasicMaterial(), // LineBasicMaterial | LineDashMaterial
+    material = new THREE.LineBasicMaterial(),
     ...options
   } = {}) {
     const geometry: THREE.BufferGeometry = new THREE.BufferGeometry();
     // 添加颜色
     if (material.vertexColors === THREE.VertexColors) {
-      const verticesColorArray: number[] = Array.from({ length: verticesNumber * verticesSize });
-      for (let i: number = 0; i < verticesColorArray.length; i++) {
+      const verticesColorArrayNumber: number = verticesNumber * verticesSize;
+      const verticesColorArray: number[] = Array.from({ length: verticesColorArrayNumber });
+      for (let i: number = 0; i < verticesColorArrayNumber; i++) {
         verticesColorArray[i] = i < colors.length ? colors[i] : Math.random();
       }
       const colorAttribute: THREE.BufferAttribute = new THREE.BufferAttribute(new Float32Array(verticesColorArray), verticesSize);
@@ -33,12 +33,7 @@ class Line extends THREE.Line {
       geometry.addAttribute('color', colorAttribute);
     }
     geometry.addAttribute('position', new THREE.BufferAttribute(
-      new Float32Array(
-        Util.fill(
-          Array.from({ length: verticesNumber * verticesSize }),
-          0.0
-        ),
-      ),
+      new Float32Array(Array.from({ length: verticesNumber * verticesSize }).fill(0.0) as number[]),
       verticesSize
     ));
     super(geometry, material);

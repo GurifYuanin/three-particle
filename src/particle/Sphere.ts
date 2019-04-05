@@ -15,7 +15,7 @@ class Sphere extends THREE.Mesh {
     widthSegments = 32,
     heightSegments = 32,
     glow = null,
-    material = new THREE.MeshPhongMaterial() as THREE.Material,
+    material = new THREE.MeshPhongMaterial(),
     ...options
   } = {}) {
     const geometry = new THREE.SphereBufferGeometry(radius, widthSegments, heightSegments);
@@ -40,7 +40,7 @@ class Sphere extends THREE.Mesh {
       radius: this.radius,
       heightSegments: this.heightSegments,
       widthSegments: this.widthSegments,
-      material: (this.material as THREE.Material).clone(),
+      material: (this.material as THREE.MeshPhongMaterial).clone(),
       glow: this.glow,
       ...this.options
     });

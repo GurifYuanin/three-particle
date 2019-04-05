@@ -18,7 +18,7 @@ class BoxEmitter extends Emitter {
     side = 0,
     ...options
   }) {
-    super(options);
+    super(options || {});
     this.width = width;
     this.height = height;
     this.thickness = thickness;

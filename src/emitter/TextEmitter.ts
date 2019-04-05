@@ -21,7 +21,7 @@ class TextEmitter extends Emitter {
   geometry: THREE.TextBufferGeometry | null;
   constructor({
     text = 'Hello World',
-    font = '/demo/fonts/helvetiker_regular.typeface.json',
+    font = './fonts/helvetiker_regular.typeface.json',
     size = 10,
     height = 10,
     curveSegments = 12,
@@ -31,7 +31,7 @@ class TextEmitter extends Emitter {
     bevelSegments = 3,
     ...options
   }) {
-    super(options);
+    super(options || {});
     this.emitting = false; // 等待字体加载完才能运动
     this.text = text;
     this.font = font;

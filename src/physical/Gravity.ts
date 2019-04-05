@@ -33,13 +33,13 @@ class Gravity extends Physical {
     this.type = 'Gravity';
   }
   effect(particle: ParticleInterface, emitter: Emiiter): void {
-    const elapsedTime = particle.clock.elapsedTime;
+    const elapsedTime: number = particle.clock.elapsedTime;
     // 如果时间跨度为 0，则直接返回
     if (elapsedTime === 0) return;
     super.effect(particle, emitter);
     // 受重力影响，修正粒子运动方向
-    const originDirection = particle.direction.clone(); // 记录下受重力影响前的粒子运动方向
-    let velocity = particle.direction.add(
+    const originDirection: THREE.Vector3 = particle.direction.clone(); // 记录下受重力影响前的粒子运动方向
+    let velocity: number = particle.direction.add(
       this.direction
         .clone()
         .multiplyScalar(this.gravity * elapsedTime)
@@ -50,18 +50,17 @@ class Gravity extends Physical {
     if (this.floor && this.event !== Gravity.NONE) {
       // 使用受重力影响前的粒子运动方向进行计算
       // 避免重力影响下方向产生重大变化（比如平行 -> 斜线）
-      const particlePosition = particle.position.clone();
+      const particlePosition: THREE.Vector3 = particle.position.clone();
       // 当粒子是折线的时候
       // 折线的位置永远不变
       // 因此参考依据为折线第一个点的位置
       if (particle.type === Line.TYPE) {
         const positionArray: number[] | ArrayLike<number> = (particle.geometry as THREE.BufferGeometry).getAttribute('position').array;
         particlePosition.set(positionArray[0], positionArray[1], positionArray[2]);
-        particlePosition.set(positionArray[0], positionArray[1], positionArray[2]);
       }
-      const ray = new THREE.Ray(particlePosition, originDirection); // 粒子运动方向射线
-      const distance = this.floor.distanceToPoint(particlePosition); // 粒子与地面的距离（地面上为正，地面下为负）
-      const angle = originDirection.angleTo(this.floor.normal); // 粒子方向与地面法线的弧度
+      const ray: THREE.Ray = new THREE.Ray(particlePosition, originDirection); // 粒子运动方向射线
+      const distance: number = this.floor.distanceToPoint(particlePosition); // 粒子与地面的距离（地面上为正，地面下为负）
+      const angle: number = originDirection.angleTo(this.floor.normal); // 粒子方向与地面法线的弧度
 
       // 1、若事件为粒子消失，则直接移除
       // 2、若为弹起事件
@@ -85,8 +84,8 @@ class Gravity extends Physical {
             if (Math.abs(angle - 1.57) < .1) {
               // 如果粒子运动方向与地面接近平行
               // 则产生摩擦力
-              const lostVelocity = particle.velocity * this.firction * elapsedTime; // 受摩擦力影响损失的速率
-              const firctionedVelocity = particle.velocity - lostVelocity; // 减去损失的速率后的粒子最终速率
+              const lostVelocity: number = particle.velocity * this.firction * elapsedTime; // 受摩擦力影响损失的速率
+              const firctionedVelocity: number = particle.velocity - lostVelocity; // 减去损失的速率后的粒子最终速率
 
               // 既然粒子运动方向与地面
               // 且粒子运动方向与地面接近平行

@@ -23,7 +23,7 @@ class Text extends THREE.Mesh {
   glow: Glow | null;
   constructor({
     text = 'Hello World',
-    font = '/demo/fonts/helvetiker_regular.typeface.json',
+    font = './fonts/helvetiker_regular.typeface.json',
     size = 10,
     height = 10,
     curveSegments = 12,
@@ -31,7 +31,7 @@ class Text extends THREE.Mesh {
     bevelThickness = 10,
     bevelSize = 8,
     bevelSegments = 3,
-    material = new THREE.MeshPhongMaterial() as THREE.Material,
+    material = new THREE.MeshPhongMaterial(),
     glow = null,
     ...options
   } = {}) {
@@ -87,7 +87,7 @@ class Text extends THREE.Mesh {
       bevelThickness: this.bevelThickness,
       bevelSize: this.bevelSize,
       bevelSegments: this.bevelSegments,
-      material: (this.material as THREE.Material).clone(),
+      material: (this.material as THREE.MeshPhongMaterial).clone(),
       glow: this.glow,
       ...this.options
     });

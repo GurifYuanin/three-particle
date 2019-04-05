@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Particle, ParticleInterface } from '../particle/Particle';
 import Physical from '../physical/Physical';
+import Points from '../particle/Points';
 import Line from '../particle/Line';
 import Lut from '../util/Lut';
 import Util from '../util/Util';
@@ -109,22 +110,21 @@ class Emitter extends THREE.Object3D {
     // 发射器进行打点
     let delta: number = this.clock.getDelta(); // 距离上一次发射粒子过去的时间差
     let deltaEmission: number = 0; // 该时间差需要发射多少粒子
+    const particlesNumber = this.particles.length;
     const generatedParticles: ParticleInterface[] = [];
-    if (this.emitting) {
+
+    // 当发射器处于发射状态，且粒子样本数量大于 0 时，才会进行粒子创建
+    if (this.emitting && particlesNumber > 0) {
       switch(this.mode) {
         case Emitter.MODE_DURATIOIN: {
           // 持续发射模式
           // 通过打点时间差计算得到本次 update 需要补充多少粒子
-          deltaEmission = Math.round((delta + this.gap) * this.emission);
+          deltaEmission = Math.floor((delta + this.gap) * this.emission);
           if (deltaEmission === 0) {
-            const randomParticle: ParticleInterface = this.particles[THREE.Math.randInt(0, this.particles.length)];
-            const randomParticleLife: number = randomParticle ? randomParticle.life : 1;
-            if (this.children.length < this.emission * randomParticleLife) {
-              // 发射例子数量为 0，且已发射的例子数量过少
-              // 出现这种情况是因为每次发射器 update 消耗时间过小
-              // 进而导致 delta 过小，计算出来的 deltaEmission 为 0
-              this.gap += delta;
-            }
+            // 应该发射粒子数量为 0，且已发射的例子数量过少
+            // 出现这种情况是因为每次发射器 update 消耗时间过小
+            // 进而导致 delta 过小，计算出来的 deltaEmission 为 0
+            this.gap += delta;
           } else {
             // 计算出来应发射粒子数大于 0
             // 属于正常情况，所以清空 gap
@@ -149,19 +149,22 @@ class Emitter extends THREE.Object3D {
       // 基类 Emitter 不会初始化粒子的位置和方向等参数，
       // 只会负责生成例子，而由子类来实现粒子的参数
       for (let i: number = 0; i < deltaEmission; i++) {
-        const randomIndex: number = THREE.Math.randInt(0, this.particles.length - 1);
-        let randomParticle: ParticleInterface = this.particles[randomIndex].clone(); // 从 particles 内随机取出一个粒子作为样本
-        if (randomParticle.emitting) {
+        const randomParticle: ParticleInterface = this.particles[THREE.Math.randInt(0, particlesNumber - 1)]; // 从 particles 内随机取出一个粒子作为样本
+        randomParticle.onBeforeCreated(); // 调用生命周期钩子
+        const generatedRandomParticle: ParticleInterface = randomParticle.clone();
+        generatedRandomParticle.matrixAutoUpdate = false; // 为了提高效率，在这里关闭 matrix 的自动更新，手动控制更新时机
+        generatedRandomParticle.onAfterCreated(); // 调用生命周期钩子
+        if (generatedRandomParticle.emitting) {
           // 外层会进行一次 emitting 判断，控制发射器是否可以发射粒子
           // 这里也会进行一次判断，判断该粒子是否可以被发射器发射
           // 这里是因为 Text 粒子需要加载字体
           // 字体未加载完成之前不能添加到场景中
           // 用粒子的 emitting 属性标记是否可以进行发射
-          generatedParticles.push(randomParticle);
-          this.add(randomParticle);
+          generatedParticles.push(generatedRandomParticle);
+          this.add(generatedRandomParticle);
         } else {
           // 粒子无法进行发射，则清除掉
-          Util.dispose(randomParticle);
+          Util.dispose(generatedRandomParticle);
         }
       }
     }
@@ -184,13 +187,11 @@ class Emitter extends THREE.Object3D {
       // 粒子透明度
       for (let j: number = 0; j < this.particlesOpacityKey.length - 1; j++) {
         if (elapsedTimePercentage >= this.particlesOpacityKey[j] && elapsedTimePercentage < this.particlesOpacityKey[j + 1]) {
-          Util.fill(particle.material,
-            interpolationFunction(
-              this.particlesOpacityValue[j],
-              this.particlesOpacityValue[j + 1],
-              elapsedTimePercentage
-            ) + THREE.Math.randFloatSpread(this.particlesOpacityRandom),
-            'opacity');
+          particle.material.opacity = interpolationFunction(
+            this.particlesOpacityValue[j],
+            this.particlesOpacityValue[j + 1],
+            elapsedTimePercentage
+          ) + THREE.Math.randFloatSpread(this.particlesOpacityRandom);
           break;
         }
       }
@@ -200,16 +201,17 @@ class Emitter extends THREE.Object3D {
         if (elapsedTimePercentage >= this.particlesColorKey[j] && elapsedTimePercentage < this.particlesColorKey[j + 1]) {
           const preColor: THREE.Color = this.particlesColorValue[j];
           const nextColor: THREE.Color = this.particlesColorValue[j + 1];
-          Util.fill(particle.material, new THREE.Color(
+          particle.material.color = new THREE.Color(
             interpolationFunction(preColor.r, nextColor.r, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesColorRandom[0]),
             interpolationFunction(preColor.g, nextColor.g, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesColorRandom[1]),
             interpolationFunction(preColor.b, nextColor.b, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesColorRandom[2]),
-          ), 'color');
+          )
           break;
         }
       }
-      Util.fill(particle.material, true, 'needsUpdate');
       
+      particle.material.needsUpdate = true;
+
       // 粒子位置
       this.particlesPositionRandom && particle.position.add(new THREE.Vector3(
         THREE.Math.randFloatSpread(this.particlesPositionRandom.x),
@@ -260,10 +262,11 @@ class Emitter extends THREE.Object3D {
         case Line.TYPE: {
           // 线段的运动是最前面的点更新值
           // 其后的所有点紧随前面一个的点的位置
-          const position: THREE.BufferAttribute = (particle.geometry as THREE.BufferGeometry).getAttribute('position') as THREE.BufferAttribute;
-          const positionArray: number[] = position.array as number[];
-          const verticesNumber: number = (<unknown>particle as Line).verticesNumber;
-          const verticesSize: number = (<unknown>particle as Line).verticesSize;
+          const line: Line = <unknown>particle as Line;
+          const positionAttribute: THREE.BufferAttribute = line.geometry.getAttribute('position') as THREE.BufferAttribute;
+          const positionArray: number[] = positionAttribute.array as number[];
+          const verticesNumber: number = line.verticesNumber;
+          const verticesSize: number = line.verticesSize;
           let m: number, n: number;
           // 更新除了第一个点之外的所有点
           for (m = 0; m < verticesNumber - 1; m++) {
@@ -276,7 +279,7 @@ class Emitter extends THREE.Object3D {
           for (n = 0; n < verticesSize; n++) {
             positionArray[m * verticesSize + n] += directionArray[n] * particle.velocity;
           }
-          position.needsUpdate = true;
+          positionAttribute.needsUpdate = true;
           break;
         }
         default: {
@@ -294,7 +297,7 @@ class Emitter extends THREE.Object3D {
 
       // 生成与更新残影
       if (particle.afterimage && particle.afterimage.number > 0) {
-        const isLine = particle.type === Line.TYPE; // 当粒子类型是线段时，有另一套处理方法
+        const isLine: boolean = particle.type === Line.TYPE; // 当粒子类型是线段时，有另一套处理方法
 
         if (elapsedTime > particle.afterimage.delay - particle.afterimage.interval) {
           if (isLine) {
@@ -314,7 +317,8 @@ class Emitter extends THREE.Object3D {
         if (elapsedTime > particle.afterimage.delay) {
           // 先计算还需要生成的残影的数量
           // 用总共需要生成的残影数量减去已经生成的残影数量
-          const generatedGlowNumber: number = particle.glow ? 1 : 0;
+          // 点集的发光特效与其他粒子不同，是通过 material.map 来实现，因此不会添加进 children 数组内
+          const generatedGlowNumber: number = (particle.glow && particle.type !== Points.TYPE) ? 1 : 0;
           const generatedAfterimageNumber: number = particle.children.length - generatedGlowNumber; // 已经生成的残影数量
           const needGeneratedAfterimageNumber: number =
             Math.min(Math.floor((elapsedTime - particle.afterimage.delay) / particle.afterimage.interval) + 1, particle.afterimage.number)
@@ -366,11 +370,14 @@ class Emitter extends THREE.Object3D {
           }
         }
       }
+      particle.updateMatrix(); // 粒子形变处理完成，更新 matrix
     }
   }
   clear(particle: ParticleInterface): void {
     // 清除指定的粒子
+    particle.onBeforeDestroyed();
     this.remove(particle);
+    particle.onAfterDestroyed();
     Util.dispose(particle);
   }
   clearAll(): void {
