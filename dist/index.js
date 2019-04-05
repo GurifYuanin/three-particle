@@ -1,7 +1,7 @@
 
 /*!
  * three-particle
- 0.0.3(https://github.com/GurifYuanin/three-particle)
+ 0.0.4(https://github.com/GurifYuanin/three-particle)
  * API https://github.com/GurifYuanin/three-particle/blob/master/doc/api.md)
  * Copyright 2017 - 2019
  GurifYuanin.All Rights Reserved
@@ -138,19 +138,45 @@ var TP = (function (exports,THREE) {
       return t;
   }
 
+  // 残影特效
+  var Afterimage = /** @class */ (function () {
+      function Afterimage(_a) {
+          var _b = _a === void 0 ? {} : _a, _c = _b.delay, delay = _c === void 0 ? 0.2 : _c, _d = _b.interval, interval = _d === void 0 ? 0.2 : _d, _e = _b.attenuation, attenuation = _e === void 0 ? 0.2 : _e, _f = _b.number, number = _f === void 0 ? 2 : _f;
+          this.delay = delay;
+          this.interval = interval;
+          this.number = number;
+          this.attenuation = attenuation;
+          this.matrixWorlds = [];
+          this.positionArrays = [];
+      }
+      Afterimage.prototype.clone = function () {
+          return new Afterimage({
+              delay: this.delay,
+              interval: this.interval,
+              number: this.number,
+              attenuation: this.attenuation
+          });
+      };
+      return Afterimage;
+  }());
+
   var Particle = /** @class */ (function () {
       function Particle(_a) {
           var _b = _a === void 0 ? {} : _a, _c = _b.life, life = _c === void 0 ? 3 : _c, _d = _b.lifeRandom, lifeRandom = _d === void 0 ? 0 : _d, // 生命随机比例
           _e = _b.velocity, // 生命随机比例
-          velocity = _e === void 0 ? 10 : _e, _f = _b.border, border = _f === void 0 ? 5 : _f, _g = _b.afterimage, afterimage = _g === void 0 ? null : _g;
+          velocity = _e === void 0 ? 10 : _e, _f = _b.border, border = _f === void 0 ? 5 : _f, _g = _b.afterimage, afterimage = _g === void 0 ? null : _g, _h = _b.onBeforeCreated, onBeforeCreated = _h === void 0 ? function () { } : _h, _j = _b.onAfterCreated, onAfterCreated = _j === void 0 ? function () { } : _j, _k = _b.onBeforeDestroyed, onBeforeDestroyed = _k === void 0 ? function () { } : _k, _l = _b.onAfterDestroyed, onAfterDestroyed = _l === void 0 ? function () { } : _l;
           this.clock = new THREE.Clock();
           this.clock.start();
           this.life = life + THREE.Math.randFloatSpread(lifeRandom);
           this.direction = new THREE.Vector3(0, 1, 0); // 粒子运动方向由发射器控制，不受参数影响
           this.velocity = velocity;
           this.border = border;
-          this.afterimage = afterimage ? afterimage.clone() : afterimage;
+          this.afterimage = afterimage instanceof Afterimage ? afterimage.clone() : afterimage;
           this.afterimageMatrixWorldIndex = 0;
+          this.onBeforeCreated = onBeforeCreated;
+          this.onAfterCreated = onAfterCreated;
+          this.onBeforeDestroyed = onBeforeDestroyed;
+          this.onAfterDestroyed = onAfterDestroyed;
           this.emitting = true;
       }
       Particle.TRANSFORM_LINEAR = 0; // 线性插值
@@ -188,97 +214,26 @@ var TP = (function (exports,THREE) {
       return Sphere;
   }(THREE.Mesh));
 
-  // 通用工具包
-  var Util = /** @class */ (function () {
-      function Util() {
-      }
-      // 填充函数，用于将源头赋值给目标
-      // 当目标是数组的时候，源头将同时赋值给数组内的每个元素
-      Util.fill = function (target, source, propertyName) {
-          if (Array.isArray(target)) {
-              for (var i = target.length - 1; i >= 0; i--) {
-                  if (propertyName) {
-                      target[i][propertyName] = source;
-                  }
-                  else {
-                      target[i] = source;
-                  }
-              }
-          }
-          else {
-              if (propertyName) {
-                  target[propertyName] = source;
-              }
-              else {
-                  target = source;
-              }
-          }
-          return target;
-      };
-      // threejs 对象清除函数
-      Util.dispose = function (object) {
-          if (object.dispose) {
-              object.dispose();
-          }
-          if (object instanceof Particle) {
-              object.geometry.dispose();
-              object.material.dispose();
-          }
-          if (Array.isArray(object.children)) {
-              for (var i = object.children.length - 1; i >= 0; i--) {
-                  Util.dispose(object.children[i]);
-              }
-          }
-          object = null;
-      };
-      // 深拷贝
-      // 与一般深拷贝不同，该方法会优先认同传入对象的 clone 方法
-      Util.clone = function (anything) {
-          var _a;
-          if (anything && anything.clone) {
-              return anything.clone();
-          }
-          if (Array.isArray(anything)) {
-              var array = Array.from({ length: anything.length });
-              for (var i = anything.length - 1; i >= 0; i--) {
-                  array[i] = Util.clone(anything[i]);
-              }
-              return array;
-          }
-          else if (Object.prototype.toString.call(anything).toLowerCase() === '[object object]') {
-              var object = {};
-              for (var key in anything) {
-                  Object.assign(object, (_a = {}, _a[key] = Util.clone(object[key]), _a));
-              }
-              return object;
-          }
-          else {
-              return anything;
-          }
-      };
-      return Util;
-  }());
-
   /* 线段 */
   var Line = /** @class */ (function (_super) {
       __extends(Line, _super);
       function Line(_a) {
           if (_a === void 0) { _a = {}; }
-          var _b = _a.verticesNumber, verticesNumber = _b === void 0 ? 2 : _b, _c = _a.verticesSize, verticesSize = _c === void 0 ? 3 : _c, _d = _a.vertices, vertices = _d === void 0 ? [] : _d, _e = _a.colors, colors = _e === void 0 ? [] : _e, _f = _a.material, material = _f === void 0 ? new THREE.LineBasicMaterial() : _f, // LineBasicMaterial | LineDashMaterial
-          options = __rest(_a, ["verticesNumber", "verticesSize", "vertices", "colors", "material"]);
+          var _b = _a.verticesNumber, verticesNumber = _b === void 0 ? 2 : _b, _c = _a.verticesSize, verticesSize = _c === void 0 ? 3 : _c, _d = _a.vertices, vertices = _d === void 0 ? [] : _d, _e = _a.colors, colors = _e === void 0 ? [] : _e, _f = _a.material, material = _f === void 0 ? new THREE.LineBasicMaterial() : _f, options = __rest(_a, ["verticesNumber", "verticesSize", "vertices", "colors", "material"]);
           var _this = this;
           var geometry = new THREE.BufferGeometry();
           // 添加颜色
           if (material.vertexColors === THREE.VertexColors) {
-              var verticesColorArray = Array.from({ length: verticesNumber * verticesSize });
-              for (var i = 0; i < verticesColorArray.length; i++) {
+              var verticesColorArrayNumber = verticesNumber * verticesSize;
+              var verticesColorArray = Array.from({ length: verticesColorArrayNumber });
+              for (var i = 0; i < verticesColorArrayNumber; i++) {
                   verticesColorArray[i] = i < colors.length ? colors[i] : Math.random();
               }
               var colorAttribute = new THREE.BufferAttribute(new Float32Array(verticesColorArray), verticesSize);
               colorAttribute.dynamic = true;
               geometry.addAttribute('color', colorAttribute);
           }
-          geometry.addAttribute('position', new THREE.BufferAttribute(new Float32Array(Util.fill(Array.from({ length: verticesNumber * verticesSize }), 0.0)), verticesSize));
+          geometry.addAttribute('position', new THREE.BufferAttribute(new Float32Array(Array.from({ length: verticesNumber * verticesSize }).fill(0.0)), verticesSize));
           _this = _super.call(this, geometry, material) || this;
           Particle.prototype.constructor.call(_this, options);
           _this.verticesNumber = verticesNumber;
@@ -306,8 +261,9 @@ var TP = (function (exports,THREE) {
           var _this = this;
           var geometry = new THREE.BufferGeometry();
           // 设置点位置
-          var positionsArray = Array.from({ length: verticesNumber * verticesSize });
-          for (var i = 0; i < positionsArray.length; i++) {
+          var positionsArrayNumber = verticesNumber * verticesSize;
+          var positionsArray = Array.from({ length: positionsArrayNumber });
+          for (var i = 0; i < positionsArrayNumber; i++) {
               positionsArray[i] = i < vertices.length ? vertices[i] : THREE.Math.randFloatSpread(spread);
           }
           var positionsAttribute = new THREE.BufferAttribute(new Float32Array(positionsArray), verticesSize);
@@ -317,8 +273,9 @@ var TP = (function (exports,THREE) {
           if (material.vertexColors === THREE.VertexColors) {
               // 每个点单独着色
               // 可以通过 color 参数传入，省略部分设置为随机颜色
-              var colorsArray = Array.from({ length: verticesNumber * verticesSize });
-              for (var i = 0; i < colorsArray.length; i++) {
+              var colorsArrayNumber = verticesNumber * verticesSize;
+              var colorsArray = Array.from({ length: colorsArrayNumber });
+              for (var i = 0; i < colorsArrayNumber; i++) {
                   colorsArray[i] = i < colors.length ? colors[i] : Math.random();
               }
               var colorsAttribute = new THREE.BufferAttribute(new Float32Array(colorsArray), verticesSize);
@@ -359,9 +316,8 @@ var TP = (function (exports,THREE) {
               context.fillRect(0, 0, diameter, diameter);
               // 创建径向渐变的 2d canvas，作为点集的颜色贴图
               // 该贴图会作用给每个点
-              var glowTexture = new THREE.CanvasTexture(canvasEl);
-              glowTexture.needsUpdate = true;
-              material.map = glowTexture;
+              material.map = new THREE.CanvasTexture(canvasEl);
+              material.map.needsUpdate = true;
           }
           _this = _super.call(this, geometry, material) || this;
           Particle.prototype.constructor.call(_this, options);
@@ -417,7 +373,7 @@ var TP = (function (exports,THREE) {
       __extends(Text, _super);
       function Text(_a) {
           if (_a === void 0) { _a = {}; }
-          var _b = _a.text, text = _b === void 0 ? 'Hello World' : _b, _c = _a.font, font = _c === void 0 ? '/demo/fonts/helvetiker_regular.typeface.json' : _c, _d = _a.size, size = _d === void 0 ? 10 : _d, _e = _a.height, height = _e === void 0 ? 10 : _e, _f = _a.curveSegments, curveSegments = _f === void 0 ? 12 : _f, _g = _a.bevelEnabled, bevelEnabled = _g === void 0 ? false : _g, _h = _a.bevelThickness, bevelThickness = _h === void 0 ? 10 : _h, _j = _a.bevelSize, bevelSize = _j === void 0 ? 8 : _j, _k = _a.bevelSegments, bevelSegments = _k === void 0 ? 3 : _k, _l = _a.material, material = _l === void 0 ? new THREE.MeshPhongMaterial() : _l, _m = _a.glow, glow = _m === void 0 ? null : _m, options = __rest(_a, ["text", "font", "size", "height", "curveSegments", "bevelEnabled", "bevelThickness", "bevelSize", "bevelSegments", "material", "glow"]);
+          var _b = _a.text, text = _b === void 0 ? 'Hello World' : _b, _c = _a.font, font = _c === void 0 ? './fonts/helvetiker_regular.typeface.json' : _c, _d = _a.size, size = _d === void 0 ? 10 : _d, _e = _a.height, height = _e === void 0 ? 10 : _e, _f = _a.curveSegments, curveSegments = _f === void 0 ? 12 : _f, _g = _a.bevelEnabled, bevelEnabled = _g === void 0 ? false : _g, _h = _a.bevelThickness, bevelThickness = _h === void 0 ? 10 : _h, _j = _a.bevelSize, bevelSize = _j === void 0 ? 8 : _j, _k = _a.bevelSegments, bevelSegments = _k === void 0 ? 3 : _k, _l = _a.material, material = _l === void 0 ? new THREE.MeshPhongMaterial() : _l, _m = _a.glow, glow = _m === void 0 ? null : _m, options = __rest(_a, ["text", "font", "size", "height", "curveSegments", "bevelEnabled", "bevelThickness", "bevelSize", "bevelSegments", "material", "glow"]);
           var _this = _super.call(this) || this;
           Particle.prototype.constructor.call(_this, options);
           _this.emitting = false; // 等待字体加载完才能运动
@@ -500,6 +456,77 @@ var TP = (function (exports,THREE) {
       return Lut;
   }());
 
+  // 通用工具包
+  var Util = /** @class */ (function () {
+      function Util() {
+      }
+      // 填充函数，用于将源头赋值给目标
+      // 当目标是数组的时候，源头将同时赋值给数组内的每个元素
+      Util.fill = function (target, source, propertyName) {
+          if (Array.isArray(target)) {
+              for (var i = target.length - 1; i >= 0; i--) {
+                  if (propertyName) {
+                      target[i][propertyName] = source;
+                  }
+                  else {
+                      target[i] = source;
+                  }
+              }
+          }
+          else {
+              if (propertyName) {
+                  target[propertyName] = source;
+              }
+              else {
+                  target = source;
+              }
+          }
+          return target;
+      };
+      // threejs 对象清除函数
+      Util.dispose = function (object) {
+          if (object.dispose) {
+              object.dispose();
+          }
+          if (object instanceof Particle) {
+              object.geometry.dispose();
+              object.material.dispose();
+          }
+          if (Array.isArray(object.children)) {
+              for (var i = object.children.length - 1; i >= 0; i--) {
+                  Util.dispose(object.children[i]);
+              }
+          }
+          object = null;
+      };
+      // 深拷贝
+      // 与一般深拷贝不同，该方法会优先认同传入对象的 clone 方法
+      Util.clone = function (anything) {
+          var _a;
+          if (anything && anything.clone) {
+              return anything.clone();
+          }
+          if (Array.isArray(anything)) {
+              var array = Array.from({ length: anything.length });
+              for (var i = anything.length - 1; i >= 0; i--) {
+                  array[i] = Util.clone(anything[i]);
+              }
+              return array;
+          }
+          else if (Object.prototype.toString.call(anything).toLowerCase() === '[object object]') {
+              var object = {};
+              for (var key in anything) {
+                  Object.assign(object, (_a = {}, _a[key] = Util.clone(object[key]), _a));
+              }
+              return object;
+          }
+          else {
+              return anything;
+          }
+      };
+      return Util;
+  }());
+
   var Emitter = /** @class */ (function (_super) {
       __extends(Emitter, _super);
       function Emitter(_a) {
@@ -558,22 +585,20 @@ var TP = (function (exports,THREE) {
           // 发射器进行打点
           var delta = this.clock.getDelta(); // 距离上一次发射粒子过去的时间差
           var deltaEmission = 0; // 该时间差需要发射多少粒子
+          var particlesNumber = this.particles.length;
           var generatedParticles = [];
-          if (this.emitting) {
+          // 当发射器处于发射状态，且粒子样本数量大于 0 时，才会进行粒子创建
+          if (this.emitting && particlesNumber > 0) {
               switch (this.mode) {
                   case Emitter.MODE_DURATIOIN: {
                       // 持续发射模式
                       // 通过打点时间差计算得到本次 update 需要补充多少粒子
-                      deltaEmission = Math.round((delta + this.gap) * this.emission);
+                      deltaEmission = Math.floor((delta + this.gap) * this.emission);
                       if (deltaEmission === 0) {
-                          var randomParticle = this.particles[THREE.Math.randInt(0, this.particles.length)];
-                          var randomParticleLife = randomParticle ? randomParticle.life : 1;
-                          if (this.children.length < this.emission * randomParticleLife) {
-                              // 发射例子数量为 0，且已发射的例子数量过少
-                              // 出现这种情况是因为每次发射器 update 消耗时间过小
-                              // 进而导致 delta 过小，计算出来的 deltaEmission 为 0
-                              this.gap += delta;
-                          }
+                          // 应该发射粒子数量为 0，且已发射的例子数量过少
+                          // 出现这种情况是因为每次发射器 update 消耗时间过小
+                          // 进而导致 delta 过小，计算出来的 deltaEmission 为 0
+                          this.gap += delta;
                       }
                       else {
                           // 计算出来应发射粒子数大于 0
@@ -596,20 +621,23 @@ var TP = (function (exports,THREE) {
               // 基类 Emitter 不会初始化粒子的位置和方向等参数，
               // 只会负责生成例子，而由子类来实现粒子的参数
               for (var i = 0; i < deltaEmission; i++) {
-                  var randomIndex = THREE.Math.randInt(0, this.particles.length - 1);
-                  var randomParticle = this.particles[randomIndex].clone(); // 从 particles 内随机取出一个粒子作为样本
-                  if (randomParticle.emitting) {
+                  var randomParticle = this.particles[THREE.Math.randInt(0, particlesNumber - 1)]; // 从 particles 内随机取出一个粒子作为样本
+                  randomParticle.onBeforeCreated(); // 调用生命周期钩子
+                  var generatedRandomParticle = randomParticle.clone();
+                  generatedRandomParticle.matrixAutoUpdate = false; // 为了提高效率，在这里关闭 matrix 的自动更新，手动控制更新时机
+                  generatedRandomParticle.onAfterCreated(); // 调用生命周期钩子
+                  if (generatedRandomParticle.emitting) {
                       // 外层会进行一次 emitting 判断，控制发射器是否可以发射粒子
                       // 这里也会进行一次判断，判断该粒子是否可以被发射器发射
                       // 这里是因为 Text 粒子需要加载字体
                       // 字体未加载完成之前不能添加到场景中
                       // 用粒子的 emitting 属性标记是否可以进行发射
-                      generatedParticles.push(randomParticle);
-                      this.add(randomParticle);
+                      generatedParticles.push(generatedRandomParticle);
+                      this.add(generatedRandomParticle);
                   }
                   else {
                       // 粒子无法进行发射，则清除掉
-                      Util.dispose(randomParticle);
+                      Util.dispose(generatedRandomParticle);
                   }
               }
           }
@@ -632,7 +660,7 @@ var TP = (function (exports,THREE) {
               // 粒子透明度
               for (var j = 0; j < this.particlesOpacityKey.length - 1; j++) {
                   if (elapsedTimePercentage >= this.particlesOpacityKey[j] && elapsedTimePercentage < this.particlesOpacityKey[j + 1]) {
-                      Util.fill(particle.material, interpolationFunction(this.particlesOpacityValue[j], this.particlesOpacityValue[j + 1], elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesOpacityRandom), 'opacity');
+                      particle.material.opacity = interpolationFunction(this.particlesOpacityValue[j], this.particlesOpacityValue[j + 1], elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesOpacityRandom);
                       break;
                   }
               }
@@ -641,11 +669,11 @@ var TP = (function (exports,THREE) {
                   if (elapsedTimePercentage >= this.particlesColorKey[j] && elapsedTimePercentage < this.particlesColorKey[j + 1]) {
                       var preColor = this.particlesColorValue[j];
                       var nextColor = this.particlesColorValue[j + 1];
-                      Util.fill(particle.material, new THREE.Color(interpolationFunction(preColor.r, nextColor.r, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesColorRandom[0]), interpolationFunction(preColor.g, nextColor.g, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesColorRandom[1]), interpolationFunction(preColor.b, nextColor.b, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesColorRandom[2])), 'color');
+                      particle.material.color = new THREE.Color(interpolationFunction(preColor.r, nextColor.r, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesColorRandom[0]), interpolationFunction(preColor.g, nextColor.g, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesColorRandom[1]), interpolationFunction(preColor.b, nextColor.b, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesColorRandom[2]));
                       break;
                   }
               }
-              Util.fill(particle.material, true, 'needsUpdate');
+              particle.material.needsUpdate = true;
               // 粒子位置
               this.particlesPositionRandom && particle.position.add(new THREE.Vector3(THREE.Math.randFloatSpread(this.particlesPositionRandom.x), THREE.Math.randFloatSpread(this.particlesPositionRandom.y), THREE.Math.randFloatSpread(this.particlesPositionRandom.z)));
               // 粒子旋转
@@ -683,10 +711,11 @@ var TP = (function (exports,THREE) {
                   case Line.TYPE: {
                       // 线段的运动是最前面的点更新值
                       // 其后的所有点紧随前面一个的点的位置
-                      var position = particle.geometry.getAttribute('position');
-                      var positionArray = position.array;
-                      var verticesNumber = particle.verticesNumber;
-                      var verticesSize = particle.verticesSize;
+                      var line = particle;
+                      var positionAttribute = line.geometry.getAttribute('position');
+                      var positionArray = positionAttribute.array;
+                      var verticesNumber = line.verticesNumber;
+                      var verticesSize = line.verticesSize;
                       var m = void 0, n = void 0;
                       // 更新除了第一个点之外的所有点
                       for (m = 0; m < verticesNumber - 1; m++) {
@@ -699,7 +728,7 @@ var TP = (function (exports,THREE) {
                       for (n = 0; n < verticesSize; n++) {
                           positionArray[m * verticesSize + n] += directionArray[n] * particle.velocity;
                       }
-                      position.needsUpdate = true;
+                      positionAttribute.needsUpdate = true;
                       break;
                   }
                   default: {
@@ -734,7 +763,8 @@ var TP = (function (exports,THREE) {
                   if (elapsedTime > particle.afterimage.delay) {
                       // 先计算还需要生成的残影的数量
                       // 用总共需要生成的残影数量减去已经生成的残影数量
-                      var generatedGlowNumber = particle.glow ? 1 : 0;
+                      // 点集的发光特效与其他粒子不同，是通过 material.map 来实现，因此不会添加进 children 数组内
+                      var generatedGlowNumber = (particle.glow && particle.type !== Points.TYPE) ? 1 : 0;
                       var generatedAfterimageNumber = particle.children.length - generatedGlowNumber; // 已经生成的残影数量
                       var needGeneratedAfterimageNumber = Math.min(Math.floor((elapsedTime - particle.afterimage.delay) / particle.afterimage.interval) + 1, particle.afterimage.number)
                           - generatedAfterimageNumber;
@@ -783,11 +813,14 @@ var TP = (function (exports,THREE) {
                       }
                   }
               }
+              particle.updateMatrix(); // 粒子形变处理完成，更新 matrix
           }
       };
       Emitter.prototype.clear = function (particle) {
           // 清除指定的粒子
+          particle.onBeforeDestroyed();
           this.remove(particle);
+          particle.onAfterDestroyed();
           Util.dispose(particle);
       };
       Emitter.prototype.clearAll = function () {
@@ -991,7 +1024,7 @@ var TP = (function (exports,THREE) {
       __extends(BoxEmitter, _super);
       function BoxEmitter(_a) {
           var _b = _a.width, width = _b === void 0 ? 5 : _b, _c = _a.height, height = _c === void 0 ? 5 : _c, _d = _a.thickness, thickness = _d === void 0 ? 5 : _d, _e = _a.side, side = _e === void 0 ? 0 : _e, options = __rest(_a, ["width", "height", "thickness", "side"]);
-          var _this = _super.call(this, options) || this;
+          var _this = _super.call(this, options || {}) || this;
           _this.width = width;
           _this.height = height;
           _this.thickness = thickness;
@@ -1038,8 +1071,8 @@ var TP = (function (exports,THREE) {
   var TextEmitter = /** @class */ (function (_super) {
       __extends(TextEmitter, _super);
       function TextEmitter(_a) {
-          var _b = _a.text, text = _b === void 0 ? 'Hello World' : _b, _c = _a.font, font = _c === void 0 ? '/demo/fonts/helvetiker_regular.typeface.json' : _c, _d = _a.size, size = _d === void 0 ? 10 : _d, _e = _a.height, height = _e === void 0 ? 10 : _e, _f = _a.curveSegments, curveSegments = _f === void 0 ? 12 : _f, _g = _a.bevelEnabled, bevelEnabled = _g === void 0 ? false : _g, _h = _a.bevelThickness, bevelThickness = _h === void 0 ? 10 : _h, _j = _a.bevelSize, bevelSize = _j === void 0 ? 8 : _j, _k = _a.bevelSegments, bevelSegments = _k === void 0 ? 3 : _k, options = __rest(_a, ["text", "font", "size", "height", "curveSegments", "bevelEnabled", "bevelThickness", "bevelSize", "bevelSegments"]);
-          var _this = _super.call(this, options) || this;
+          var _b = _a.text, text = _b === void 0 ? 'Hello World' : _b, _c = _a.font, font = _c === void 0 ? './fonts/helvetiker_regular.typeface.json' : _c, _d = _a.size, size = _d === void 0 ? 10 : _d, _e = _a.height, height = _e === void 0 ? 10 : _e, _f = _a.curveSegments, curveSegments = _f === void 0 ? 12 : _f, _g = _a.bevelEnabled, bevelEnabled = _g === void 0 ? false : _g, _h = _a.bevelThickness, bevelThickness = _h === void 0 ? 10 : _h, _j = _a.bevelSize, bevelSize = _j === void 0 ? 8 : _j, _k = _a.bevelSegments, bevelSegments = _k === void 0 ? 3 : _k, options = __rest(_a, ["text", "font", "size", "height", "curveSegments", "bevelEnabled", "bevelThickness", "bevelSize", "bevelSegments"]);
+          var _this = _super.call(this, options || {}) || this;
           _this.emitting = false; // 等待字体加载完才能运动
           _this.text = text;
           _this.font = font;
@@ -1168,7 +1201,6 @@ var TP = (function (exports,THREE) {
               if (particle.type === Line.TYPE) {
                   var positionArray = particle.geometry.getAttribute('position').array;
                   particlePosition.set(positionArray[0], positionArray[1], positionArray[2]);
-                  particlePosition.set(positionArray[0], positionArray[1], positionArray[2]);
               }
               var ray = new THREE.Ray(particlePosition, originDirection); // 粒子运动方向射线
               var distance = this.floor.distanceToPoint(particlePosition); // 粒子与地面的距离（地面上为正，地面下为负）
@@ -1290,12 +1322,12 @@ var TP = (function (exports,THREE) {
                   // 扰乱折线或者点集各个点的位置
                   // 而不是影响粒子位置
                   // 因为 particle.position 是整个粒子的位置属性
-                  var position = particle.geometry.getAttribute('position');
-                  var positionArray = position.array;
+                  var positionAttribute = particle.geometry.getAttribute('position');
+                  var positionArray = positionAttribute.array;
                   for (var i = positionArray.length - 1; i >= 0; i--) {
                       positionArray[i] += THREE.Math.randFloatSpread(this.intensity);
                   }
-                  position.needsUpdate = true;
+                  positionAttribute.needsUpdate = true;
                   break;
               }
               default: {
@@ -1344,28 +1376,6 @@ var TP = (function (exports,THREE) {
       Glow.vertexShader = "\n\t\tvarying vec3 vNormal;\n\t\tvarying vec3 vPositionNormal;\n\t\tvoid main() \n\t\t{\n\t\t  vNormal = normalize( normalMatrix * normal ); // \u8F6C\u6362\u5230\u89C6\u56FE\u7A7A\u95F4\n\t\t  vPositionNormal = normalize(( modelViewMatrix * vec4( position, 1.0) ).xyz);\n\t\t  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n\t\t}\n\t";
       Glow.fragmentShader = "\n\t\tuniform vec3 color;\n\t\tuniform float opacity;\n\t\tuniform float bias;\n\t\tuniform float power;\n\t\tuniform float scale;\n\t\tvarying vec3 vNormal;\n\t\tvarying vec3 vPositionNormal;\n\t\tvoid main() \n\t\t{\n      // Empricial \u83F2\u6D85\u5C14\u8FD1\u4F3C\u7B49\u5F0F\n      // \u8BA1\u7B97\u5F97\u5230\u7247\u6BB5\u7740\u8272\u7684\u900F\u660E\u5EA6\n      float alpha = pow( bias + scale * abs(dot(vNormal, vPositionNormal)), power );\n\t\t  gl_FragColor = vec4( color, alpha * opacity );\n\t\t}\n\t";
       return Glow;
-  }());
-
-  // 残影特效
-  var Afterimage = /** @class */ (function () {
-      function Afterimage(_a) {
-          var _b = _a === void 0 ? {} : _a, _c = _b.delay, delay = _c === void 0 ? 0.2 : _c, _d = _b.interval, interval = _d === void 0 ? 0.2 : _d, _e = _b.attenuation, attenuation = _e === void 0 ? 0.2 : _e, _f = _b.number, number = _f === void 0 ? 2 : _f;
-          this.delay = delay;
-          this.interval = interval;
-          this.number = number;
-          this.attenuation = attenuation;
-          this.matrixWorlds = [];
-          this.positionArrays = [];
-      }
-      Afterimage.prototype.clone = function () {
-          return new Afterimage({
-              delay: this.delay,
-              interval: this.interval,
-              number: this.number,
-              attenuation: this.attenuation
-          });
-      };
-      return Afterimage;
   }());
 
   // polyfill

@@ -5,12 +5,13 @@ import Loader from '../util/Loader';
 class Sprite extends THREE.Sprite {
   static readonly TYPE: string = 'Sprite';
   options: object;
-  image: string;
+  image: string; // 精灵图 URL 地址
+  material: THREE.SpriteMaterial;
   constructor({
     image = './images/star.png',
     material = new THREE.SpriteMaterial({
       map: Loader.loadTexture(image)
-    }) as THREE.Material,
+    }),
     ...options
   } = {}) {
     super(material);
@@ -22,7 +23,7 @@ class Sprite extends THREE.Sprite {
   clone(): Sprite | any {
     return new Sprite({
       image: this.image,
-      material: (this.material as THREE.Material).clone(),
+      material: this.material.clone(),
       ...this.options
     });
   }

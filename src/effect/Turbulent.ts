@@ -23,12 +23,12 @@ class Turbulent extends Effect {
         // 扰乱折线或者点集各个点的位置
         // 而不是影响粒子位置
         // 因为 particle.position 是整个粒子的位置属性
-        const position: THREE.BufferAttribute = (particle.geometry as THREE.BufferGeometry).getAttribute('position') as THREE.BufferAttribute;
-        const positionArray: number[] = position.array as number[];
+        const positionAttribute: THREE.BufferAttribute = (particle.geometry as THREE.BufferGeometry).getAttribute('position') as THREE.BufferAttribute;
+        const positionArray: number[] = positionAttribute.array as number[];
         for (let i: number = positionArray.length - 1; i >= 0; i--) {
           positionArray[i] += THREE.Math.randFloatSpread(this.intensity);
         }
-        position.needsUpdate = true;
+        positionAttribute.needsUpdate = true;
         break;
       }
       default: {

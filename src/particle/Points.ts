@@ -27,8 +27,9 @@ class Points extends THREE.Points {
   } = {}) {
     const geometry: THREE.BufferGeometry = new THREE.BufferGeometry();
     // 设置点位置
-    const positionsArray: number[] = Array.from({ length: verticesNumber * verticesSize });
-    for (let i: number = 0; i < positionsArray.length; i++) {
+    const positionsArrayNumber: number = verticesNumber * verticesSize;
+    const positionsArray: number[] = Array.from({ length: positionsArrayNumber });
+    for (let i: number = 0; i < positionsArrayNumber; i++) {
       positionsArray[i] = i < vertices.length ? vertices[i] : THREE.Math.randFloatSpread(spread);
     }
     const positionsAttribute: THREE.BufferAttribute = new THREE.BufferAttribute(new Float32Array(positionsArray), verticesSize);
@@ -38,8 +39,9 @@ class Points extends THREE.Points {
     if (material.vertexColors === THREE.VertexColors) {
       // 每个点单独着色
       // 可以通过 color 参数传入，省略部分设置为随机颜色
-      const colorsArray: number[] = Array.from({ length: verticesNumber * verticesSize });
-      for (let i: number = 0; i < colorsArray.length; i++) {
+      const colorsArrayNumber: number = verticesNumber * verticesSize;
+      const colorsArray: number[] = Array.from({ length: colorsArrayNumber });
+      for (let i: number = 0; i < colorsArrayNumber; i++) {
         colorsArray[i] = i < colors.length ? colors[i] : Math.random();
       }
       const colorsAttribute: THREE.BufferAttribute = new THREE.BufferAttribute(new Float32Array(colorsArray), verticesSize);
@@ -55,27 +57,27 @@ class Points extends THREE.Points {
     // 后续 clone 的时候会发现 material.map 不为 null
     if (!material.map && glow) {
       // 参考 https://segmentfault.com/a/1190000015862604
-      const canvasEl = document.createElement('canvas');
-      const diameter = 16 * glow.size; // 画布宽高，也是径向渐变的直径
-      const radius = diameter / 2; // 径向渐变的半径
+      const canvasEl: HTMLCanvasElement = document.createElement('canvas');
+      const diameter: number = 16 * glow.size; // 画布宽高，也是径向渐变的直径
+      const radius: number = diameter / 2; // 径向渐变的半径
       canvasEl.width = diameter;
       canvasEl.height = diameter;
-      const context = canvasEl.getContext('2d');
+      const context: CanvasRenderingContext2D = canvasEl.getContext('2d');
       // 从中心点且半径为 0 的圆渐变到半径为 radius 的圆
-      const radioGradient = context.createRadialGradient(
+      const radioGradient: CanvasGradient = context.createRadialGradient(
         radius, radius, 0,
         radius, radius, radius
       );
       // 颜色（白色）增加率，将 intensity 反映到材质的 color 上
       // 当 intensity 大于 1 时，发光偏白（亮）
       // 当 intensity 小于 1 时，发光偏黑（暗）
-      const incrementsRate = glow.intensity > 1 ?
-                            glow.intensity * 0.2 :
-                            glow.intensity - 1;
-      const red = THREE.Math.clamp(glow.color.r * 255 * (1 + incrementsRate), 0, 255);
-      const green = THREE.Math.clamp(glow.color.g * 255 * (1 + incrementsRate), 0, 255);
-      const blue = THREE.Math.clamp(glow.color.b * 255 * (1 + incrementsRate), 0, 255);
-      const rgbColor = `rgba(${red},${green},${blue}`; // 计算出来 rgb 颜色，减少重复计算
+      const incrementsRate: number = glow.intensity > 1 ?
+                                    glow.intensity * 0.2 :
+                                    glow.intensity - 1;
+      const red: number = THREE.Math.clamp(glow.color.r * 255 * (1 + incrementsRate), 0, 255);
+      const green: number = THREE.Math.clamp(glow.color.g * 255 * (1 + incrementsRate), 0, 255);
+      const blue: number = THREE.Math.clamp(glow.color.b * 255 * (1 + incrementsRate), 0, 255);
+      const rgbColor: string = `rgba(${red},${green},${blue}`; // 计算出来 rgb 颜色，减少重复计算
       // 注意，glow 的 opacity 表示透明度
       // 而 rgba 的 alpha 表示不透明度
       radioGradient.addColorStop(0, `${rgbColor},1)`);
@@ -87,9 +89,8 @@ class Points extends THREE.Points {
       context.fillRect(0, 0, diameter, diameter);
       // 创建径向渐变的 2d canvas，作为点集的颜色贴图
       // 该贴图会作用给每个点
-      const glowTexture = new THREE.CanvasTexture(canvasEl);
-      glowTexture.needsUpdate = true;
-      material.map = glowTexture;
+      material.map = new THREE.CanvasTexture(canvasEl);
+      material.map.needsUpdate = true;
     }
     super(geometry, material);
     Particle.prototype.constructor.call(this, options);

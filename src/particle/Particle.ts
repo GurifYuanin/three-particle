@@ -14,12 +14,20 @@ class Particle {
   emitting: boolean; // 该粒子是否可以被发射
   afterimage: Afterimage | null; // 是否有粒子残影
   afterimageMatrixWorldIndex: number;
+  onBeforeCreated: Function;
+  onAfterCreated: Function;
+  onBeforeDestroyed: Function;
+  onAfterDestroyed: Function;
   constructor({
     life = 3,
     lifeRandom = 0, // 生命随机比例
     velocity = 10,
     border = 5,
     afterimage = null,
+    onBeforeCreated = () => {},
+    onAfterCreated = () => {},
+    onBeforeDestroyed = () => {},
+    onAfterDestroyed = () => {},
   } = {}) {
     this.clock = new THREE.Clock();
     this.clock.start();
@@ -27,8 +35,12 @@ class Particle {
     this.direction = new THREE.Vector3(0, 1, 0); // 粒子运动方向由发射器控制，不受参数影响
     this.velocity = velocity;
     this.border = border;
-    this.afterimage = afterimage ? afterimage.clone() : afterimage;
+    this.afterimage = afterimage instanceof Afterimage ? afterimage.clone() : afterimage;
     this.afterimageMatrixWorldIndex = 0;
+    this.onBeforeCreated = onBeforeCreated;
+    this.onAfterCreated = onAfterCreated;
+    this.onBeforeDestroyed = onBeforeDestroyed;
+    this.onAfterDestroyed = onAfterDestroyed;
     this.emitting = true;
   }
 }
@@ -36,7 +48,9 @@ class Particle {
 // Particle 接口，用于解决 ts 不识别 Particle.prototype.call 而报错的尴尬情况
 interface ParticleInterface extends THREE.Object3D, Particle {
   geometry: THREE.Geometry | THREE.BufferGeometry;
-  material: THREE.Material;
+  material: THREE.Material & {
+    color: THREE.Color
+  };
   glow: Glow | null;
 }
 
