@@ -6,6 +6,7 @@ import Line from '../particle/Line';
 import Lut from '../util/Lut';
 import Util from '../util/Util';
 import Effect from '../effect/Effect';
+import Event from '../event/Event';
 
 class Emitter extends THREE.Object3D {
   static readonly MODE_DURATIOIN: number = 0; // 持续发射
@@ -17,13 +18,14 @@ class Emitter extends THREE.Object3D {
   particles: ParticleInterface[]; // 发射粒子样板
   physicals: Physical[]; // 物理场
   effects: Effect[]; // 特效场
+  events: Event[]; // 事件
   isVerticalToDirection: boolean; // 粒子朝向是否垂直于运动方向
   mode: number; // 发射模式
-  particlesPositionRandom: null | THREE.Vector3; // 粒子位置随机数
+  particlesPositionRandom: THREE.Vector3; // 粒子位置随机数
   particlesOpacityRandom: number; // 粒子透明度随机数
   particlesOpacityKey: number[]; // 一个生命周期内，粒子透明度关键帧百分比
   particlesOpacityValue: number[]; // 一个生命周期内，粒子透明度关键帧透明度值
-  particlesColorRandom: number[]; // 粒子颜色随机数
+  particlesColorRandom: THREE.Color; // 粒子颜色随机数
   particlesColorKey: number[]; // 一个生命周期内，粒子颜色关键帧百分比
   particlesColorValue: THREE.Color[]; // 一个生命周期内，粒子颜色关键帧颜色值
   particlesRotationRandom: THREE.Vector3; // 粒子旋转随机值
@@ -43,11 +45,11 @@ class Emitter extends THREE.Object3D {
     isVerticalToDirection = false,
     mode = Emitter.MODE_DURATIOIN,
     anchor = new THREE.Vector3(0, 0, 0),
-    particlesPositionRandom = null,
+    particlesPositionRandom = new THREE.Vector3,
     particlesOpacityRandom = 0,
     particlesOpacityKey = [],
     particlesOpacityValue = [],
-    particlesColorRandom = [0, 0, 0],
+    particlesColorRandom = new THREE.Color(0, 0, 0),
     particlesColorKey = [],
     particlesColorValue = [],
     particlesRotationRandom = new THREE.Vector3(0, 0, 0),
@@ -67,23 +69,34 @@ class Emitter extends THREE.Object3D {
     this.particles = [];
     this.physicals = [];
     this.effects = [];
-    this.anchor = anchor;
-    this.particlesPositionRandom = particlesPositionRandom;
+    this.events = [];
+    this.anchor = anchor instanceof THREE.Vector3 ? anchor : new THREE.Vector3(anchor, anchor, anchor);
+    this.particlesPositionRandom = particlesPositionRandom instanceof THREE.Vector3 ? particlesPositionRandom : new THREE.Vector3(particlesPositionRandom, particlesPositionRandom, particlesPositionRandom);
     this.particlesOpacityRandom = particlesOpacityRandom;
     this.particlesOpacityKey = particlesOpacityKey;
     this.particlesOpacityValue = particlesOpacityValue;
-    this.particlesColorRandom = particlesColorRandom;
+    this.particlesColorRandom = particlesColorRandom instanceof THREE.Color ? particlesColorRandom : new THREE.Color(particlesColorRandom, particlesColorRandom, particlesColorRandom);
     this.particlesColorKey = particlesColorKey;
-    this.particlesColorValue = particlesColorValue;
+    this.particlesColorValue = Util.isElementsInstanceOf(particlesColorValue, THREE.Color) ?
+                               particlesColorValue :
+                               particlesColorValue.map(color => {
+                                 return color >= 0 && color <= 1 ?
+                                        new THREE.Color(color, color, color) :
+                                        new THREE.Color(color);
+                               });
     this.particlesRotationRandom = particlesRotationRandom;
     this.particlesRotationKey = particlesRotationKey;
-    this.particlesRotationValue = particlesRotationValue;
-    this.particlesScaleRandom = particlesScaleRandom;
+    this.particlesRotationValue = Util.isElementsInstanceOf(particlesRotationValue, THREE.Vector3) ?
+                                  particlesRotationValue :
+                                  particlesRotationValue.map(rotation => new THREE.Vector3(rotation, rotation, rotation));
+    this.particlesScaleRandom = particlesScaleRandom instanceof THREE.Vector3 ? particlesScaleRandom : new THREE.Vector3(particlesScaleRandom, particlesScaleRandom, particlesScaleRandom);
     this.particlesScaleKey = particlesScaleKey;
-    this.particlesScaleValue = particlesScaleValue;
+    this.particlesScaleValue = Util.isElementsInstanceOf(particlesScaleValue, THREE.Vector3) ?
+                               particlesScaleValue :
+                               particlesScaleValue.map(scale => new THREE.Vector3(scale, scale, scale));
     this.particlesTransformType = Particle.TRANSFORM_LINEAR;
-    this.type = 'Emitter';
     this.gap = 0;
+    this.type = 'Emitter';
   }
   // 新增样板粒子
   addParticle(particle: ParticleInterface): void {
@@ -96,6 +109,10 @@ class Emitter extends THREE.Object3D {
   // 新增特效场
   addEffect(effect: Effect): void {
     this.effects.push(effect);
+  }
+  // 新增交互事件
+  addEvent(event: Event): void {
+    this.events.push(event);
   }
   // 开始发射粒子，默认为开启
   start(): void {
@@ -173,6 +190,12 @@ class Emitter extends THREE.Object3D {
   }
   // 更新粒子
   update(): void {
+    // 触发事件
+    // 在更新方法前面部分判定触发，因为关闭了粒子的矩阵自动计算
+    for (let i: number = 0; i < this.events.length; i++) {
+      this.events[i].effect(this.children as ParticleInterface[], this);
+    }
+    
     for (let i: number = this.children.length - 1; i >= 0; i--) {
       const particle: ParticleInterface = this.children[i] as ParticleInterface;
       if (!particle.emitting) continue;
@@ -180,17 +203,20 @@ class Emitter extends THREE.Object3D {
       const elapsedTime: number = particle.clock.elapsedTime;
       // 获得粒子距离上次更新的时间差
       const elapsedTimePercentage: number = elapsedTime % particle.life / particle.life;
-      // 获得插值函数
-      const interpolationFunction: (x: number, y: number, t: number) => number = Lut.getInterpolationFunction(this.particlesTransformType);
+      // 获得查询百分比函数
+      const interpolationFunction: (value: number, min: number, max: number) => number = Lut.getInterpolationFunction(this.particlesTransformType);
 
       // 设置粒子属性随机值
       // 粒子透明度
       for (let j: number = 0; j < this.particlesOpacityKey.length - 1; j++) {
         if (elapsedTimePercentage >= this.particlesOpacityKey[j] && elapsedTimePercentage < this.particlesOpacityKey[j + 1]) {
-          particle.material.opacity = interpolationFunction(
+          const opacityPercentage: number = interpolationFunction(elapsedTimePercentage,
+                                            this.particlesOpacityKey[j],
+                                            this.particlesOpacityKey[j + 1]);
+          particle.material.opacity = THREE.Math.lerp(
             this.particlesOpacityValue[j],
             this.particlesOpacityValue[j + 1],
-            elapsedTimePercentage
+            opacityPercentage
           ) + THREE.Math.randFloatSpread(this.particlesOpacityRandom);
           break;
         }
@@ -201,47 +227,56 @@ class Emitter extends THREE.Object3D {
         if (elapsedTimePercentage >= this.particlesColorKey[j] && elapsedTimePercentage < this.particlesColorKey[j + 1]) {
           const preColor: THREE.Color = this.particlesColorValue[j];
           const nextColor: THREE.Color = this.particlesColorValue[j + 1];
+          const colorPercentage: number = interpolationFunction(elapsedTimePercentage,
+                                          this.particlesColorKey[j],
+                                          this.particlesColorKey[j + 1]);
           particle.material.color = new THREE.Color(
-            interpolationFunction(preColor.r, nextColor.r, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesColorRandom[0]),
-            interpolationFunction(preColor.g, nextColor.g, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesColorRandom[1]),
-            interpolationFunction(preColor.b, nextColor.b, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesColorRandom[2]),
+            THREE.Math.lerp(preColor.r, nextColor.r, colorPercentage) + THREE.Math.randFloatSpread(this.particlesColorRandom.r),
+            THREE.Math.lerp(preColor.g, nextColor.g, colorPercentage) + THREE.Math.randFloatSpread(this.particlesColorRandom.g),
+            THREE.Math.lerp(preColor.b, nextColor.b, colorPercentage) + THREE.Math.randFloatSpread(this.particlesColorRandom.b),
           )
           break;
         }
       }
       
-      particle.material.needsUpdate = true;
-
       // 粒子位置
-      this.particlesPositionRandom && particle.position.add(new THREE.Vector3(
-        THREE.Math.randFloatSpread(this.particlesPositionRandom.x),
-        THREE.Math.randFloatSpread(this.particlesPositionRandom.y),
-        THREE.Math.randFloatSpread(this.particlesPositionRandom.z),
-      ));
+      if (this.particlesPositionRandom) {
+        particle.position.add(new THREE.Vector3(
+          THREE.Math.randFloatSpread(this.particlesPositionRandom.x),
+          THREE.Math.randFloatSpread(this.particlesPositionRandom.y),
+          THREE.Math.randFloatSpread(this.particlesPositionRandom.z),
+        ));
+      }
 
       // 粒子旋转
       for (let j: number = 0; j < this.particlesRotationKey.length - 1; j++) {
         if (elapsedTimePercentage >= this.particlesRotationKey[j] && elapsedTimePercentage < this.particlesRotationKey[j + 1]) {
           const preRotation: THREE.Vector3 = this.particlesRotationValue[j];
           const nextRotation: THREE.Vector3 = this.particlesRotationValue[j + 1];
-          particle.rotateX(interpolationFunction(preRotation.x, nextRotation.x, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesRotationRandom.x));
-          particle.rotateY(interpolationFunction(preRotation.y, nextRotation.y, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesRotationRandom.y));
-          particle.rotateZ(interpolationFunction(preRotation.z, nextRotation.z, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesRotationRandom.z));
+          const rotationPercentage: number = interpolationFunction(elapsedTimePercentage,
+                                             this.particlesRotationKey[j],
+                                             this.particlesRotationKey[j + 1]);
+          particle.rotateX(THREE.Math.lerp(preRotation.x, nextRotation.x, rotationPercentage) + THREE.Math.randFloatSpread(this.particlesRotationRandom.x));
+          particle.rotateY(THREE.Math.lerp(preRotation.y, nextRotation.y, rotationPercentage) + THREE.Math.randFloatSpread(this.particlesRotationRandom.y));
+          particle.rotateZ(THREE.Math.lerp(preRotation.z, nextRotation.z, rotationPercentage) + THREE.Math.randFloatSpread(this.particlesRotationRandom.z));
           break;
         }
       }
 
-      // 粒子缩放调整
+      // 粒子缩放
       for (let j: number = 0; j < this.particlesScaleKey.length - 1; j++) {
         if (elapsedTimePercentage >= this.particlesScaleKey[j] && elapsedTimePercentage < this.particlesScaleKey[j + 1]) {
           const preScale: THREE.Vector3 = this.particlesScaleValue[j];
           const nextScale: THREE.Vector3 = this.particlesScaleValue[j + 1];
+          const scalePercentage: number = interpolationFunction(elapsedTimePercentage,
+                                          this.particlesScaleKey[j],
+                                          this.particlesScaleKey[j + 1]);
           // 缩放值不应该为 0 ,否则 three 无法计算 Matrix3 的逆，控制台报警告
           // https://github.com/aframevr/aframe-inspector/issues/524
           particle.scale.set(
-            (interpolationFunction(preScale.x, nextScale.x, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesScaleRandom.x)) || 0.00001,
-            (interpolationFunction(preScale.y, nextScale.y, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesScaleRandom.y)) || 0.00001,
-            (interpolationFunction(preScale.z, nextScale.z, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesScaleRandom.z)) || 0.00001
+            (THREE.Math.lerp(preScale.x, nextScale.x, scalePercentage) + THREE.Math.randFloatSpread(this.particlesScaleRandom.x)) || 0.00001,
+            (THREE.Math.lerp(preScale.y, nextScale.y, scalePercentage) + THREE.Math.randFloatSpread(this.particlesScaleRandom.y)) || 0.00001,
+            (THREE.Math.lerp(preScale.z, nextScale.z, scalePercentage) + THREE.Math.randFloatSpread(this.particlesScaleRandom.z)) || 0.00001
           );
           break;
         }
@@ -370,6 +405,7 @@ class Emitter extends THREE.Object3D {
           }
         }
       }
+      particle.material.needsUpdate = true;
       particle.updateMatrix(); // 粒子形变处理完成，更新 matrix
     }
   }

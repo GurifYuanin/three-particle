@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MouseEvent</title>
+</head>
+
+<body>
+    <script src="./javascripts/three.js"></script>
+    <script src="../dist/index.js"></script>
+    <script src="./javascripts/common.js"></script>
+    <script>
+        const sphere = new TP.Sphere({
+            radius: 1,
+            velocity: 0.1,
+            life: 5,
+            material: new THREE.MeshBasicMaterial({
+              color: new THREE.Color(0xff0000)
+            })
+        });
+        const emitter = new TP.ExplosionEmitter({
+            emission: 20
+        });
+        const mouseEvent = new TP.MouseEvent({
+            camera,
+            renderer,
+            onMouseMove: (particles) => {
+              renderer.domElement.style.cursor = particles.length > 0 ? 'pointer' : 'default';
+            },
+            onMouseEnter: (particles) => {
+              for (let particle of particles) {
+                particle.scale.set(5, 5, 5);
+              }
+            },
+            onMouseClick: (particles) => {
+              for (let particle of particles) {
+                particle.material.color.set(0x00ff00);  
+              }
+            },
+            onMouseLeave: (particles) => {
+              for (let particle of particles) {
+                particle.scale.set(1, 1, 1);
+              }
+            }
+        });
+
+
+        emitter.addParticle(sphere);
+        emitter.addEvent(mouseEvent);
+        scene.add(emitter);
+
+        camera.position.set(0, 0, 50);
+
+        (function render() {
+            requestAnimationFrame(render);
+            emitter.update();
+            renderer.render(scene, camera);
+        })();
+
+    </script>
+</body>
+
+</html>

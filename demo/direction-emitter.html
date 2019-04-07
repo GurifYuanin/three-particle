@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>TextEmitter</title>
+    <title>DirectionEmitter</title>
 </head>
 
 <body>
@@ -11,18 +11,18 @@
     <script src="../dist/index.js"></script>
     <script src="./javascripts/common.js"></script>
     <script>
-
         const sphere = new TP.Sphere({
-            radius: 0.2,
-            velocity: 0
+            radius: 1,
+            velocity: 1,
         });
-        const emitter = new TP.TextEmitter({
-            emission: 250
+        const emitter = new TP.DirectionEmitter({
+            direction: new THREE.Vector3(1, 0, 0),
+            spread: 0.5,
+            emission: 20,
         });
 
 
         emitter.addParticle(sphere);
-        emitter.anchor.x = -50;
         scene.add(emitter);
 
         camera.position.set(0, 0, 50);
@@ -32,7 +32,6 @@
             emitter.update();
             renderer.render(scene, camera);
         })();
-
     </script>
 </body>
 
