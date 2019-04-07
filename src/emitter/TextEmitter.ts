@@ -3,6 +3,7 @@ import Emitter from './Emitter';
 import { ParticleInterface } from '../particle/Particle';
 import Loader from '../util/Loader';
 import Line from '../particle/Line';
+import Points from '../particle/Points';
 
 class TextEmitter extends Emitter {
   text: string; // 文字
@@ -18,7 +19,7 @@ class TextEmitter extends Emitter {
   bevelSize: number; // 倒角大小
   bevelSegments: number; // 倒角圆滑度
 
-  geometry: THREE.TextBufferGeometry | null;
+  geometry: THREE.TextBufferGeometry;
   constructor({
     text = 'Hello World',
     font = './fonts/helvetiker_regular.typeface.json',
@@ -67,27 +68,28 @@ class TextEmitter extends Emitter {
     }
 
     const generatedParticles: ParticleInterface[] = super.generate();
-    const positionArray: number[] | ArrayLike < number > = this.geometry.getAttribute('position').array;
-    const positionArrayLength: number = positionArray.length;
+    const textPositionArray: number[] | ArrayLike<number> = this.geometry.getAttribute('position').array;
+    const textPositionArrayLength: number = textPositionArray.length;
     for (let i: number = 0; i < generatedParticles.length; i++) {
       const generatedParticle: ParticleInterface = generatedParticles[i];
 
       // 初始化粒子位置
       // 获得倍数为 3 的随机 index
-      const randomIndex: number = Math.floor(THREE.Math.randInt(0, positionArrayLength) / 3) * 3;
+      const randomIndex: number = Math.floor(THREE.Math.randInt(0, textPositionArrayLength) / 3) * 3;
 
       switch (generatedParticle.type) {
+        case Points.TYPE:;
         case Line.TYPE: {
-          // Line 的情况，将 Line 的所有端点的所有位置放在随机取得的点上
-          const line: Line = <unknown>generatedParticle as Line;
-          const positionAttribute: THREE.BufferAttribute = line.geometry.getAttribute('position') as THREE.BufferAttribute;
+          // Line 或者 Points 的情况，将 Line 或 Points 所有端点的所有位置放在随机取得的点上
+          const lineOrPoints: Line | Points = <unknown>generatedParticle as Line | Points;
+          const positionAttribute: THREE.BufferAttribute = lineOrPoints.geometry.getAttribute('position') as THREE.BufferAttribute;
           const positionArray: number[] = positionAttribute.array as number[];
-          for (let m: number = 0; m < line.verticesNumber; m++) {
-            for (let n: number = 0; n < line.verticesSize; n++) {
-              const index = m * line.verticesSize + n; // 获得索引，避免重复计算
-              positionArray[index] = index < line.vertices.length ?
-                line.vertices[index] :
-                positionArray[randomIndex + n];
+          for (let m: number = 0; m < lineOrPoints.verticesNumber; m++) {
+            for (let n: number = 0; n < lineOrPoints.verticesSize; n++) {
+              const index = m * lineOrPoints.verticesSize + n; // 获得索引，避免重复计算
+              positionArray[index] = index < lineOrPoints.vertices.length ?
+                lineOrPoints.vertices[index] :
+                textPositionArray[randomIndex + n];
             }
           }
           positionAttribute.dynamic = true;
@@ -96,15 +98,15 @@ class TextEmitter extends Emitter {
         }
         default: {
           generatedParticle.position.set(
-            this.anchor.x + positionArray[randomIndex],
-            this.anchor.y + positionArray[randomIndex + 1],
-            this.anchor.z + positionArray[randomIndex + 2]
+            this.anchor.x + textPositionArray[randomIndex],
+            this.anchor.y + textPositionArray[randomIndex + 1],
+            this.anchor.z + textPositionArray[randomIndex + 2]
           );
         }
       }
 
       // 初始化粒子方向
-      generatedParticle.direction = new THREE.Vector3(
+      generatedParticle.direction.set(
         THREE.Math.randFloatSpread(1),
         THREE.Math.randFloatSpread(1),
         THREE.Math.randFloatSpread(1)

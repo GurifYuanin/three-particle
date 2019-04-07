@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Sphere</title>
+    <title>Gravity</title>
 </head>
 
 <body>
@@ -17,7 +17,7 @@
             particlesOpacityValue: [0, 1, 0],
         });
         const sphere = new TP.Sphere({
-            velocity: 1,
+            velocity: 2.5,
             radius: 1,
             life: 5,
             border: 5
@@ -25,7 +25,7 @@
         const gravity = new TP.Gravity({
             gravity: .1,
             floor: new THREE.Plane(new THREE.Vector3(0, 1, 0), 10),
-            event: TP.Gravity.BOUNCE
+            event: TP.Gravity.EVENT_BOUNCE
         });
         const ambientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
         scene.add(ambientLight);

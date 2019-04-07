@@ -444,10 +444,10 @@ var TP = (function (exports,THREE) {
   var Lut = /** @class */ (function () {
       function Lut() {
       }
-      // 获得插值方程
+      // 根据值，获得最小值到最大值之间的百分比位置
       Lut.getInterpolationFunction = function (particlesTransformType) {
           switch (particlesTransformType) {
-              case Particle.TRANSFORM_LINEAR: return THREE.Math.lerp;
+              case Particle.TRANSFORM_LINEAR: return function (value, min, max) { return (value - min) / (max - min); };
               case Particle.TRANSFORM_SMOOTH: return THREE.Math.smoothstep;
               case Particle.TRANSFORM_SMOOTHER: return THREE.Math.smootherstep;
               default: return function () { return 0; };
@@ -524,13 +524,19 @@ var TP = (function (exports,THREE) {
               return anything;
           }
       };
+      // 判断数组内元素是否都是特定类型
+      Util.isElementsInstanceOf = function (array, type) {
+          return Array.isArray(array) &&
+              (array.length === 0 ||
+                  array.length > 0 && array.every(function (element) { return element instanceof type; }));
+      };
       return Util;
   }());
 
   var Emitter = /** @class */ (function (_super) {
       __extends(Emitter, _super);
       function Emitter(_a) {
-          var _b = _a === void 0 ? {} : _a, _c = _b.emission, emission = _c === void 0 ? 100 : _c, _d = _b.isVerticalToDirection, isVerticalToDirection = _d === void 0 ? false : _d, _e = _b.mode, mode = _e === void 0 ? Emitter.MODE_DURATIOIN : _e, _f = _b.anchor, anchor = _f === void 0 ? new THREE.Vector3(0, 0, 0) : _f, _g = _b.particlesPositionRandom, particlesPositionRandom = _g === void 0 ? null : _g, _h = _b.particlesOpacityRandom, particlesOpacityRandom = _h === void 0 ? 0 : _h, _j = _b.particlesOpacityKey, particlesOpacityKey = _j === void 0 ? [] : _j, _k = _b.particlesOpacityValue, particlesOpacityValue = _k === void 0 ? [] : _k, _l = _b.particlesColorRandom, particlesColorRandom = _l === void 0 ? [0, 0, 0] : _l, _m = _b.particlesColorKey, particlesColorKey = _m === void 0 ? [] : _m, _o = _b.particlesColorValue, particlesColorValue = _o === void 0 ? [] : _o, _p = _b.particlesRotationRandom, particlesRotationRandom = _p === void 0 ? new THREE.Vector3(0, 0, 0) : _p, _q = _b.particlesRotationKey, particlesRotationKey = _q === void 0 ? [] : _q, _r = _b.particlesRotationValue, particlesRotationValue = _r === void 0 ? [] : _r, _s = _b.particlesScaleRandom, particlesScaleRandom = _s === void 0 ? new THREE.Vector3(0, 0, 0) : _s, _t = _b.particlesScaleKey, particlesScaleKey = _t === void 0 ? [] : _t, _u = _b.particlesScaleValue, particlesScaleValue = _u === void 0 ? [] : _u;
+          var _b = _a === void 0 ? {} : _a, _c = _b.emission, emission = _c === void 0 ? 100 : _c, _d = _b.isVerticalToDirection, isVerticalToDirection = _d === void 0 ? false : _d, _e = _b.mode, mode = _e === void 0 ? Emitter.MODE_DURATIOIN : _e, _f = _b.anchor, anchor = _f === void 0 ? new THREE.Vector3(0, 0, 0) : _f, _g = _b.particlesPositionRandom, particlesPositionRandom = _g === void 0 ? new THREE.Vector3 : _g, _h = _b.particlesOpacityRandom, particlesOpacityRandom = _h === void 0 ? 0 : _h, _j = _b.particlesOpacityKey, particlesOpacityKey = _j === void 0 ? [] : _j, _k = _b.particlesOpacityValue, particlesOpacityValue = _k === void 0 ? [] : _k, _l = _b.particlesColorRandom, particlesColorRandom = _l === void 0 ? new THREE.Color(0, 0, 0) : _l, _m = _b.particlesColorKey, particlesColorKey = _m === void 0 ? [] : _m, _o = _b.particlesColorValue, particlesColorValue = _o === void 0 ? [] : _o, _p = _b.particlesRotationRandom, particlesRotationRandom = _p === void 0 ? new THREE.Vector3(0, 0, 0) : _p, _q = _b.particlesRotationKey, particlesRotationKey = _q === void 0 ? [] : _q, _r = _b.particlesRotationValue, particlesRotationValue = _r === void 0 ? [] : _r, _s = _b.particlesScaleRandom, particlesScaleRandom = _s === void 0 ? new THREE.Vector3(0, 0, 0) : _s, _t = _b.particlesScaleKey, particlesScaleKey = _t === void 0 ? [] : _t, _u = _b.particlesScaleValue, particlesScaleValue = _u === void 0 ? [] : _u;
           var _this = _super.call(this) || this;
           _this.emission = emission;
           _this.isVerticalToDirection = isVerticalToDirection;
@@ -541,23 +547,34 @@ var TP = (function (exports,THREE) {
           _this.particles = [];
           _this.physicals = [];
           _this.effects = [];
-          _this.anchor = anchor;
-          _this.particlesPositionRandom = particlesPositionRandom;
+          _this.events = [];
+          _this.anchor = anchor instanceof THREE.Vector3 ? anchor : new THREE.Vector3(anchor, anchor, anchor);
+          _this.particlesPositionRandom = particlesPositionRandom instanceof THREE.Vector3 ? particlesPositionRandom : new THREE.Vector3(particlesPositionRandom, particlesPositionRandom, particlesPositionRandom);
           _this.particlesOpacityRandom = particlesOpacityRandom;
           _this.particlesOpacityKey = particlesOpacityKey;
           _this.particlesOpacityValue = particlesOpacityValue;
-          _this.particlesColorRandom = particlesColorRandom;
+          _this.particlesColorRandom = particlesColorRandom instanceof THREE.Color ? particlesColorRandom : new THREE.Color(particlesColorRandom, particlesColorRandom, particlesColorRandom);
           _this.particlesColorKey = particlesColorKey;
-          _this.particlesColorValue = particlesColorValue;
+          _this.particlesColorValue = Util.isElementsInstanceOf(particlesColorValue, THREE.Color) ?
+              particlesColorValue :
+              particlesColorValue.map(function (color) {
+                  return color >= 0 && color <= 1 ?
+                      new THREE.Color(color, color, color) :
+                      new THREE.Color(color);
+              });
           _this.particlesRotationRandom = particlesRotationRandom;
           _this.particlesRotationKey = particlesRotationKey;
-          _this.particlesRotationValue = particlesRotationValue;
-          _this.particlesScaleRandom = particlesScaleRandom;
+          _this.particlesRotationValue = Util.isElementsInstanceOf(particlesRotationValue, THREE.Vector3) ?
+              particlesRotationValue :
+              particlesRotationValue.map(function (rotation) { return new THREE.Vector3(rotation, rotation, rotation); });
+          _this.particlesScaleRandom = particlesScaleRandom instanceof THREE.Vector3 ? particlesScaleRandom : new THREE.Vector3(particlesScaleRandom, particlesScaleRandom, particlesScaleRandom);
           _this.particlesScaleKey = particlesScaleKey;
-          _this.particlesScaleValue = particlesScaleValue;
+          _this.particlesScaleValue = Util.isElementsInstanceOf(particlesScaleValue, THREE.Vector3) ?
+              particlesScaleValue :
+              particlesScaleValue.map(function (scale) { return new THREE.Vector3(scale, scale, scale); });
           _this.particlesTransformType = Particle.TRANSFORM_LINEAR;
-          _this.type = 'Emitter';
           _this.gap = 0;
+          _this.type = 'Emitter';
           return _this;
       }
       // 新增样板粒子
@@ -571,6 +588,10 @@ var TP = (function (exports,THREE) {
       // 新增特效场
       Emitter.prototype.addEffect = function (effect) {
           this.effects.push(effect);
+      };
+      // 新增交互事件
+      Emitter.prototype.addEvent = function (event) {
+          this.events.push(event);
       };
       // 开始发射粒子，默认为开启
       Emitter.prototype.start = function () {
@@ -646,6 +667,11 @@ var TP = (function (exports,THREE) {
       };
       // 更新粒子
       Emitter.prototype.update = function () {
+          // 触发事件
+          // 在更新方法前面部分判定触发，因为关闭了粒子的矩阵自动计算
+          for (var i = 0; i < this.events.length; i++) {
+              this.events[i].effect(this.children, this);
+          }
           for (var i = this.children.length - 1; i >= 0; i--) {
               var particle = this.children[i];
               if (!particle.emitting)
@@ -654,13 +680,14 @@ var TP = (function (exports,THREE) {
               var elapsedTime = particle.clock.elapsedTime;
               // 获得粒子距离上次更新的时间差
               var elapsedTimePercentage = elapsedTime % particle.life / particle.life;
-              // 获得插值函数
+              // 获得查询百分比函数
               var interpolationFunction = Lut.getInterpolationFunction(this.particlesTransformType);
               // 设置粒子属性随机值
               // 粒子透明度
               for (var j = 0; j < this.particlesOpacityKey.length - 1; j++) {
                   if (elapsedTimePercentage >= this.particlesOpacityKey[j] && elapsedTimePercentage < this.particlesOpacityKey[j + 1]) {
-                      particle.material.opacity = interpolationFunction(this.particlesOpacityValue[j], this.particlesOpacityValue[j + 1], elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesOpacityRandom);
+                      var opacityPercentage = interpolationFunction(elapsedTimePercentage, this.particlesOpacityKey[j], this.particlesOpacityKey[j + 1]);
+                      particle.material.opacity = THREE.Math.lerp(this.particlesOpacityValue[j], this.particlesOpacityValue[j + 1], opacityPercentage) + THREE.Math.randFloatSpread(this.particlesOpacityRandom);
                       break;
                   }
               }
@@ -669,32 +696,36 @@ var TP = (function (exports,THREE) {
                   if (elapsedTimePercentage >= this.particlesColorKey[j] && elapsedTimePercentage < this.particlesColorKey[j + 1]) {
                       var preColor = this.particlesColorValue[j];
                       var nextColor = this.particlesColorValue[j + 1];
-                      particle.material.color = new THREE.Color(interpolationFunction(preColor.r, nextColor.r, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesColorRandom[0]), interpolationFunction(preColor.g, nextColor.g, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesColorRandom[1]), interpolationFunction(preColor.b, nextColor.b, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesColorRandom[2]));
+                      var colorPercentage = interpolationFunction(elapsedTimePercentage, this.particlesColorKey[j], this.particlesColorKey[j + 1]);
+                      particle.material.color = new THREE.Color(THREE.Math.lerp(preColor.r, nextColor.r, colorPercentage) + THREE.Math.randFloatSpread(this.particlesColorRandom.r), THREE.Math.lerp(preColor.g, nextColor.g, colorPercentage) + THREE.Math.randFloatSpread(this.particlesColorRandom.g), THREE.Math.lerp(preColor.b, nextColor.b, colorPercentage) + THREE.Math.randFloatSpread(this.particlesColorRandom.b));
                       break;
                   }
               }
-              particle.material.needsUpdate = true;
               // 粒子位置
-              this.particlesPositionRandom && particle.position.add(new THREE.Vector3(THREE.Math.randFloatSpread(this.particlesPositionRandom.x), THREE.Math.randFloatSpread(this.particlesPositionRandom.y), THREE.Math.randFloatSpread(this.particlesPositionRandom.z)));
+              if (this.particlesPositionRandom) {
+                  particle.position.add(new THREE.Vector3(THREE.Math.randFloatSpread(this.particlesPositionRandom.x), THREE.Math.randFloatSpread(this.particlesPositionRandom.y), THREE.Math.randFloatSpread(this.particlesPositionRandom.z)));
+              }
               // 粒子旋转
               for (var j = 0; j < this.particlesRotationKey.length - 1; j++) {
                   if (elapsedTimePercentage >= this.particlesRotationKey[j] && elapsedTimePercentage < this.particlesRotationKey[j + 1]) {
                       var preRotation = this.particlesRotationValue[j];
                       var nextRotation = this.particlesRotationValue[j + 1];
-                      particle.rotateX(interpolationFunction(preRotation.x, nextRotation.x, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesRotationRandom.x));
-                      particle.rotateY(interpolationFunction(preRotation.y, nextRotation.y, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesRotationRandom.y));
-                      particle.rotateZ(interpolationFunction(preRotation.z, nextRotation.z, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesRotationRandom.z));
+                      var rotationPercentage = interpolationFunction(elapsedTimePercentage, this.particlesRotationKey[j], this.particlesRotationKey[j + 1]);
+                      particle.rotateX(THREE.Math.lerp(preRotation.x, nextRotation.x, rotationPercentage) + THREE.Math.randFloatSpread(this.particlesRotationRandom.x));
+                      particle.rotateY(THREE.Math.lerp(preRotation.y, nextRotation.y, rotationPercentage) + THREE.Math.randFloatSpread(this.particlesRotationRandom.y));
+                      particle.rotateZ(THREE.Math.lerp(preRotation.z, nextRotation.z, rotationPercentage) + THREE.Math.randFloatSpread(this.particlesRotationRandom.z));
                       break;
                   }
               }
-              // 粒子缩放调整
+              // 粒子缩放
               for (var j = 0; j < this.particlesScaleKey.length - 1; j++) {
                   if (elapsedTimePercentage >= this.particlesScaleKey[j] && elapsedTimePercentage < this.particlesScaleKey[j + 1]) {
                       var preScale = this.particlesScaleValue[j];
                       var nextScale = this.particlesScaleValue[j + 1];
+                      var scalePercentage = interpolationFunction(elapsedTimePercentage, this.particlesScaleKey[j], this.particlesScaleKey[j + 1]);
                       // 缩放值不应该为 0 ,否则 three 无法计算 Matrix3 的逆，控制台报警告
                       // https://github.com/aframevr/aframe-inspector/issues/524
-                      particle.scale.set((interpolationFunction(preScale.x, nextScale.x, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesScaleRandom.x)) || 0.00001, (interpolationFunction(preScale.y, nextScale.y, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesScaleRandom.y)) || 0.00001, (interpolationFunction(preScale.z, nextScale.z, elapsedTimePercentage) + THREE.Math.randFloatSpread(this.particlesScaleRandom.z)) || 0.00001);
+                      particle.scale.set((THREE.Math.lerp(preScale.x, nextScale.x, scalePercentage) + THREE.Math.randFloatSpread(this.particlesScaleRandom.x)) || 0.00001, (THREE.Math.lerp(preScale.y, nextScale.y, scalePercentage) + THREE.Math.randFloatSpread(this.particlesScaleRandom.y)) || 0.00001, (THREE.Math.lerp(preScale.z, nextScale.z, scalePercentage) + THREE.Math.randFloatSpread(this.particlesScaleRandom.z)) || 0.00001);
                       break;
                   }
               }
@@ -813,6 +844,7 @@ var TP = (function (exports,THREE) {
                       }
                   }
               }
+              particle.material.needsUpdate = true;
               particle.updateMatrix(); // 粒子形变处理完成，更新 matrix
           }
       };
@@ -1107,25 +1139,26 @@ var TP = (function (exports,THREE) {
               return [];
           }
           var generatedParticles = _super.prototype.generate.call(this);
-          var positionArray = this.geometry.getAttribute('position').array;
-          var positionArrayLength = positionArray.length;
+          var textPositionArray = this.geometry.getAttribute('position').array;
+          var textPositionArrayLength = textPositionArray.length;
           for (var i = 0; i < generatedParticles.length; i++) {
               var generatedParticle = generatedParticles[i];
               // 初始化粒子位置
               // 获得倍数为 3 的随机 index
-              var randomIndex = Math.floor(THREE.Math.randInt(0, positionArrayLength) / 3) * 3;
+              var randomIndex = Math.floor(THREE.Math.randInt(0, textPositionArrayLength) / 3) * 3;
               switch (generatedParticle.type) {
+                  case Points.TYPE:
                   case Line.TYPE: {
-                      // Line 的情况，将 Line 的所有端点的所有位置放在随机取得的点上
-                      var line = generatedParticle;
-                      var positionAttribute = line.geometry.getAttribute('position');
-                      var positionArray_1 = positionAttribute.array;
-                      for (var m = 0; m < line.verticesNumber; m++) {
-                          for (var n = 0; n < line.verticesSize; n++) {
-                              var index = m * line.verticesSize + n; // 获得索引，避免重复计算
-                              positionArray_1[index] = index < line.vertices.length ?
-                                  line.vertices[index] :
-                                  positionArray_1[randomIndex + n];
+                      // Line 或者 Points 的情况，将 Line 或 Points 所有端点的所有位置放在随机取得的点上
+                      var lineOrPoints = generatedParticle;
+                      var positionAttribute = lineOrPoints.geometry.getAttribute('position');
+                      var positionArray = positionAttribute.array;
+                      for (var m = 0; m < lineOrPoints.verticesNumber; m++) {
+                          for (var n = 0; n < lineOrPoints.verticesSize; n++) {
+                              var index = m * lineOrPoints.verticesSize + n; // 获得索引，避免重复计算
+                              positionArray[index] = index < lineOrPoints.vertices.length ?
+                                  lineOrPoints.vertices[index] :
+                                  textPositionArray[randomIndex + n];
                           }
                       }
                       positionAttribute.dynamic = true;
@@ -1133,11 +1166,11 @@ var TP = (function (exports,THREE) {
                       break;
                   }
                   default: {
-                      generatedParticle.position.set(this.anchor.x + positionArray[randomIndex], this.anchor.y + positionArray[randomIndex + 1], this.anchor.z + positionArray[randomIndex + 2]);
+                      generatedParticle.position.set(this.anchor.x + textPositionArray[randomIndex], this.anchor.y + textPositionArray[randomIndex + 1], this.anchor.z + textPositionArray[randomIndex + 2]);
                   }
               }
               // 初始化粒子方向
-              generatedParticle.direction = new THREE.Vector3(THREE.Math.randFloatSpread(1), THREE.Math.randFloatSpread(1), THREE.Math.randFloatSpread(1)).normalize();
+              generatedParticle.direction.set(THREE.Math.randFloatSpread(1), THREE.Math.randFloatSpread(1), THREE.Math.randFloatSpread(1)).normalize();
           }
           return generatedParticles;
       };
@@ -1167,7 +1200,7 @@ var TP = (function (exports,THREE) {
       __extends(Gravity, _super);
       function Gravity(_a) {
           if (_a === void 0) { _a = {}; }
-          var _b = _a.direction, direction = _b === void 0 ? new THREE.Vector3(0, -1, 0) : _b, _c = _a.gravity, gravity = _c === void 0 ? 9.8 : _c, _d = _a.floor, floor = _d === void 0 ? null : _d, _e = _a.bounce, bounce = _e === void 0 ? .1 : _e, _f = _a.firction, firction = _f === void 0 ? 1 : _f, _g = _a.event, event = _g === void 0 ? Gravity.NONE : _g, options = __rest(_a, ["direction", "gravity", "floor", "bounce", "firction", "event"]);
+          var _b = _a.direction, direction = _b === void 0 ? new THREE.Vector3(0, -1, 0) : _b, _c = _a.gravity, gravity = _c === void 0 ? 9.8 : _c, _d = _a.floor, floor = _d === void 0 ? null : _d, _e = _a.bounce, bounce = _e === void 0 ? .5 : _e, _f = _a.firction, firction = _f === void 0 ? 1 : _f, _g = _a.event, event = _g === void 0 ? Gravity.EVENT_NONE : _g, _h = _a.onBeforeEvent, onBeforeEvent = _h === void 0 ? function (particle) { } : _h, _j = _a.onAfterEvent, onAfterEvent = _j === void 0 ? function (particle) { } : _j, options = __rest(_a, ["direction", "gravity", "floor", "bounce", "firction", "event", "onBeforeEvent", "onAfterEvent"]);
           var _this = _super.call(this, options || {}) || this;
           _this.direction = direction.normalize(); // 重力默认为 y 轴负方向
           _this.floor = floor;
@@ -1175,6 +1208,8 @@ var TP = (function (exports,THREE) {
           _this.firction = firction;
           _this.gravity = gravity;
           _this.event = event;
+          _this.onBeforeEvent = onBeforeEvent;
+          _this.onAfterEvent = onAfterEvent;
           _this.type = 'Gravity';
           return _this;
       }
@@ -1185,25 +1220,26 @@ var TP = (function (exports,THREE) {
               return;
           _super.prototype.effect.call(this, particle, emitter);
           // 受重力影响，修正粒子运动方向
-          var originDirection = particle.direction.clone(); // 记录下受重力影响前的粒子运动方向
-          var velocity = particle.direction.add(this.direction
+          var originDirection = particle.direction.clone(); // 受重力影响前的粒子运动方向
+          var originVelocity = particle.velocity; // 受重力影响前的粒子速率
+          // 粒子被重力场所影响，方向发生偏移
+          particle.direction.multiplyScalar(particle.velocity).add(this.direction
               .clone()
-              .multiplyScalar(this.gravity * elapsedTime)).length();
-          particle.direction.divideScalar(velocity); // 单位向量化
+              .multiplyScalar(this.gravity * elapsedTime)).normalize();
           // 存在地面且有碰撞事件
-          if (this.floor && this.event !== Gravity.NONE) {
+          if (this.floor && this.event !== Gravity.EVENT_NONE) {
               // 使用受重力影响前的粒子运动方向进行计算
               // 避免重力影响下方向产生重大变化（比如平行 -> 斜线）
-              var particlePosition = particle.position.clone();
+              var originPosition = particle.position.clone();
               // 当粒子是折线的时候
               // 折线的位置永远不变
               // 因此参考依据为折线第一个点的位置
               if (particle.type === Line.TYPE) {
                   var positionArray = particle.geometry.getAttribute('position').array;
-                  particlePosition.set(positionArray[0], positionArray[1], positionArray[2]);
+                  originPosition.set(positionArray[0], positionArray[1], positionArray[2]);
               }
-              var ray = new THREE.Ray(particlePosition, originDirection); // 粒子运动方向射线
-              var distance = this.floor.distanceToPoint(particlePosition); // 粒子与地面的距离（地面上为正，地面下为负）
+              var ray = new THREE.Ray(originPosition, originDirection); // 粒子运动方向射线
+              var distance = this.floor.distanceToPoint(originPosition); // 粒子与地面的距离（地面上为正，地面下为负）
               var angle = originDirection.angleTo(this.floor.normal); // 粒子方向与地面法线的弧度
               // 1、若事件为粒子消失，则直接移除
               // 2、若为弹起事件
@@ -1213,36 +1249,42 @@ var TP = (function (exports,THREE) {
               // 且粒子是射入平面方向
               // 则判定为与地面产生了碰撞
               if (ray.intersectsPlane(this.floor) &&
-                  distance < particle.border &&
-                  distance > -particle.border) {
+                  distance < particle.border
+              // && distance > -particle.border
+              ) {
+                  this.onBeforeEvent(particle);
+                  // 与地面接触，发生了事件
+                  // 因此将粒子的方向恢复为受重力影响下偏移之前
+                  particle.direction.copy(originDirection);
                   switch (this.event) {
-                      case Gravity.DISAPPEAR: {
+                      case Gravity.EVENT_DISAPPEAR: {
                           emitter.clear(particle);
                           return;
                       }
-                      case Gravity.BOUNCE: {
+                      case Gravity.EVENT_STICK: {
+                          particle.velocity = 0;
+                          break;
+                      }
+                      case Gravity.EVENT_BOUNCE: {
                           if (Math.abs(angle - 1.57) < .1) {
-                              // 如果粒子运动方向与地面接近平行
-                              // 则产生摩擦力
-                              var lostVelocity = particle.velocity * this.firction * elapsedTime; // 受摩擦力影响损失的速率
-                              var firctionedVelocity = particle.velocity - lostVelocity; // 减去损失的速率后的粒子最终速率
-                              // 既然粒子运动方向与地面
-                              // 且粒子运动方向与地面接近平行
-                              // 那么认为重力对物体不产生影响
-                              // 将原来的方向赋值回去
-                              particle.direction = originDirection;
+                              // 如果粒子运动方向与地面接近平行，则产生摩擦力
+                              var lostVelocity = originVelocity * this.firction * elapsedTime; // 受摩擦力影响损失的速率
+                              var firctionedVelocity = originVelocity - lostVelocity; // 减去损失的速率后的粒子最终速率              
                               // 计算被重力作用之前的速度
                               // 减去受摩擦力损失的速度
                               // 判定若小于一定值则认为物体静止
-                              if (firctionedVelocity < .1) {
-                                  velocity = 0;
-                              }
+                              particle.velocity = firctionedVelocity < .1 ? 0 : firctionedVelocity;
+                              // particle.velocity = firctionedVelocity;
                               // 消除粒子运动垂直于平面的方向的分速度
-                              // else {
-                              //   particle.direction = this.floor.coplanarPoint(
-                              //     intersectPoint.clone().add(particle.direction)
-                              //   ).sub(intersectPoint).normalize();
-                              // }
+                              // const intersectPoint = new THREE.Vector3();
+                              // ray.intersectPlane(this.floor, intersectPoint);
+                              // particle.direction = this.floor.coplanarPoint(
+                              //   intersectPoint.clone().add(particle.direction)
+                              // ).sub(intersectPoint).normalize();
+                          }
+                          else if (angle < .1 && particle.velocity < .1) {
+                              // 如果粒子运动方向与地面接近垂直，且速率小于 0.1
+                              particle.velocity = 0;
                           }
                           else {
                               // 粒子运动方向不与地面平行
@@ -1254,18 +1296,19 @@ var TP = (function (exports,THREE) {
                               // const direction = particle.direction.clone();
                               // particle.direction = direction.sub(normal.multiply(normal).multiply(direction).multiplyScalar(2));
                               // 直接使用 THREE 内置的计算公式
+                              particle.velocity = this.bounce * originVelocity;
                               particle.direction.reflect(this.floor.normal);
-                              velocity = this.bounce * velocity;
                           }
                       }
                   }
+                  this.onAfterEvent(particle);
               }
           }
-          particle.velocity = velocity;
       };
-      Gravity.NONE = 0;
-      Gravity.BOUNCE = 1;
-      Gravity.DISAPPEAR = 2;
+      Gravity.EVENT_NONE = 0; // 无事件
+      Gravity.EVENT_BOUNCE = 1; // 弹跳事件
+      Gravity.EVENT_DISAPPEAR = 2; // 消失事件
+      Gravity.EVENT_STICK = 3; // 粘附事件
       return Gravity;
   }(Physcial));
 
@@ -1283,7 +1326,7 @@ var TP = (function (exports,THREE) {
       }
       Wind.prototype.effect = function (particle, emitter) {
           _super.prototype.effect.call(this, particle, emitter);
-          particle.velocity = particle.direction.add(this.direction
+          particle.velocity = particle.direction.multiplyScalar(particle.velocity).add(this.direction
               .clone()
               .multiplyScalar(this.intensity)
               .addScalar(THREE.Math.randFloatSpread(this.spread))).length();
@@ -1378,6 +1421,93 @@ var TP = (function (exports,THREE) {
       return Glow;
   }());
 
+  var Event = /** @class */ (function () {
+      function Event(_a) {
+          _a = {};
+      }
+      Event.prototype.effect = function (particles, emitter) {
+      };
+      return Event;
+  }());
+
+  var renderers = [];
+  var raycasters = [];
+  var mouses = [];
+  var MouseEvent = /** @class */ (function (_super) {
+      __extends(MouseEvent, _super);
+      function MouseEvent(_a) {
+          if (_a === void 0) { _a = {}; }
+          var _b = _a.camera, camera = _b === void 0 ? null : _b, _c = _a.renderer, renderer = _c === void 0 ? null : _c, _d = _a.onMouseEnter, onMouseEnter = _d === void 0 ? function (particles) { } : _d, _e = _a.onMouseMove, onMouseMove = _e === void 0 ? function (particles) { } : _e, _f = _a.onMouseLeave, onMouseLeave = _f === void 0 ? function (particles) { } : _f, _g = _a.onMouseClick, onMouseClick = _g === void 0 ? function (particles) { } : _g, options = __rest(_a, ["camera", "renderer", "onMouseEnter", "onMouseMove", "onMouseLeave", "onMouseClick"]);
+          var _this = _super.call(this, options || {}) || this;
+          _this.camera = camera;
+          _this.onMouseEnter = onMouseEnter;
+          _this.onMouseMove = onMouseMove;
+          _this.onMouseLeave = onMouseLeave;
+          _this.onMouseClick = onMouseClick;
+          _this.intersectionParticles = [];
+          // renderer 和 camera 都是必须参数，缺少则报错
+          if (!(renderer instanceof THREE.WebGLRenderer && camera instanceof THREE.Camera)) {
+              throw new Error('The arguments of camera and renderer are required');
+          }
+          var rendererIndex = renderers.indexOf(renderer);
+          if (rendererIndex === -1) {
+              _this.raycaster = new THREE.Raycaster();
+              _this.mouse = new THREE.Vector2();
+              _this.isPrimaryEvent = true;
+              var canvasEl_1 = renderer.domElement;
+              canvasEl_1.addEventListener('mousemove', function (event) {
+                  // 将光标在 DOM 中为位置转化为画布内的相对坐标
+                  var canvasRect = canvasEl_1.getBoundingClientRect();
+                  _this.mouse.x = ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
+                  _this.mouse.y = -((event.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
+              }, false);
+              canvasEl_1.addEventListener('click', function (event) {
+                  _this.onMouseClick(_this.intersectionParticles);
+              }, false);
+              raycasters.push(_this.raycaster);
+              mouses.push(_this.mouse);
+              renderers.push(renderer);
+          }
+          else {
+              // 为了避免重复添加事件，缓存已经添加过的事件
+              _this.raycaster = raycasters[rendererIndex];
+              _this.mouse = mouses[rendererIndex];
+              _this.isPrimaryEvent = false;
+          }
+          return _this;
+      }
+      MouseEvent.prototype.effect = function (particles, emitter) {
+          var _this = this;
+          _super.prototype.effect.call(this, particles, emitter);
+          if (this.isPrimaryEvent) {
+              this.raycaster.setFromCamera(this.mouse, this.camera);
+          }
+          // 获得当前时刻光标悬浮地方的粒子
+          // intersectionParticles 表示当前时刻的粒子
+          // this.intersectionParticles 表示上一时刻的粒子
+          var intersectionParticles = this.raycaster.intersectObjects(particles)
+              .map(function (intersection) { return intersection.object; });
+          var enterIntersectionParticles = []; // 获得光标进入的粒子
+          var leaveIntersectionParticles = []; // 获得光标离开的粒子
+          // 感觉这种实现方式会有很大的性能消耗
+          if (intersectionParticles.length !== this.intersectionParticles.length) {
+              if (intersectionParticles.length < this.intersectionParticles.length) {
+                  leaveIntersectionParticles = this.intersectionParticles
+                      .filter(function (particle) { return !intersectionParticles.includes(particle); });
+              }
+              else {
+                  enterIntersectionParticles = intersectionParticles
+                      .filter(function (particle) { return !_this.intersectionParticles.includes(particle); });
+              }
+          }
+          this.onMouseEnter(enterIntersectionParticles);
+          this.onMouseMove(intersectionParticles);
+          this.onMouseLeave(leaveIntersectionParticles);
+          this.intersectionParticles = intersectionParticles;
+      };
+      return MouseEvent;
+  }(Event));
+
   // polyfill
 
   exports.Sphere = Sphere;
@@ -1395,6 +1525,7 @@ var TP = (function (exports,THREE) {
   exports.Turbulent = Turbulent;
   exports.Glow = Glow;
   exports.Afterimage = Afterimage;
+  exports.MouseEvent = MouseEvent;
 
   return exports;
 

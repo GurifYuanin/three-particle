@@ -64,6 +64,13 @@ class Util {
       return anything;
     }
   }
+
+  // 判断数组内元素是否都是特定类型
+  static isElementsInstanceOf(array: any[], type: any): boolean {
+    return Array.isArray(array) &&
+           (array.length === 0 ||
+            array.length > 0 && array.every(element => element instanceof type));
+  }
 }
 
 export default Util;

@@ -14,10 +14,12 @@
 
         const sphere = new TP.Sphere({
             glow: new TP.Glow(),
-            velocity: 1
+            velocity: 1,
         });
         const emitter = new TP.ExplosionEmitter({
-            emission: 5
+            emission: 5,
+            particlesScaleKey: [0, 0.5, 1],
+            particlesScaleValue: [0, 1, 0],
         });
 
 

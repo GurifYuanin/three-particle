@@ -24,3 +24,6 @@ export { default as Wind } from './physical/Wind';
 export { default as Turbulent } from './effect/Turbulent';
 export { default as Glow } from './effect/Glow';
 export { default as Afterimage } from './effect/Afterimage'
+
+// 交互事件
+export { default as MouseEvent } from './event/MouseEvent';

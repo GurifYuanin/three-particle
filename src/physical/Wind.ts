@@ -21,7 +21,7 @@ class Wind extends Physical {
 
   effect(particle: ParticleInterface, emitter): void {
     super.effect(particle, emitter);
-    particle.velocity = particle.direction.add(
+    particle.velocity = particle.direction.multiplyScalar(particle.velocity).add(
       this.direction
         .clone()
         .multiplyScalar(this.intensity)
