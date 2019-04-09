@@ -1,7 +1,8 @@
 import * as THREE from 'three';
+import Effect from './Effect';
 
 // 残影特效
-class Afterimage {
+class Afterimage extends Effect {
   delay: number; // 残影延迟
   interval: number; // 残影间隙
   number: number; // 残影数量
@@ -13,13 +14,16 @@ class Afterimage {
     interval = 0.2,
     attenuation = 0.2,
     number = 2,
+    ...options
   } = {}) {
+    super(options || {});
     this.delay = delay;
     this.interval = interval;
     this.number = number;
     this.attenuation = attenuation;
     this.matrixWorlds = [];
     this.positionArrays = [];
+    this.type = 'Afterimage';
   }
   clone(): Afterimage {
     return new Afterimage({

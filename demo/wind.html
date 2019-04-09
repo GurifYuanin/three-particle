@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Wind</title>
+</head>
+
+<body>
+    <script src="./javascripts/three.js"></script>
+    <script src="../dist/index.js"></script>
+    <script src="./javascripts/common.js"></script>
+    <script>
+        const emitter = new TP.ExplosionEmitter({
+            emission: 50,
+        });
+        const sphere = new TP.Sphere({
+            velocity: 2,
+            radius: 1,
+        });
+        const wind = new TP.Wind({
+          intensity: 0.05
+        });
+        emitter.addParticle(sphere);
+        emitter.addPhysical(wind);
+        scene.add(emitter);
+
+        camera.position.set(0, 0, 100);
+
+        (function render() {
+            requestAnimationFrame(render);
+            emitter.update();
+            renderer.render(scene, camera);
+        })();
+    </script>
+</body>
+
+</html>

@@ -22,12 +22,13 @@
     "clean": "rimraf ./dist",
     "lint": "eslint -c .eslintrc.js src/**.js",
     "lint:fix": "eslint --fix -c .eslintrc.js src/**.js",
-    "serve": "node server/index.js",
+    "serve": "nodemon server/index.js",
     "dev": "rollup -c config/rollup.config.iife.js -w",
+    "doc": "webpack --config webpack.config.js -w",
     "build:cjs": "rollup -c config/rollup.config.cjs.js",
     "build:iife": "rollup -c config/rollup.config.iife.js",
     "build:esm": "rollup -c config/rollup.config.esm.js",
-    "build": "npm run clean && npm run build:iife && npm run build:esm && npm run build:cjs",
+    "build": "npm run clean && npm run build:iife && npm run build:esm && npm run build:cjs && webpack --config webpack.config.js",
     "test": "npm run lint && cross-env NODE_ENV=test nyc mocha",
     "coveralls": "nyc report --reporter=text-lcov | coveralls",
     "release": "npn test && npm run build && git commit -am $npm_package_version && git tag $npm_package_version && git push && git push --tags"
@@ -58,7 +59,9 @@
     "eslint": "4.18.2",
     "expect.js": "0.3.1",
     "express": "^4.16.4",
-    "mocha": "^6.0.2",
+    "html-webpack-plugin": "^3.2.0",
+    "mocha": "^6.1.1",
+    "nodemon": "^1.18.10",
     "nyc": "^13.3.0",
     "rimraf": "2.6.2",
     "rollup": "0.57.1",
@@ -71,7 +74,9 @@
     "ts-node": "7.0.1",
     "tslib": "1.9.3",
     "tslint": "^5.15.0",
-    "typescript": "3.1.6"
+    "typescript": "3.1.6",
+    "webpack": "^4.29.6",
+    "webpack-cli": "^3.3.0"
   },
   "dependencies": {
     "@babel/polyfill": "^7.4.3",
@@ -88,6 +93,8 @@
     "@jsmini/querystring": "0.1.0",
     "@jsmini/type": "0.4.0",
     "@jsmini/url": "0.1.0",
-    "three": "^0.99.0"
+    "showdown": "^1.9.0",
+    "three": "^0.99.0",
+    "xss": "^1.0.6"
   }
 }

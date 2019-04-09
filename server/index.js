@@ -2,26 +2,33 @@ const express = require('express');
 const detect = require('detect-port');
 const path = require('path');
 const fs = require('fs');
+const packageJson = require('../package.json');
+
 
 const router = express.Router();
 router.get('/', (req, res) => {
   const files = fs.readdirSync(path.resolve(__dirname, '../demo'));
   res.send(`
-    <div style="display: flex;
-                justify-content: center;
-                align-content: center;
-                flex-wrap: wrap;
-                text-align: center;
-                width: 100vw;
-                height: 100vh;">
-      <div style="width: 100%;">hello three-particle!</div>
-      <div style="width: 100%;">
-        ${files
-    .filter(file => file.endsWith('.html'))
-    .map(file => `<a href="./demo/${file}" style="padding: 0 5px;">${file}</a>`)
-    .join('')}
+    <body style="overflow: hidden;">
+      <div style="display: flex;
+                  justify-content: center;
+                  align-content: center;
+                  flex-wrap: wrap;
+                  text-align: center;
+                  width: 100vw;
+                  height: 100vh;">
+        <h2 style="width: 100%;">Hello ${packageJson.name}!</h2>
+        <div style="width: 100%;
+                    display: flex;
+                    flex-wrap: wrap;
+                    text-align: center;">
+          ${files
+      .filter(file => file.endsWith('.html'))
+      .map(file => `<a style="width: 20%; margin: 5px 0;" href="./demo/${file}" style="padding: 0 5px;">${file}</a>`)
+      .join('')}
+        </div>
       </div>
-    </div>
+    </body>
   `);
 });
 

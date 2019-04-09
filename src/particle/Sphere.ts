@@ -29,7 +29,7 @@ class Sphere extends THREE.Mesh {
     // 设置 glow
     if (this.glow) {
       this.add(new THREE.Mesh(
-        new THREE.SphereBufferGeometry(radius * this.glow.size, widthSegments, heightSegments),
+        new THREE.SphereBufferGeometry(radius * this.glow.rate, widthSegments, heightSegments),
         this.glow.getShaderMaterial()
       ));
     }
