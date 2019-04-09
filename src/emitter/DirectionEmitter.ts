@@ -9,17 +9,17 @@ class DirectionEmitter extends Emitter {
   direction: THREE.Vector3; // 方向
   emitType: number; // 发射类型
   radius: THREE.Vector3;
-  spread: number; // 粒子发散值
+  spread: THREE.Vector3; // 粒子发散值
   constructor({
     direction = new THREE.Vector3(0, 0, -1),
-    spread = 0,
+    spread = new THREE.Vector3(0, 0, 0),
     radius = new THREE.Vector3(0, 0, 0),
     emitType = DirectionEmitter.EMIT_TYPE_SHPERE,
     ...options
   } = {}) {
     super(options || {});
     this.direction = direction.normalize();
-    this.spread = spread;
+    this.spread = spread instanceof THREE.Vector3 ? spread : new THREE.Vector3(spread, spread, spread);
     this.radius = radius instanceof THREE.Vector3 ? radius : new THREE.Vector3(radius, radius, radius);
     this.emitType = emitType;
     this.type = 'DirectionEmitter';
@@ -146,9 +146,9 @@ class DirectionEmitter extends Emitter {
 
       // 初始化粒子方向
       generatedParticles[i].direction = new THREE.Vector3(
-        this.direction.x + THREE.Math.randFloatSpread(this.spread),
-        this.direction.y + THREE.Math.randFloatSpread(this.spread),
-        this.direction.z + THREE.Math.randFloatSpread(this.spread),
+        this.direction.x + THREE.Math.randFloatSpread(this.spread.x),
+        this.direction.y + THREE.Math.randFloatSpread(this.spread.y),
+        this.direction.z + THREE.Math.randFloatSpread(this.spread.z),
       ).normalize();
     }
 

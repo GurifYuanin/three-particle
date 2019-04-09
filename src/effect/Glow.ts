@@ -1,7 +1,8 @@
+import Effect from './Effect';
 import * as THREE from 'three';
 
 // 粒子发光特效
-class Glow {
+class Glow extends Effect {
 	// from: https://zhuanlan.zhihu.com/p/38548428
 	static readonly vertexShader = `
 		varying vec3 vNormal;
@@ -43,20 +44,22 @@ class Glow {
 	opacity: number; // 整体不透明度
 	feature: number; // 发光羽化值（单位，像素）
 	intensity: number; // 发光强度
- 	size: number; // 发光大小（相对于发光物体的比例）
+	rate: number;
  	color: THREE.Color; // 发光颜色
 	constructor({
 		opacity = 0.5,
 		intensity = 1,
+		rate = 1.1,
 		feature = 5,
-		size = 1.1,
-		color = new THREE.Color(0x00ffff)
+		color = new THREE.Color(0x00ffff),
+		...options
 	} = {}) {
+		super(options || {});
 		this.opacity = opacity;
 		this.intensity = intensity;
-		this.size = size;
 		this.color = color;
 		this.feature = feature;
+		this.rate = rate;
 
 		// intensity 应该为 [-5, 5]
 		// abs(intensity) > 5 时，值再大变化效果也不明显
@@ -65,6 +68,7 @@ class Glow {
 		// 因此将 bias 根据 scale ，让 scale 从区间 0 - 5 映射到 bias 从区间 1 - 0
 		this.bias = THREE.Math.mapLinear(intensity, 0, 5, 1.0, 0.0);
 		this.power = 5 / feature;
+		this.type = 'Glow';
 	}
 	// 根据 glow 的参数生成着色器材质
 	// 并不是很好的解决方法，目前是为了减少重复编码

@@ -8,7 +8,6 @@ class Line extends THREE.Line {
   verticesSize: number; // 线段维度
   vertices: number[]; // 自定义端点位置
   colors: number[]; // 自定义端点颜色
-  afterimagePositionArrayIndex: number;
   material: THREE.LineBasicMaterial | THREE.LineDashedMaterial;
   geometry: THREE.BufferGeometry;
   options: object;
@@ -42,7 +41,6 @@ class Line extends THREE.Line {
     this.verticesSize = verticesSize;
     this.vertices = vertices;
     this.colors = colors;
-    this.afterimagePositionArrayIndex = 0;
     this.options = options;
     this.type = 'Line';
   }

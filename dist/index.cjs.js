@@ -141,16 +141,31 @@ function __rest(s, e) {
     return t;
 }
 
+var Effect = /** @class */ (function () {
+    function Effect(options) {
+        if (options === void 0) { options = {}; }
+        this.type = 'Effect';
+    }
+    Effect.prototype.effect = function (particle, emitter) {
+    };
+    return Effect;
+}());
+
 // 残影特效
-var Afterimage = /** @class */ (function () {
+var Afterimage = /** @class */ (function (_super) {
+    __extends(Afterimage, _super);
     function Afterimage(_a) {
-        var _b = _a === void 0 ? {} : _a, _c = _b.delay, delay = _c === void 0 ? 0.2 : _c, _d = _b.interval, interval = _d === void 0 ? 0.2 : _d, _e = _b.attenuation, attenuation = _e === void 0 ? 0.2 : _e, _f = _b.number, number = _f === void 0 ? 2 : _f;
-        this.delay = delay;
-        this.interval = interval;
-        this.number = number;
-        this.attenuation = attenuation;
-        this.matrixWorlds = [];
-        this.positionArrays = [];
+        if (_a === void 0) { _a = {}; }
+        var _b = _a.delay, delay = _b === void 0 ? 0.2 : _b, _c = _a.interval, interval = _c === void 0 ? 0.2 : _c, _d = _a.attenuation, attenuation = _d === void 0 ? 0.2 : _d, _e = _a.number, number = _e === void 0 ? 2 : _e, options = __rest(_a, ["delay", "interval", "attenuation", "number"]);
+        var _this = _super.call(this, options || {}) || this;
+        _this.delay = delay;
+        _this.interval = interval;
+        _this.number = number;
+        _this.attenuation = attenuation;
+        _this.matrixWorlds = [];
+        _this.positionArrays = [];
+        _this.type = 'Afterimage';
+        return _this;
     }
     Afterimage.prototype.clone = function () {
         return new Afterimage({
@@ -161,7 +176,7 @@ var Afterimage = /** @class */ (function () {
         });
     };
     return Afterimage;
-}());
+}(Effect));
 
 var Particle = /** @class */ (function () {
     function Particle(_a) {
@@ -176,15 +191,13 @@ var Particle = /** @class */ (function () {
         this.border = border;
         this.afterimage = afterimage instanceof Afterimage ? afterimage.clone() : afterimage;
         this.afterimageMatrixWorldIndex = 0;
+        this.afterimagePositionArrayIndex = 0;
         this.onBeforeCreated = onBeforeCreated;
         this.onAfterCreated = onAfterCreated;
         this.onBeforeDestroyed = onBeforeDestroyed;
         this.onAfterDestroyed = onAfterDestroyed;
         this.emitting = true;
     }
-    Particle.TRANSFORM_LINEAR = 0; // 线性插值
-    Particle.TRANSFORM_SMOOTH = 1; // 平滑插值
-    Particle.TRANSFORM_SMOOTHER = 2; // 更平滑的插值
     return Particle;
 }());
 
@@ -205,7 +218,7 @@ var Sphere = /** @class */ (function (_super) {
         _this.glow = glow;
         // 设置 glow
         if (_this.glow) {
-            _this.add(new THREE.Mesh(new THREE.SphereBufferGeometry(radius * _this.glow.size, widthSegments, heightSegments), _this.glow.getShaderMaterial()));
+            _this.add(new THREE.Mesh(new THREE.SphereBufferGeometry(radius * _this.glow.rate, widthSegments, heightSegments), _this.glow.getShaderMaterial()));
         }
         _this.type = 'Sphere';
         return _this;
@@ -243,7 +256,6 @@ var Line = /** @class */ (function (_super) {
         _this.verticesSize = verticesSize;
         _this.vertices = vertices;
         _this.colors = colors;
-        _this.afterimagePositionArrayIndex = 0;
         _this.options = options;
         _this.type = 'Line';
         return _this;
@@ -411,7 +423,7 @@ var Text = /** @class */ (function (_super) {
         };
         this.geometry = new THREE.TextBufferGeometry(this.text, options);
         if (this.glow) {
-            options.size *= this.glow.size;
+            options.size *= this.glow.rate;
             this.add(new THREE.Mesh(new THREE.TextBufferGeometry(this.text, options), this.glow.getShaderMaterial()));
         }
         this.emitting = true;
@@ -443,21 +455,6 @@ var Sprite = /** @class */ (function (_super) {
     Sprite.TYPE = 'Sprite';
     return Sprite;
 }(THREE.Sprite));
-
-var Lut = /** @class */ (function () {
-    function Lut() {
-    }
-    // 根据值，获得最小值到最大值之间的百分比位置
-    Lut.getInterpolationFunction = function (particlesTransformType) {
-        switch (particlesTransformType) {
-            case Particle.TRANSFORM_LINEAR: return function (value, min, max) { return (value - min) / (max - min); };
-            case Particle.TRANSFORM_SMOOTH: return THREE.Math.smoothstep;
-            case Particle.TRANSFORM_SMOOTHER: return THREE.Math.smootherstep;
-            default: return function () { return 0; };
-        }
-    };
-    return Lut;
-}());
 
 // 通用工具包
 var Util = /** @class */ (function () {
@@ -539,12 +536,12 @@ var Util = /** @class */ (function () {
 var Emitter = /** @class */ (function (_super) {
     __extends(Emitter, _super);
     function Emitter(_a) {
-        var _b = _a === void 0 ? {} : _a, _c = _b.emission, emission = _c === void 0 ? 100 : _c, _d = _b.isVerticalToDirection, isVerticalToDirection = _d === void 0 ? false : _d, _e = _b.mode, mode = _e === void 0 ? Emitter.MODE_DURATIOIN : _e, _f = _b.anchor, anchor = _f === void 0 ? new THREE.Vector3(0, 0, 0) : _f, _g = _b.particlesPositionRandom, particlesPositionRandom = _g === void 0 ? new THREE.Vector3 : _g, _h = _b.particlesOpacityRandom, particlesOpacityRandom = _h === void 0 ? 0 : _h, _j = _b.particlesOpacityKey, particlesOpacityKey = _j === void 0 ? [] : _j, _k = _b.particlesOpacityValue, particlesOpacityValue = _k === void 0 ? [] : _k, _l = _b.particlesColorRandom, particlesColorRandom = _l === void 0 ? new THREE.Color(0, 0, 0) : _l, _m = _b.particlesColorKey, particlesColorKey = _m === void 0 ? [] : _m, _o = _b.particlesColorValue, particlesColorValue = _o === void 0 ? [] : _o, _p = _b.particlesRotationRandom, particlesRotationRandom = _p === void 0 ? new THREE.Vector3(0, 0, 0) : _p, _q = _b.particlesRotationKey, particlesRotationKey = _q === void 0 ? [] : _q, _r = _b.particlesRotationValue, particlesRotationValue = _r === void 0 ? [] : _r, _s = _b.particlesScaleRandom, particlesScaleRandom = _s === void 0 ? new THREE.Vector3(0, 0, 0) : _s, _t = _b.particlesScaleKey, particlesScaleKey = _t === void 0 ? [] : _t, _u = _b.particlesScaleValue, particlesScaleValue = _u === void 0 ? [] : _u;
+        var _b = _a === void 0 ? {} : _a, _c = _b.emission, emission = _c === void 0 ? 100 : _c, _d = _b.status, status = _d === void 0 ? Emitter.STATUS_NORMAL : _d, _e = _b.isVerticalToDirection, isVerticalToDirection = _e === void 0 ? false : _e, _f = _b.mode, mode = _f === void 0 ? Emitter.MODE_DURATIOIN : _f, _g = _b.anchor, anchor = _g === void 0 ? new THREE.Vector3(0, 0, 0) : _g, _h = _b.particlesPositionRandom, particlesPositionRandom = _h === void 0 ? new THREE.Vector3(0, 0, 0) : _h, _j = _b.particlesOpacityRandom, particlesOpacityRandom = _j === void 0 ? 0 : _j, _k = _b.particlesOpacityKey, particlesOpacityKey = _k === void 0 ? [] : _k, _l = _b.particlesOpacityValue, particlesOpacityValue = _l === void 0 ? [] : _l, _m = _b.particlesColorRandom, particlesColorRandom = _m === void 0 ? new THREE.Color(0, 0, 0) : _m, _o = _b.particlesColorKey, particlesColorKey = _o === void 0 ? [] : _o, _p = _b.particlesColorValue, particlesColorValue = _p === void 0 ? [] : _p, _q = _b.particlesRotationRandom, particlesRotationRandom = _q === void 0 ? new THREE.Vector3(0, 0, 0) : _q, _r = _b.particlesRotationKey, particlesRotationKey = _r === void 0 ? [] : _r, _s = _b.particlesRotationValue, particlesRotationValue = _s === void 0 ? [] : _s, _t = _b.particlesScaleRandom, particlesScaleRandom = _t === void 0 ? new THREE.Vector3(0, 0, 0) : _t, _u = _b.particlesScaleKey, particlesScaleKey = _u === void 0 ? [] : _u, _v = _b.particlesScaleValue, particlesScaleValue = _v === void 0 ? [] : _v;
         var _this = _super.call(this) || this;
         _this.emission = emission;
         _this.isVerticalToDirection = isVerticalToDirection;
         _this.mode = mode;
-        _this.emitting = true;
+        _this.status = status;
         _this.clock = new THREE.Clock();
         _this.clock.start();
         _this.particles = [];
@@ -575,7 +572,7 @@ var Emitter = /** @class */ (function (_super) {
         _this.particlesScaleValue = Util.isElementsInstanceOf(particlesScaleValue, THREE.Vector3) ?
             particlesScaleValue :
             particlesScaleValue.map(function (scale) { return new THREE.Vector3(scale, scale, scale); });
-        _this.particlesTransformType = Particle.TRANSFORM_LINEAR;
+        _this.particlesTransformType = Emitter.TRANSFORM_LINEAR;
         _this.gap = 0;
         _this.type = 'Emitter';
         return _this;
@@ -584,25 +581,64 @@ var Emitter = /** @class */ (function (_super) {
     Emitter.prototype.addParticle = function (particle) {
         this.particles.push(particle);
     };
+    Emitter.prototype.addParticles = function (particles) {
+        for (var i = 0; i < particles.length; i++) {
+            this.addParticle(particles[i]);
+        }
+    };
+    Emitter.prototype.removeParticle = function (particle) {
+        var index = this.particles.indexOf(particle);
+        return index === -1 ? null : this.particles.splice(index, 1)[0];
+    };
     // 新增物理场
     Emitter.prototype.addPhysical = function (physical) {
         this.physicals.push(physical);
+    };
+    Emitter.prototype.addPhysicals = function (physicals) {
+        for (var i = 0; i < physicals.length; i++) {
+            this.physicals.push(physicals[i]);
+        }
+    };
+    Emitter.prototype.removePhysical = function (physical) {
+        var index = this.physicals.indexOf(physical);
+        return index === -1 ? null : this.physicals.splice(index, 1)[0];
     };
     // 新增特效场
     Emitter.prototype.addEffect = function (effect) {
         this.effects.push(effect);
     };
+    Emitter.prototype.addEffects = function (effects) {
+        for (var i = 0; i < effects.length; i++) {
+            this.effects.push(effects[i]);
+        }
+    };
+    Emitter.prototype.removeEffect = function (effect) {
+        var index = this.effects.indexOf(effect);
+        return index === -1 ? null : this.effects.splice(index, 1)[0];
+    };
     // 新增交互事件
     Emitter.prototype.addEvent = function (event) {
         this.events.push(event);
     };
+    Emitter.prototype.addEvents = function (events) {
+        for (var i = 0; i < events.length; i++) {
+            this.events.push(events[i]);
+        }
+    };
+    Emitter.prototype.removeEvent = function (event) {
+        var index = this.events.indexOf(event);
+        return index === -1 ? null : this.events.splice(index, 1)[0];
+    };
     // 开始发射粒子，默认为开启
     Emitter.prototype.start = function () {
-        this.emitting = true;
+        this.status = Emitter.STATUS_NORMAL;
     };
     // 暂停发射粒子
     Emitter.prototype.stop = function () {
-        this.emitting = false;
+        this.status = Emitter.STATUS_STOP;
+    };
+    Emitter.prototype.freeze = function () {
+        this.status = Emitter.STATUS_FROZEN;
     };
     // 生成粒子
     Emitter.prototype.generate = function () {
@@ -612,7 +648,7 @@ var Emitter = /** @class */ (function (_super) {
         var particlesNumber = this.particles.length;
         var generatedParticles = [];
         // 当发射器处于发射状态，且粒子样本数量大于 0 时，才会进行粒子创建
-        if (this.emitting && particlesNumber > 0) {
+        if (this.status === Emitter.STATUS_NORMAL && particlesNumber > 0) {
             switch (this.mode) {
                 case Emitter.MODE_DURATIOIN: {
                     // 持续发射模式
@@ -670,6 +706,8 @@ var Emitter = /** @class */ (function (_super) {
     };
     // 更新粒子
     Emitter.prototype.update = function () {
+        if (this.status === Emitter.STATUS_FROZEN)
+            return;
         // 触发事件
         // 在更新方法前面部分判定触发，因为关闭了粒子的矩阵自动计算
         for (var i = 0; i < this.events.length; i++) {
@@ -684,7 +722,7 @@ var Emitter = /** @class */ (function (_super) {
             // 获得粒子距离上次更新的时间差
             var elapsedTimePercentage = elapsedTime % particle.life / particle.life;
             // 获得查询百分比函数
-            var interpolationFunction = Lut.getInterpolationFunction(this.particlesTransformType);
+            var interpolationFunction = Emitter.getInterpolationFunction(this.particlesTransformType);
             // 设置粒子属性随机值
             // 粒子透明度
             for (var j = 0; j < this.particlesOpacityKey.length - 1; j++) {
@@ -869,8 +907,23 @@ var Emitter = /** @class */ (function (_super) {
             }
         }
     };
+    // 获得差值方程
+    Emitter.getInterpolationFunction = function (particlesTransformType) {
+        switch (particlesTransformType) {
+            case Emitter.TRANSFORM_LINEAR: return function (value, min, max) { return (value - min) / (max - min); };
+            case Emitter.TRANSFORM_SMOOTH: return THREE.Math.smoothstep;
+            case Emitter.TRANSFORM_SMOOTHER: return THREE.Math.smootherstep;
+            default: return function () { return 0; };
+        }
+    };
     Emitter.MODE_DURATIOIN = 0; // 持续发射
     Emitter.MODE_EXPLOSION = 1; // 爆炸失发射
+    Emitter.TRANSFORM_LINEAR = 0; // 线性插值
+    Emitter.TRANSFORM_SMOOTH = 1; // 平滑插值
+    Emitter.TRANSFORM_SMOOTHER = 2; // 更平滑的插值
+    Emitter.STATUS_NORMAL = 0;
+    Emitter.STATUS_STOP = 1;
+    Emitter.STATUS_FROZEN = 2;
     return Emitter;
 }(THREE.Object3D));
 
@@ -929,10 +982,10 @@ var DirectionEmitter = /** @class */ (function (_super) {
     __extends(DirectionEmitter, _super);
     function DirectionEmitter(_a) {
         if (_a === void 0) { _a = {}; }
-        var _b = _a.direction, direction = _b === void 0 ? new THREE.Vector3(0, 0, -1) : _b, _c = _a.spread, spread = _c === void 0 ? 0 : _c, _d = _a.radius, radius = _d === void 0 ? new THREE.Vector3(0, 0, 0) : _d, _e = _a.emitType, emitType = _e === void 0 ? DirectionEmitter.EMIT_TYPE_SHPERE : _e, options = __rest(_a, ["direction", "spread", "radius", "emitType"]);
+        var _b = _a.direction, direction = _b === void 0 ? new THREE.Vector3(0, 0, -1) : _b, _c = _a.spread, spread = _c === void 0 ? new THREE.Vector3(0, 0, 0) : _c, _d = _a.radius, radius = _d === void 0 ? new THREE.Vector3(0, 0, 0) : _d, _e = _a.emitType, emitType = _e === void 0 ? DirectionEmitter.EMIT_TYPE_SHPERE : _e, options = __rest(_a, ["direction", "spread", "radius", "emitType"]);
         var _this = _super.call(this, options || {}) || this;
         _this.direction = direction.normalize();
-        _this.spread = spread;
+        _this.spread = spread instanceof THREE.Vector3 ? spread : new THREE.Vector3(spread, spread, spread);
         _this.radius = radius instanceof THREE.Vector3 ? radius : new THREE.Vector3(radius, radius, radius);
         _this.emitType = emitType;
         _this.type = 'DirectionEmitter';
@@ -1036,7 +1089,7 @@ var DirectionEmitter = /** @class */ (function (_super) {
             }
             generatedParticle.position.set(generatedParticlePosition[0], generatedParticlePosition[1], generatedParticlePosition[2]);
             // 初始化粒子方向
-            generatedParticles[i].direction = new THREE.Vector3(this.direction.x + THREE.Math.randFloatSpread(this.spread), this.direction.y + THREE.Math.randFloatSpread(this.spread), this.direction.z + THREE.Math.randFloatSpread(this.spread)).normalize();
+            generatedParticles[i].direction = new THREE.Vector3(this.direction.x + THREE.Math.randFloatSpread(this.spread.x), this.direction.y + THREE.Math.randFloatSpread(this.spread.y), this.direction.z + THREE.Math.randFloatSpread(this.spread.z)).normalize();
         }
         return generatedParticles;
     };
@@ -1319,20 +1372,20 @@ var Wind = /** @class */ (function (_super) {
     __extends(Wind, _super);
     function Wind(_a) {
         if (_a === void 0) { _a = {}; }
-        var _b = _a.direction, direction = _b === void 0 ? new THREE.Vector3(1, 0, 0) : _b, _c = _a.intensity, intensity = _c === void 0 ? 1 : _c, _d = _a.spread, spread = _d === void 0 ? 0 : _d, options = __rest(_a, ["direction", "intensity", "spread"]);
+        var _b = _a.direction, direction = _b === void 0 ? new THREE.Vector3(1, 0, 0) : _b, _c = _a.intensity, intensity = _c === void 0 ? new THREE.Vector3(1, 1, 1) : _c, _d = _a.spread, spread = _d === void 0 ? new THREE.Vector3(0, 0, 0) : _d, options = __rest(_a, ["direction", "intensity", "spread"]);
         var _this = _super.call(this, options || {}) || this;
         _this.direction = direction;
-        _this.intensity = intensity;
-        _this.spread = spread;
+        _this.intensity = intensity instanceof THREE.Vector3 ? intensity : new THREE.Vector3(intensity, intensity, intensity);
+        _this.spread = spread instanceof THREE.Vector3 ? spread : new THREE.Vector3(spread, spread, spread);
         _this.type = 'Wind';
         return _this;
     }
     Wind.prototype.effect = function (particle, emitter) {
         _super.prototype.effect.call(this, particle, emitter);
-        particle.velocity = particle.direction.multiplyScalar(particle.velocity).add(this.direction
-            .clone()
-            .multiplyScalar(this.intensity)
-            .addScalar(THREE.Math.randFloatSpread(this.spread))).length();
+        var x = (this.direction.x + THREE.Math.randFloatSpread(this.spread.x)) * this.intensity.x;
+        var y = (this.direction.y + THREE.Math.randFloatSpread(this.spread.y)) * this.intensity.y;
+        var z = (this.direction.z + THREE.Math.randFloatSpread(this.spread.z)) * this.intensity.z;
+        particle.velocity = particle.direction.multiplyScalar(particle.velocity).add(new THREE.Vector3(x, y, z)).length();
         // 如果速度等于 0，直接返回，除数不能为 0
         if (particle.velocity === 0)
             return;
@@ -1340,15 +1393,6 @@ var Wind = /** @class */ (function (_super) {
     };
     return Wind;
 }(Physcial));
-
-var Effect = /** @class */ (function () {
-    function Effect(options) {
-        this.type = 'Effect';
-    }
-    Effect.prototype.effect = function (particle, emitter) {
-    };
-    return Effect;
-}());
 
 // 湍流
 var Turbulent = /** @class */ (function (_super) {
@@ -1385,21 +1429,26 @@ var Turbulent = /** @class */ (function (_super) {
 }(Effect));
 
 // 粒子发光特效
-var Glow = /** @class */ (function () {
+var Glow = /** @class */ (function (_super) {
+    __extends(Glow, _super);
     function Glow(_a) {
-        var _b = _a === void 0 ? {} : _a, _c = _b.opacity, opacity = _c === void 0 ? 0.5 : _c, _d = _b.intensity, intensity = _d === void 0 ? 1 : _d, _e = _b.feature, feature = _e === void 0 ? 5 : _e, _f = _b.size, size = _f === void 0 ? 1.1 : _f, _g = _b.color, color = _g === void 0 ? new THREE.Color(0x00ffff) : _g;
-        this.opacity = opacity;
-        this.intensity = intensity;
-        this.size = size;
-        this.color = color;
-        this.feature = feature;
+        if (_a === void 0) { _a = {}; }
+        var _b = _a.opacity, opacity = _b === void 0 ? 0.5 : _b, _c = _a.intensity, intensity = _c === void 0 ? 1 : _c, _d = _a.rate, rate = _d === void 0 ? 1.1 : _d, _e = _a.feature, feature = _e === void 0 ? 5 : _e, _f = _a.color, color = _f === void 0 ? new THREE.Color(0x00ffff) : _f, options = __rest(_a, ["opacity", "intensity", "rate", "feature", "color"]);
+        var _this = _super.call(this, options || {}) || this;
+        _this.opacity = opacity;
+        _this.intensity = intensity;
+        _this.color = color;
+        _this.feature = feature;
+        _this.rate = rate;
         // intensity 应该为 [-5, 5]
         // abs(intensity) > 5 时，值再大变化效果也不明显
-        this.scale = -intensity;
+        _this.scale = -intensity;
         // 当 scale 为 5 时，不透明度基本上都为 1
         // 因此将 bias 根据 scale ，让 scale 从区间 0 - 5 映射到 bias 从区间 1 - 0
-        this.bias = THREE.Math.mapLinear(intensity, 0, 5, 1.0, 0.0);
-        this.power = 5 / feature;
+        _this.bias = THREE.Math.mapLinear(intensity, 0, 5, 1.0, 0.0);
+        _this.power = 5 / feature;
+        _this.type = 'Glow';
+        return _this;
     }
     // 根据 glow 的参数生成着色器材质
     // 并不是很好的解决方法，目前是为了减少重复编码
@@ -1422,7 +1471,7 @@ var Glow = /** @class */ (function () {
     Glow.vertexShader = "\n\t\tvarying vec3 vNormal;\n\t\tvarying vec3 vPositionNormal;\n\t\tvoid main() \n\t\t{\n\t\t  vNormal = normalize( normalMatrix * normal ); // \u8F6C\u6362\u5230\u89C6\u56FE\u7A7A\u95F4\n\t\t  vPositionNormal = normalize(( modelViewMatrix * vec4( position, 1.0) ).xyz);\n\t\t  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n\t\t}\n\t";
     Glow.fragmentShader = "\n\t\tuniform vec3 color;\n\t\tuniform float opacity;\n\t\tuniform float bias;\n\t\tuniform float power;\n\t\tuniform float scale;\n\t\tvarying vec3 vNormal;\n\t\tvarying vec3 vPositionNormal;\n\t\tvoid main() \n\t\t{\n      // Empricial \u83F2\u6D85\u5C14\u8FD1\u4F3C\u7B49\u5F0F\n      // \u8BA1\u7B97\u5F97\u5230\u7247\u6BB5\u7740\u8272\u7684\u900F\u660E\u5EA6\n      float alpha = pow( bias + scale * abs(dot(vNormal, vPositionNormal)), power );\n\t\t  gl_FragColor = vec4( color, alpha * opacity );\n\t\t}\n\t";
     return Glow;
-}());
+}(Effect));
 
 var Event = /** @class */ (function () {
     function Event(_a) {

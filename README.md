@@ -83,7 +83,9 @@ For browser environment:
 ```
 
 ## Documents
-+ [API](./doc/api.md)
++ [API Document](./doc/api.md)
++ [接口文档](./doc/api.zh-CN.md)
++ [HTML entry](https://gurifyuanin.github.io/three-particle/demo/index.html)
 
 ## Contribution Guide
 

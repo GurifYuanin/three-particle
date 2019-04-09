@@ -3,9 +3,6 @@ import Afterimage from '../effect/Afterimage';
 import Glow from '../effect/Glow';
 
 class Particle {
-  static readonly TRANSFORM_LINEAR: number = 0; // 线性插值
-  static readonly TRANSFORM_SMOOTH: number = 1; // 平滑插值
-  static readonly TRANSFORM_SMOOTHER: number = 2; // 更平滑的插值
   clock: THREE.Clock; // 生命时钟
   velocity: number; // 粒子移动速度
   life: number; // 粒子生命长度，单位 s
@@ -14,6 +11,7 @@ class Particle {
   emitting: boolean; // 该粒子是否可以被发射
   afterimage: Afterimage | null; // 是否有粒子残影
   afterimageMatrixWorldIndex: number;
+  afterimagePositionArrayIndex: number;
   onBeforeCreated: Function;
   onAfterCreated: Function;
   onBeforeDestroyed: Function;
@@ -37,6 +35,7 @@ class Particle {
     this.border = border;
     this.afterimage = afterimage instanceof Afterimage ? afterimage.clone() : afterimage;
     this.afterimageMatrixWorldIndex = 0;
+    this.afterimagePositionArrayIndex = 0;
     this.onBeforeCreated = onBeforeCreated;
     this.onAfterCreated = onAfterCreated;
     this.onBeforeDestroyed = onBeforeDestroyed;

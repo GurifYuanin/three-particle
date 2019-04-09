@@ -20,18 +20,32 @@
 
         .demos-container {
             display: flex;
-            justify-content: center;
+            flex-wrap: wrap;
         }
 
-        .demos-container>* {
-            margin: 5px;
+        .demos-container > div {
+          display: relative;
+          width: 20%;
+          margin: 5px 0;
+          white-space: nowrap;
+        }
+        iframe {
+          position: absolute;
+          top: 2em;
+          transform: translateX(-50%);
+          z-index: 1;
+          border-radius: 5px;
+          border: none;
+          padding: 5px;
+          background-color: white;
+          box-shadow: 0 0 10px 0.5px rgba(127, 127, 127, .5)
         }
 
     </style>
 </head>
 
 <body>
-    <div id="app">
+    <div id="app" @click="hoverIndex = -1">
         <Layout class="has-text-centered">
             <Header style="padding-top: 25px; font-size: 1.5em;">Welcome to three-particle</Header>
             <Content>
@@ -45,12 +59,13 @@
                         <Icon type="md-bulb" />
                     </div>
                     <div class="demos-container">
-                        <span v-for="demo in demos">
-                            <Tooltip :content="demo.tip" placement="top-start">
-                                <a :href="demo.url">{{demo.url}}</a>
+                        <template v-for="(demo, index) in demos">
+                            <Tooltip :content="demo.tip" placement="top-start" >
+                                <a :href="demo.url"
+                                    @mouseenter="hoverIndex = index">{{demo.url}}</a>
+                                <iframe v-if="hoverIndex === index" :src="demo.url"></iframe>
                             </Tooltip>
-
-                        </span>
+                          </template>
                     </div>
                 </Card>
 
@@ -65,35 +80,36 @@
         new Vue({
             el: '#app',
             data: {
-                demos: [{
-                    url: 'gravity.html',
-                    tip: 'Sphere particle with gravity'
-                }, {
-                    url: 'sprite.html',
-                    tip: 'Red sprite explode randomly'
-                }, {
-                    url: 'turbulent.html',
-                    tip: 'Turbulent effect'
-                }, {
-                    url: 'rain.html',
-                    tip: 'Simulation rain or snow'
-                }, {
-                    url: 'after-image.html',
-                    tip: 'Create particle\'s afterimage easily'
-                }, {
-                    url: 'glow.html',
-                    tip: 'Generate the particle glow effect'
-                }, {
-                    url: 'text-emitter.html',
-                    tip: 'Emit particles around text'
-                }, {
-                    url: 'direction-emitter.html',
-                    tip: 'Emit particles with the same direction'
-                }, {
-                    url: 'mouse-event.html',
-                    tip: 'Add mouse event on Emitter'
-                }]
-            },
+              hoverIndex: -1,
+              demos: [{
+                  url: 'gravity.html',
+                  tip: 'Sphere particle with gravity'
+              }, {
+                  url: 'sprite.html',
+                  tip: 'Red sprite explode randomly'
+              }, {
+                  url: 'turbulent.html',
+                  tip: 'Turbulent effect'
+              }, {
+                  url: 'rain.html',
+                  tip: 'Simulation rain or snow'
+              }, {
+                  url: 'after-image.html',
+                  tip: 'Create particle\'s afterimage easily'
+              }, {
+                  url: 'glow.html',
+                  tip: 'Generate the particle glow effect'
+              }, {
+                  url: 'text-emitter.html',
+                  tip: 'Emit particles around text'
+              }, {
+                  url: 'direction-emitter.html',
+                  tip: 'Emit particles with the same direction'
+              }, {
+                  url: 'mouse-event.html',
+                  tip: 'Add mouse event on Emitter'
+              }]
+            }
         })
 
     </script>

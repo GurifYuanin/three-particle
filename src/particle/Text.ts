@@ -68,7 +68,7 @@ class Text extends THREE.Mesh {
     };
     this.geometry = new THREE.TextBufferGeometry(this.text, options);
     if (this.glow) {
-      options.size *= this.glow.size;
+      options.size *= this.glow.rate;
       this.add(new THREE.Mesh(
         new THREE.TextBufferGeometry(this.text, options),
         this.glow.getShaderMaterial()

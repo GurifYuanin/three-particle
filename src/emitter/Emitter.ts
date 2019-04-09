@@ -1,9 +1,8 @@
 import * as THREE from 'three';
-import { Particle, ParticleInterface } from '../particle/Particle';
+import { ParticleInterface } from '../particle/Particle';
 import Physical from '../physical/Physical';
 import Points from '../particle/Points';
 import Line from '../particle/Line';
-import Lut from '../util/Lut';
 import Util from '../util/Util';
 import Effect from '../effect/Effect';
 import Event from '../event/Event';
@@ -11,8 +10,17 @@ import Event from '../event/Event';
 class Emitter extends THREE.Object3D {
   static readonly MODE_DURATIOIN: number = 0; // 持续发射
   static readonly MODE_EXPLOSION: number = 1; // 爆炸失发射
+  
+  static readonly TRANSFORM_LINEAR: number = 0; // 线性插值
+  static readonly TRANSFORM_SMOOTH: number = 1; // 平滑插值
+  static readonly TRANSFORM_SMOOTHER: number = 2; // 更平滑的插值
+
+  static readonly STATUS_NORMAL: number = 0;
+  static readonly STATUS_STOP: number = 1;
+  static readonly STATUS_FROZEN: number = 2;
+
   emission: number; // 每秒发射的粒子数
-  emitting: boolean; // 是否发射粒子中
+  status: number; // 是否发射粒子中
   clock: THREE.Clock; // 生命时钟
   anchor: THREE.Vector3; // 粒子发射原点
   particles: ParticleInterface[]; // 发射粒子样板
@@ -42,10 +50,11 @@ class Emitter extends THREE.Object3D {
 
   constructor({
     emission = 100,
+    status = Emitter.STATUS_NORMAL,
     isVerticalToDirection = false,
     mode = Emitter.MODE_DURATIOIN,
     anchor = new THREE.Vector3(0, 0, 0),
-    particlesPositionRandom = new THREE.Vector3,
+    particlesPositionRandom = new THREE.Vector3(0, 0, 0),
     particlesOpacityRandom = 0,
     particlesOpacityKey = [],
     particlesOpacityValue = [],
@@ -63,7 +72,7 @@ class Emitter extends THREE.Object3D {
     this.emission = emission;
     this.isVerticalToDirection = isVerticalToDirection;
     this.mode = mode;
-    this.emitting = true;
+    this.status = status;
     this.clock = new THREE.Clock();
     this.clock.start();
     this.particles = [];
@@ -94,7 +103,7 @@ class Emitter extends THREE.Object3D {
     this.particlesScaleValue = Util.isElementsInstanceOf(particlesScaleValue, THREE.Vector3) ?
                                particlesScaleValue :
                                particlesScaleValue.map(scale => new THREE.Vector3(scale, scale, scale));
-    this.particlesTransformType = Particle.TRANSFORM_LINEAR;
+    this.particlesTransformType = Emitter.TRANSFORM_LINEAR;
     this.gap = 0;
     this.type = 'Emitter';
   }
@@ -102,25 +111,64 @@ class Emitter extends THREE.Object3D {
   addParticle(particle: ParticleInterface): void {
     this.particles.push(particle);
   }
+  addParticles(particles: ParticleInterface[]): void {
+    for (let i: number = 0; i < particles.length; i++) {
+      this.addParticle(particles[i]);
+    }
+  }
+  removeParticle(particle: ParticleInterface): ParticleInterface | null {
+    const index: number = this.particles.indexOf(particle);
+    return index === -1 ? null : this.particles.splice(index, 1)[0];
+  }
   // 新增物理场
   addPhysical(physical: Physical): void {
     this.physicals.push(physical);
+  }
+  addPhysicals(physicals: Physical[]): void {
+    for (let i: number = 0; i < physicals.length; i++) {
+      this.physicals.push(physicals[i]);
+    }
+  }
+  removePhysical(physical: Physical): Physical | null {
+    const index: number = this.physicals.indexOf(physical);
+    return index === -1 ? null : this.physicals.splice(index, 1)[0];
   }
   // 新增特效场
   addEffect(effect: Effect): void {
     this.effects.push(effect);
   }
+  addEffects(effects: Effect[]): void {
+    for (let i: number = 0; i < effects.length; i++) {
+      this.effects.push(effects[i]);
+    }
+  }
+  removeEffect(effect: Effect): Effect | null {
+    const index: number = this.effects.indexOf(effect);
+    return index === -1 ? null : this.effects.splice(index, 1)[0];
+  }
   // 新增交互事件
   addEvent(event: Event): void {
     this.events.push(event);
   }
+  addEvents(events: Event[]): void {
+    for (let i: number = 0; i < events.length; i++) {
+      this.events.push(events[i]);
+    }
+  }
+  removeEvent(event: Event): Event | null {
+    const index: number = this.events.indexOf(event);
+    return index === -1 ? null : this.events.splice(index, 1)[0];
+  }
   // 开始发射粒子，默认为开启
   start(): void {
-    this.emitting = true;
+    this.status = Emitter.STATUS_NORMAL;
   }
   // 暂停发射粒子
   stop(): void {
-    this.emitting = false;
+    this.status = Emitter.STATUS_STOP;
+  }
+  freeze(): void {
+    this.status = Emitter.STATUS_FROZEN;
   }
   // 生成粒子
   generate(): ParticleInterface[] {
@@ -131,7 +179,7 @@ class Emitter extends THREE.Object3D {
     const generatedParticles: ParticleInterface[] = [];
 
     // 当发射器处于发射状态，且粒子样本数量大于 0 时，才会进行粒子创建
-    if (this.emitting && particlesNumber > 0) {
+    if (this.status === Emitter.STATUS_NORMAL && particlesNumber > 0) {
       switch(this.mode) {
         case Emitter.MODE_DURATIOIN: {
           // 持续发射模式
@@ -190,6 +238,8 @@ class Emitter extends THREE.Object3D {
   }
   // 更新粒子
   update(): void {
+    if (this.status === Emitter.STATUS_FROZEN) return;
+
     // 触发事件
     // 在更新方法前面部分判定触发，因为关闭了粒子的矩阵自动计算
     for (let i: number = 0; i < this.events.length; i++) {
@@ -204,7 +254,7 @@ class Emitter extends THREE.Object3D {
       // 获得粒子距离上次更新的时间差
       const elapsedTimePercentage: number = elapsedTime % particle.life / particle.life;
       // 获得查询百分比函数
-      const interpolationFunction: (value: number, min: number, max: number) => number = Lut.getInterpolationFunction(this.particlesTransformType);
+      const interpolationFunction: (value: number, min: number, max: number) => number = Emitter.getInterpolationFunction(this.particlesTransformType);
 
       // 设置粒子属性随机值
       // 粒子透明度
@@ -374,7 +424,7 @@ class Emitter extends THREE.Object3D {
           // 更新残影粒子位置
           if (isLine) {
             for (let j: number = particle.children.length - 1; j >= generatedGlowNumber; j--) {
-              const afterimageParticle: Line = particle.children[j] as Line;
+              const afterimageParticle: (Line & ParticleInterface) = particle.children[j] as (Line & ParticleInterface);
               const afterimageParticlePositionAttribute: THREE.BufferAttribute = afterimageParticle.geometry.getAttribute('position') as THREE.BufferAttribute;
               const afterimageParticlePositionArray: number[] = afterimageParticlePositionAttribute.array as number[];
               const positionArray: number[] = particle.afterimage.positionArrays[afterimageParticle.afterimagePositionArrayIndex]; 
@@ -428,6 +478,15 @@ class Emitter extends THREE.Object3D {
     }
   }
 
+  // 获得差值方程
+  private static getInterpolationFunction(particlesTransformType: number): (value: number, min: number, max: number) => number {
+    switch (particlesTransformType) {
+      case Emitter.TRANSFORM_LINEAR: return (value: number, min: number, max: number) => (value - min) / (max - min);
+      case Emitter.TRANSFORM_SMOOTH: return THREE.Math.smoothstep;
+      case Emitter.TRANSFORM_SMOOTHER: return THREE.Math.smootherstep;
+      default: return () => 0;
+    }
+  }
 }
 
 export default Emitter;
