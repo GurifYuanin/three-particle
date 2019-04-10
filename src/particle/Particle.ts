@@ -22,10 +22,10 @@ class Particle {
     velocity = 10,
     border = 5,
     afterimage = null,
-    onBeforeCreated = () => {},
-    onAfterCreated = () => {},
-    onBeforeDestroyed = () => {},
-    onAfterDestroyed = () => {},
+    onBeforeCreated = () => { },
+    onAfterCreated = () => { },
+    onBeforeDestroyed = () => { },
+    onAfterDestroyed = () => { },
   } = {}) {
     this.clock = new THREE.Clock();
     this.clock.start();
