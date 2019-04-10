@@ -18,10 +18,10 @@ class Text extends THREE.Mesh {
   bevelThickness: number; // 倒角厚度
   bevelSize: number; // 倒角大小
   bevelSegments: number; // 倒角圆滑度
-  
+
   options: object;
   glow: Glow | null;
-  constructor({
+  constructor ({
     text = 'Hello World',
     font = './fonts/helvetiker_regular.typeface.json',
     size = 10,

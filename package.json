@@ -1,26 +1,15 @@
 {
   "name": "three-particle",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "A particle plugin base on three.js",
   "main": "dist/index.cjs.js",
   "jsnext:main": "dist/index.esm.js",
   "module": "dist/index.esm.js",
   "sideEffects": false,
   "srctype": "ts",
-  "scripts:ts": {
-    "clean": "rimraf ./dist",
-    "lint": "tslint -c tslint.json src/**.ts",
-    "build:cjs": "rollup -c config/rollup.config.cjs.js",
-    "build:iife": "rollup -c config/rollup.config.iife.js",
-    "build:esm": "rollup -c config/rollup.config.esm.js",
-    "build": "npm run clean && npm run build:iife && npm run build:esm && npm run build:cjs",
-    "test": "npm run lint && nyc --nycrc-path .nycrc-ts mocha",
-    "coveralls": "nyc --nycrc-path .nycrc-ts report --reporter=text-lcov | coveralls",
-    "release": "npn test && npm run build && git commit -am $npm_package_version && git tag $npm_package_version && git push && git push --tags"
-  },
   "scripts": {
     "clean": "rimraf ./dist",
-    "lint": "eslint -c .eslintrc.js src/**.js",
+    "lint": "tslint -c tslint.json src/**.ts",
     "lint:fix": "eslint --fix -c .eslintrc.js src/**.js",
     "serve": "nodemon server/index.js",
     "dev": "rollup -c config/rollup.config.iife.js -w",
@@ -28,10 +17,10 @@
     "build:cjs": "rollup -c config/rollup.config.cjs.js",
     "build:iife": "rollup -c config/rollup.config.iife.js",
     "build:esm": "rollup -c config/rollup.config.esm.js",
-    "build": "npm run clean && npm run build:iife && npm run build:esm && npm run build:cjs && webpack --config webpack.config.js",
-    "test": "npm run lint && cross-env NODE_ENV=test nyc mocha",
-    "coveralls": "nyc report --reporter=text-lcov | coveralls",
-    "release": "npn test && npm run build && git commit -am $npm_package_version && git tag $npm_package_version && git push && git push --tags"
+    "build": "npm run lint && npm run test && npm run clean && npm run build:iife && npm run build:esm && npm run build:cjs && webpack --config webpack.config.js",
+    "test": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' nyc --nycrc-path .nycrc-ts mocha --exit",
+    "coveralls": "nyc --nycrc-path .nycrc-ts report --reporter=text-lcov | coveralls",
+    "release": "npm run build && git commit -am $npm_package_version && git tag $npm_package_version && git push && git push --tags"
   },
   "author": "GurifYuanin",
   "license": "MIT",
@@ -43,11 +32,10 @@
     "url": "https://github.com/GurifYuanin/three-particle/issues"
   },
   "devDependencies": {
-    "@babel/cli": "7.1.5",
+    "@babel/cli": "^7.4.3",
     "@babel/core": "^7.4.3",
     "@babel/plugin-transform-runtime": "^7.4.3",
     "@babel/preset-env": "^7.4.3",
-    "@babel/register": "7.0.0",
     "@types/node": "^10.14.4",
     "@types/three": "^0.93.30",
     "babel-plugin-istanbul": "5.1.0",

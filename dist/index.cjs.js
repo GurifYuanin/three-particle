@@ -1111,6 +1111,7 @@ var DirectionEmitter = /** @class */ (function (_super) {
 var BoxEmitter = /** @class */ (function (_super) {
     __extends(BoxEmitter, _super);
     function BoxEmitter(_a) {
+        if (_a === void 0) { _a = {}; }
         var _b = _a.width, width = _b === void 0 ? 5 : _b, _c = _a.height, height = _c === void 0 ? 5 : _c, _d = _a.thickness, thickness = _d === void 0 ? 5 : _d, _e = _a.side, side = _e === void 0 ? 0 : _e, options = __rest(_a, ["width", "height", "thickness", "side"]);
         var _this = _super.call(this, options || {}) || this;
         _this.width = width;

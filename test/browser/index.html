@@ -23,17 +23,16 @@
     <script>
         var libs = {
             'expect.js': expect,
-            // js
-            '../src/index.js': window['three-particle']
-            // ts
-            // '../src/index.ts': window['three-particle']
+            '../src/index.ts': window['three-particle'],
         };
         var require = function (path) {
             return libs[path];
         }
 
     </script>
-    <script src="../test.js"></script>
+    <script src="../index.js"></script>
+    <script src="../particle.js"></script>
+    <script src="../emitter.js"></script>
     <script>
         mocha.run();
 
