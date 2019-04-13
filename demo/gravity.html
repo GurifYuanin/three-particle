@@ -7,10 +7,25 @@
 </head>
 
 <body>
+    <div style="position: absolute; top: 0; right: 0; color: white;">
+        <span>事件类型：</span>
+        <select id="gravity-event-selecter" option="1">
+            <option value="0">无</option>
+            <option value="1" selected>弹跳</option>
+            <option value="2">消失</option>
+            <option value="3">粘附</option>
+        </select>
+    </div>
+
     <script src="./javascripts/three.js"></script>
     <script src="../dist/index.js"></script>
     <script src="./javascripts/common.js"></script>
     <script>
+        const gravityEventEl = document.getElementById('gravity-event-selecter');
+        gravityEventEl.onchange = function () {
+            gravity.event = Number.parseInt(this.value);
+        }
+
         const emitter = new TP.ExplosionEmitter({
             emission: 25,
             particlesOpacityKey: [0, .5, 1],
@@ -27,7 +42,7 @@
             floor: new THREE.Plane(new THREE.Vector3(0, 1, 0), 10),
             event: TP.Gravity.EVENT_BOUNCE
         });
-        const ambientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
+        const ambientLight = new THREE.AmbientLight(0x404040); // soft white light
         scene.add(ambientLight);
         emitter.addParticle(sphere);
         emitter.addPhysical(gravity);

@@ -10,6 +10,8 @@ router.get('/', (req, res) => {
   const files = fs.readdirSync(path.resolve(__dirname, '../demo'));
   res.send(`
     <body style="overflow: hidden;">
+    <!-- from: https://github.blog/2008-12-19-github-ribbons/ -->
+    <a href="https://github.com/GurifYuanin/three-particle"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://github.blog/wp-content/uploads/2008/12/forkme_right_darkblue_121621.png?resize=149%2C149" alt="Fork me on GitHub"></a>
       <div style="display: flex;
                   justify-content: center;
                   align-content: center;

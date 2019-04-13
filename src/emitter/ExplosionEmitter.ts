@@ -15,24 +15,30 @@ class ExplosionEmitter extends Emitter {
     const generatedParticlePosition: number[] = [this.anchor.x, this.anchor.y, this.anchor.z];
     for (let i: number = 0; i < generatedParticles.length; i++) {
       const generatedParticle: ParticleInterface = generatedParticles[i];
-      switch(generatedParticle.type) {
+      switch (generatedParticle.type) {
         case Line.TYPE: {
-          const line: Line = <unknown>generatedParticle as Line;
+          const line: Line = <unknown> generatedParticle as Line;
           const positionAttribute: THREE.BufferAttribute = line.geometry.getAttribute('position') as THREE.BufferAttribute;
           const positionArray: number[] = positionAttribute.array as number[];
           for (let m: number = 0; m < line.verticesNumber; m++) {
             for (let n: number = 0; n < line.verticesSize; n++) {
               const index = m * line.verticesSize + n; // 获得索引，避免重复计算
               positionArray[index] = index < line.vertices.length ?
-                                  line.vertices[index] :
-                                  generatedParticlePosition[n];
+                line.vertices[index] :
+                generatedParticlePosition[n];
             }
           }
           positionAttribute.dynamic = true;
           positionAttribute.needsUpdate = true;
           break;
         }
-        default: {}
+        default: {
+          generatedParticle.position.set(
+            generatedParticlePosition[0],
+            generatedParticlePosition[1],
+            generatedParticlePosition[2]
+          );
+        }
       }
       generatedParticle.direction = new THREE.Vector3(
         THREE.Math.randFloatSpread(1),

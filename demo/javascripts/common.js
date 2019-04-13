@@ -27,6 +27,13 @@ backEl.style.cursor = 'pointer';
 backEl.title = '返回上一个页面';
 backEl.innerText = '←';
 
+// icon
+const faviconEl = document.createElement('link');
+faviconEl.setAttribute('ref', 'shortcut icon');
+faviconEl.setAttribute('href', '../../favicon.ico');
+faviconEl.setAttribute('type', 'image/x-icon');
+document.head.appendChild(faviconEl);
+
 // OrbitControls
 const orbitControlsEl = document.createElement('script');
 orbitControlsEl.src = './javascripts/OrbitControls.js';

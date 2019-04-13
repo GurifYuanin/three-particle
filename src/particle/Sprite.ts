@@ -8,7 +8,7 @@ class Sprite extends THREE.Sprite {
   image: string; // 精灵图 URL 地址
   material: THREE.SpriteMaterial;
   constructor({
-    image = './images/star.png',
+    image = './images/huaji.png',
     material = new THREE.SpriteMaterial({
       map: Loader.loadTexture(image)
     }),

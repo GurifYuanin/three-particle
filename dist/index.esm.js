@@ -1,7 +1,7 @@
 
 /*!
  * three-particle
- 0.0.4(https://github.com/GurifYuanin/three-particle)
+ 0.0.5(https://github.com/GurifYuanin/three-particle)
  * API https://github.com/GurifYuanin/three-particle/blob/master/doc/api.md)
  * Copyright 2017 - 2019
  GurifYuanin.All Rights Reserved
@@ -435,7 +435,7 @@ var Sprite$1 = /** @class */ (function (_super) {
     __extends(Sprite$$1, _super);
     function Sprite$$1(_a) {
         if (_a === void 0) { _a = {}; }
-        var _b = _a.image, image = _b === void 0 ? './images/star.png' : _b, _c = _a.material, material = _c === void 0 ? new SpriteMaterial({
+        var _b = _a.image, image = _b === void 0 ? './images/huaji.png' : _b, _c = _a.material, material = _c === void 0 ? new SpriteMaterial({
             map: Loader.loadTexture(image)
         }) : _c, options = __rest(_a, ["image", "material"]);
         var _this = _super.call(this, material) || this;
@@ -582,9 +582,16 @@ var Emitter = /** @class */ (function (_super) {
             this.addParticle(particles[i]);
         }
     };
+    // 移除样板粒子
     Emitter.prototype.removeParticle = function (particle) {
         var index = this.particles.indexOf(particle);
         return index === -1 ? null : this.particles.splice(index, 1)[0];
+    };
+    Emitter.prototype.removeParticles = function (particles) {
+        for (var i = 0; i < particles.length; i++) {
+            this.removeParticle(particles[i]);
+        }
+        return particles;
     };
     // 新增物理场
     Emitter.prototype.addPhysical = function (physical) {
@@ -595,9 +602,16 @@ var Emitter = /** @class */ (function (_super) {
             this.physicals.push(physicals[i]);
         }
     };
+    // 移除物理场
     Emitter.prototype.removePhysical = function (physical) {
         var index = this.physicals.indexOf(physical);
         return index === -1 ? null : this.physicals.splice(index, 1)[0];
+    };
+    Emitter.prototype.removePhysicals = function (physicals) {
+        for (var i = 0; i < physicals.length; i++) {
+            this.removePhysical(physicals[i]);
+        }
+        return physicals;
     };
     // 新增特效场
     Emitter.prototype.addEffect = function (effect) {
@@ -608,9 +622,16 @@ var Emitter = /** @class */ (function (_super) {
             this.effects.push(effects[i]);
         }
     };
+    // 移除特效场
     Emitter.prototype.removeEffect = function (effect) {
         var index = this.effects.indexOf(effect);
         return index === -1 ? null : this.effects.splice(index, 1)[0];
+    };
+    Emitter.prototype.removeEffects = function (effects) {
+        for (var i = 0; i < effects.length; i++) {
+            this.removeEffect(effects[i]);
+        }
+        return effects;
     };
     // 新增交互事件
     Emitter.prototype.addEvent = function (event) {
@@ -621,11 +642,18 @@ var Emitter = /** @class */ (function (_super) {
             this.events.push(events[i]);
         }
     };
+    // 移除交互事件
     Emitter.prototype.removeEvent = function (event) {
         var index = this.events.indexOf(event);
         return index === -1 ? null : this.events.splice(index, 1)[0];
     };
-    // 开始发射粒子，默认为开启
+    Emitter.prototype.removeEvents = function (events) {
+        for (var i = 0; i < events.length; i++) {
+            this.removeEvent(events[i]);
+        }
+        return events;
+    };
+    // 开始发射粒子，创建发射器后默认开启
     Emitter.prototype.start = function () {
         this.status = Emitter.STATUS_NORMAL;
     };
@@ -633,6 +661,7 @@ var Emitter = /** @class */ (function (_super) {
     Emitter.prototype.stop = function () {
         this.status = Emitter.STATUS_STOP;
     };
+    // 冻结粒子，让粒子不更新
     Emitter.prototype.freeze = function () {
         this.status = Emitter.STATUS_FROZEN;
     };
@@ -956,7 +985,9 @@ var ExplosionEmitter = /** @class */ (function (_super) {
                     positionAttribute.needsUpdate = true;
                     break;
                 }
-                default:
+                default: {
+                    generatedParticle.position.set(generatedParticlePosition[0], generatedParticlePosition[1], generatedParticlePosition[2]);
+                }
             }
             generatedParticle.direction = new Vector3(Math$1.randFloatSpread(1), Math$1.randFloatSpread(1), Math$1.randFloatSpread(1)).normalize();
         }

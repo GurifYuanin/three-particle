@@ -12,15 +12,15 @@
     <script src="./javascripts/common.js"></script>
     <script>
         const emitter = new TP.ExplosionEmitter({
-            emission: 100,
+            emission: 50,
         });
         const sprite = new TP.Sprite({
-            velocity: 1,
+            velocity: 0.25,
         });
         emitter.addParticle(sprite);
         scene.add(emitter);
 
-        camera.position.set(0, 0, 50);
+        camera.position.set(0, 0, 25);
 
         (function render() {
             requestAnimationFrame(render);
