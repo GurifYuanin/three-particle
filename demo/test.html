@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Test</title>
+</head>
+
+<body>
+  <script src="./javascripts/three.js"></script>
+  <script src="../dist/index.js"></script>
+  <script src="./javascripts/common.js"></script>
+  <script>
+    var emitter = new TP.ExplosionEmitter({
+      emission: 50,
+    });
+
+    scene.add(emitter);
+
+    camera.position.set(0, 0, 100);
+
+    (function render() {
+      requestAnimationFrame(render);
+      emitter.update();
+      renderer.render(scene, camera);
+    })();
+  </script>
+</body>
+
+</html>

@@ -19,7 +19,7 @@
             radius: 1,
         });
         const wind = new TP.Wind({
-          intensity: 0.05
+            intensity: 0.1
         });
         emitter.addParticle(sphere);
         emitter.addPhysical(wind);
@@ -27,8 +27,14 @@
 
         camera.position.set(0, 0, 100);
 
+        let last = Date.now();
         (function render() {
             requestAnimationFrame(render);
+            let now = Date.now();
+            if (now - last > 2000) {
+                last = now;
+                wind.direction.x = -wind.direction.x;
+            }
             emitter.update();
             renderer.render(scene, camera);
         })();

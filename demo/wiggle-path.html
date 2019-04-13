@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Path</title>
+</head>
+
+<body>
+  <script src="./javascripts/three.js"></script>
+  <script src="../dist/index.js"></script>
+  <script src="./javascripts/common.js"></script>
+  <script>
+    let score = '0.0';
+    let text = null;
+    let font = null;
+    const loader = new THREE.FontLoader();
+    loader.load('./fonts/helvetiker_regular.typeface.json', (_font) => {
+      font = _font;
+      const geometry = new THREE.TextBufferGeometry(score, {
+        font,
+        size: 5,
+        height: 1
+      });
+      const material = new THREE.MeshBasicMaterial();
+      text = new THREE.Mesh(geometry, material);
+      text.position.set(-5, -3, 0);
+      scene.add(text);
+    });
+
+    const sphere = new TP.Sphere({
+      radius: 0.5,
+      velocity: 0,
+    });
+    const emitter = new TP.ExplosionEmitter({
+      emission: 15,
+      particlesScaleKey: [0, 0.5, 1],
+      particlesScaleValue: [0.5, 2, 1]
+    });
+    const turbulent = new TP.Turbulent({
+      intensity: 0.1
+    });
+    const event = new TP.MouseEvent({
+      camera,
+      renderer,
+      onMouseEnter: (particles) => {
+        for (let particle of particles) {
+          particle.material.color.set(0x00ff00);
+        }
+      },
+      onMouseMove: (particles) => {
+        renderer.domElement.style.cursor = particles.length > 0 ? 'pointer' : 'default';
+      },
+      onMouseClick(particles) {
+        for (let particle of particles) {
+          score = (Number.parseFloat(score) + particle.scale.x).toString();
+          emitter.clear(particle);
+        }
+        if (particles.length > 0) {
+          const dotIndex = score.indexOf('.');
+          const formatScore = dotIndex >= 0 ? score.slice(0, dotIndex + 2) : score;
+          text.geometry = new THREE.TextBufferGeometry(formatScore, {
+            font,
+            size: 5 - formatScore.length + 3,
+            height: 1
+          });
+        }
+      }
+    });
+    const ambientLight = new THREE.AmbientLight(0x404040);
+
+
+
+    emitter.addParticle(sphere);
+    emitter.addEffect(turbulent);
+    emitter.addEvent(event);
+    scene.add(emitter);
+    scene.add(ambientLight);
+
+    camera.position.set(0, 0, 25);
+
+    (function render() {
+      requestAnimationFrame(render);
+      const now = Date.now() / 500;
+      const x = Math.sin(now) * 10;
+      const y = Math.cos(now) * 10;
+      emitter.anchor.set(x, y, 0);
+      emitter.update();
+      renderer.render(scene, camera);
+    })();
+
+  </script>
+</body>
+
+</html>
