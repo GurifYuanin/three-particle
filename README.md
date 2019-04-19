@@ -78,7 +78,12 @@ const TP = require('three-particle');
 For browser environment:
 
 ```html
-<script src="https://unpkg.com/three@0.102.1/build/three.js"></script>
+<!-- cdn -->
+<script src="https://unpkg.com/three"></script>
+<script src="https://unpkg.com/three-particle"></script>
+
+<!-- local file -->
+<script src="node_modules/three/build/three.min.js"></script>
 <script src="node_modules/three-particle/dist/index.js"></script>
 ```
 
