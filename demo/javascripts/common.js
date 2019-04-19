@@ -3,6 +3,21 @@ document.body.style.margin = '0';
 document.body.style.border = 'none';
 document.body.style.overflow = 'hidden';
 
+// 初始化右上角控制面板
+const controlPanelEl = document.getElementById('control-panel');
+if (controlPanelEl) {
+  if (window.innerWidth > 768) {
+    controlPanelEl.style.position = 'absolute';
+    controlPanelEl.style.top = '0';
+    controlPanelEl.style.right = '0';
+    controlPanelEl.style.color = 'white';
+    controlPanelEl.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+    controlPanelEl.style.padding = '10px';
+  } else {
+    controlPanelEl.style.display = 'none';
+  }
+}
+
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer();

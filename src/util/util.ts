@@ -56,7 +56,7 @@ class Util {
       const object = {};
       for (let key in anything) {
         Object.assign(object, {
-          [key]: Util.clone(object[key])
+          [key]: Util.clone(anything[key])
         });
       }
       return object;
@@ -68,8 +68,8 @@ class Util {
   // 判断数组内元素是否都是特定类型
   static isElementsInstanceOf(array: any[], type: any): boolean {
     return Array.isArray(array) &&
-           (array.length === 0 ||
-            array.length > 0 && array.every(element => element instanceof type));
+      (array.length === 0 ||
+        array.length > 0 && array.every(element => element instanceof type));
   }
 }
 

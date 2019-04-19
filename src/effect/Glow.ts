@@ -40,12 +40,12 @@ class Glow extends Effect {
 	// 透明度变化速度和方向
 	// 越大亮度衰减越明显
 	power: number;
-	
+
 	opacity: number; // 整体不透明度
 	feature: number; // 发光羽化值（单位，像素）
 	intensity: number; // 发光强度
 	rate: number;
- 	color: THREE.Color; // 发光颜色
+	color: THREE.Color; // 发光颜色
 	constructor({
 		opacity = 0.5,
 		intensity = 1,
@@ -85,6 +85,15 @@ class Glow extends Effect {
 			fragmentShader: Glow.fragmentShader,
 			blending: THREE.AdditiveBlending, // 加色模式
 			transparent: true
+		});
+	}
+	clone(): Glow {
+		return new Glow({
+			opacity: this.opacity,
+			intensity: this.intensity,
+			rate: this.rate,
+			feature: this.feature,
+			color: this.color
 		});
 	}
 }

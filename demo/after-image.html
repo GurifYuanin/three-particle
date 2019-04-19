@@ -7,10 +7,23 @@
 </head>
 
 <body>
+    <div id="control-panel">
+        <div>
+            <span>残影数量：</span>
+            <input id="after-image-number" type="number" value="2" style="width: 4em;">
+        </div>
+    </div>
     <script src="./javascripts/three.js"></script>
     <script src="../dist/index.js"></script>
     <script src="./javascripts/common.js"></script>
     <script>
+        const afterImageNumberEl = document.getElementById('after-image-number');
+        afterImageNumberEl.addEventListener('change', function () {
+            const number = Number.parseInt(this.value);
+            if (number < 0) return;
+            sphere.afterimage.number = number;
+        });
+
         const sphere = new TP.Sphere({
             afterimage: new TP.Afterimage(),
             velocity: 2
@@ -30,7 +43,7 @@
 
         scene.add(emitter);
 
-        camera.position.set(0, 0, 50);
+        camera.position.set(0, 0, 200);
 
         (function render() {
             requestAnimationFrame(render);

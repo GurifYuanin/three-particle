@@ -7,14 +7,76 @@
 </head>
 
 <body>
+    <div id="control-panel">
+        <div>
+            <span>雨滴类型：</span>
+            <select id="water-drop-type">
+                <option value="0" checked>线段</option>
+                <option value="1">球</option>
+                <option value="2">点集</option>
+            </select>
+        </div>
+        <div>
+            <span>扰乱场：</span>
+            <input id="turbulent-toggle" type="checkbox">
+        </div>
+        <div>
+            <span>扰乱场强度：</span>
+            <input id="turbulent-intensity" type="range" value="5" min="0" max="20" step="1">
+        </div>
+    </div>
     <script src="./javascripts/three.js"></script>
     <script src="../dist/index.js"></script>
     <script src="./javascripts/common.js"></script>
     <script>
+        const waterDropTypeEl = document.getElementById('water-drop-type');
+        const turbulentToggleEl = document.getElementById('turbulent-toggle');
+        const turbulentIntensityEl = document.getElementById('turbulent-intensity');
+        waterDropTypeEl.addEventListener('change', function () {
+            const option = Number.parseInt(this.value);
+            emitter.clearParticles();
+            switch (option) {
+                case 0: {
+                    emitter.emission = 500;
+                    emitter.addParticle(line);
+                    break;
+                }
+                case 1: {
+                    emitter.emission = 100;
+                    emitter.addParticle(sphere);
+                    break;
+                }
+                case 2: {
+                    emitter.emission = 100;
+                    emitter.addParticle(points);
+                }
+            }
+        });
+        turbulentToggleEl.addEventListener('change', function () {
+            emitter[
+                this.value ? 'addEffect' : 'removeEffect'
+            ](turbulent);
+        });
+        turbulentIntensityEl.addEventListener('change', function () {
+            if (emitter.effects.length > 0) {
+                emitter.effects[0].intensity = Number.parseInt(this.value);
+            }
+        });
+
+        const turbulent = new TP.Turbulent({
+            intensity: 5
+        });
+        const points = new TP.Points({
+            velocity: 1
+        });
+        const sphere = new TP.Sphere({
+            radius: 0.5,
+            velocity: 1
+        });
         // add rain or snow
         const emitter = new TP.DirectionEmitter({
             radius: 100,
-            emission: 1000,
+            emission: 500,
             direction: new THREE.Vector3(0, -1, 0),
             spread: 0,
             emitType: TP.DirectionEmitter.EMIT_TYPE_ROUND
@@ -40,8 +102,8 @@
         scene.add(floor);
 
         // config render
-        light.position.y = 100;
-        camera.position.set(20, 10, 100);
+        light.position.y = 200;
+        camera.position.set(20, 20, 200);
         camera.near = 0;
         camera.far = 10000;
 

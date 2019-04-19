@@ -7,13 +7,43 @@
 </head>
 
 <body>
+    <div id="control-panel">
+        <div>
+            <span>发光颜色：</span>
+            <input id="glow-color" type="color" value="#00ffff">
+        </div>
+        <div>
+            <span>发光强度：</span>
+            <input id="glow-intensity" type="range" value="1" min="-1" max="5" step="0.1">
+        </div>
+        <div>
+            <span>发光羽化：</span>
+            <input id="glow-feature" type="range" value="5" min="0" max="20">
+        </div>
+    </div>
     <script src="./javascripts/three.js"></script>
     <script src="../dist/index.js"></script>
     <script src="./javascripts/common.js"></script>
     <script>
+        const glowColorEl = document.getElementById('glow-color');
+        const glowIntensityEl = document.getElementById('glow-intensity');
+        const glowFeatureEl = document.getElementById('glow-feature');
+        glowColorEl.addEventListener('change', function () {
+            const color = this.value.slice(1);
+            glow.color.r = Number.parseInt(color.substr(0, 2), 16) / 255;
+            glow.color.g = Number.parseInt(color.substr(2, 2), 16) / 255;
+            glow.color.b = Number.parseInt(color.substr(4, 2), 16) / 255;
+        });
+        glowIntensityEl.addEventListener('change', function () {
+            glow.intensity = Number.parseFloat(this.value);
+        });
+        glowFeatureEl.addEventListener('change', function () {
+            glow.feature = Number.parseFloat(this.value);
+        });
 
+        const glow = new TP.Glow();
         const sphere = new TP.Sphere({
-            glow: new TP.Glow(),
+            glow,
             velocity: 1,
         });
         const emitter = new TP.ExplosionEmitter({

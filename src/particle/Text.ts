@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Particle } from './Particle';
 import Loader from '../util/Loader';
 import Glow from '../effect/Glow';
+import Util from '../util/Util';
 
 /* 文本 */
 class Text extends THREE.Mesh {
@@ -21,7 +22,7 @@ class Text extends THREE.Mesh {
 
   options: object;
   glow: Glow | null;
-  constructor ({
+  constructor({
     text = 'Hello World',
     font = './fonts/helvetiker_regular.typeface.json',
     size = 10,
@@ -88,8 +89,8 @@ class Text extends THREE.Mesh {
       bevelSize: this.bevelSize,
       bevelSegments: this.bevelSegments,
       material: (this.material as THREE.MeshPhongMaterial).clone(),
-      glow: this.glow,
-      ...this.options
+      glow: this.glow instanceof Glow ? this.glow.clone() : null,
+      ...Util.clone(this.options)
     });
   }
 }
