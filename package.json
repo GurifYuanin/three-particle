@@ -1,6 +1,6 @@
 {
   "name": "three-particle",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "A particle plugin base on three.js",
   "main": "dist/index.cjs.js",
   "jsnext:main": "dist/index.esm.js",

@@ -7,10 +7,21 @@
 </head>
 
 <body>
+    <div id="control-panel">
+        <div>你可以点击屏幕来改变方向</div>
+    </div>
+
     <script src="./javascripts/three.js"></script>
     <script src="../dist/index.js"></script>
     <script src="./javascripts/common.js"></script>
     <script>
+        renderer.domElement.addEventListener('click', function (event) {
+            const canvasRect = renderer.domElement.getBoundingClientRect();
+            emitter.direction.x = ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
+            emitter.direction.y = -((event.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
+            emitter.direction.normalize();
+        });
+
         const sphere = new TP.Sphere({
             radius: 1,
             velocity: 1,

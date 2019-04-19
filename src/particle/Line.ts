@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Particle } from './Particle';
+import Util from '../util/Util';
 
 /* 线段 */
 class Line extends THREE.Line {
@@ -51,7 +52,7 @@ class Line extends THREE.Line {
       vertices: this.vertices,
       colors: this.colors,
       material: this.material.clone(),
-      ...this.options
+      ...Util.clone(this.options)
     });
   }
 }

@@ -33,7 +33,7 @@ class Particle {
     this.direction = new THREE.Vector3(0, 1, 0); // 粒子运动方向由发射器控制，不受参数影响
     this.velocity = velocity;
     this.border = border;
-    this.afterimage = afterimage instanceof Afterimage ? afterimage.clone() : afterimage;
+    this.afterimage = afterimage; // 残影对象应该是克隆副本，因为残影保持了原粒子的运动轨迹
     this.afterimageMatrixWorldIndex = 0;
     this.afterimagePositionArrayIndex = 0;
     this.onBeforeCreated = onBeforeCreated;

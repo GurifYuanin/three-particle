@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Particle } from './Particle';
 import Glow from '../effect/Glow';
+import Util from '../util/Util';
 
 /* 球 */
 class Sphere extends THREE.Mesh {
@@ -41,8 +42,8 @@ class Sphere extends THREE.Mesh {
       heightSegments: this.heightSegments,
       widthSegments: this.widthSegments,
       material: (this.material as THREE.MeshPhongMaterial).clone(),
-      glow: this.glow,
-      ...this.options
+      glow: this.glow instanceof Glow ? this.glow.clone() : null,
+      ...Util.clone(this.options)
     });
   }
 }

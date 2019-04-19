@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Particle } from './Particle';
 import Loader from '../util/Loader';
+import Util from '../util/Util';
 
 class Sprite extends THREE.Sprite {
   static readonly TYPE: string = 'Sprite';
@@ -24,7 +25,7 @@ class Sprite extends THREE.Sprite {
     return new Sprite({
       image: this.image,
       material: this.material.clone(),
-      ...this.options
+      ...Util.clone(this.options)
     });
   }
 }

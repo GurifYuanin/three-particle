@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Particle } from './Particle';
 import Glow from '../effect/Glow';
+import Util from '../util/Util';
 
 /* 点集 */
 class Points extends THREE.Points {
@@ -72,8 +73,8 @@ class Points extends THREE.Points {
       // 当 intensity 大于 1 时，发光偏白（亮）
       // 当 intensity 小于 1 时，发光偏黑（暗）
       const incrementsRate: number = glow.intensity > 1 ?
-                                    glow.intensity * 0.2 :
-                                    glow.intensity - 1;
+        glow.intensity * 0.2 :
+        glow.intensity - 1;
       const red: number = THREE.Math.clamp(glow.color.r * 255 * (1 + incrementsRate), 0, 255);
       const green: number = THREE.Math.clamp(glow.color.g * 255 * (1 + incrementsRate), 0, 255);
       const blue: number = THREE.Math.clamp(glow.color.b * 255 * (1 + incrementsRate), 0, 255);
@@ -101,7 +102,7 @@ class Points extends THREE.Points {
     this.colors = colors;
     this.glow = glow;
     this.options = options;
-    
+
     this.type = 'Points';
   }
   clone(): Points | any {
@@ -112,8 +113,8 @@ class Points extends THREE.Points {
       spread: this.spread,
       colors: this.colors,
       material: this.material.clone(),
-      glow: this.glow,
-      ...this.options
+      glow: this.glow instanceof Glow ? this.glow.clone() : null,
+      ...Util.clone(this.options)
     });
   }
 }

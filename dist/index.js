@@ -1,7 +1,7 @@
 
 /*!
  * three-particle
- 0.0.5(https://github.com/GurifYuanin/three-particle)
+ 0.0.6(https://github.com/GurifYuanin/three-particle)
  * API https://github.com/GurifYuanin/three-particle/blob/master/doc/api.md)
  * Copyright 2017 - 2019
  GurifYuanin.All Rights Reserved
@@ -138,43 +138,6 @@ var TP = (function (exports,THREE) {
       return t;
   }
 
-  var Effect = /** @class */ (function () {
-      function Effect(options) {
-          if (options === void 0) { options = {}; }
-          this.type = 'Effect';
-      }
-      Effect.prototype.effect = function (particle, emitter) {
-      };
-      return Effect;
-  }());
-
-  // 残影特效
-  var Afterimage = /** @class */ (function (_super) {
-      __extends(Afterimage, _super);
-      function Afterimage(_a) {
-          if (_a === void 0) { _a = {}; }
-          var _b = _a.delay, delay = _b === void 0 ? 0.2 : _b, _c = _a.interval, interval = _c === void 0 ? 0.2 : _c, _d = _a.attenuation, attenuation = _d === void 0 ? 0.2 : _d, _e = _a.number, number = _e === void 0 ? 2 : _e, options = __rest(_a, ["delay", "interval", "attenuation", "number"]);
-          var _this = _super.call(this, options || {}) || this;
-          _this.delay = delay;
-          _this.interval = interval;
-          _this.number = number;
-          _this.attenuation = attenuation;
-          _this.matrixWorlds = [];
-          _this.positionArrays = [];
-          _this.type = 'Afterimage';
-          return _this;
-      }
-      Afterimage.prototype.clone = function () {
-          return new Afterimage({
-              delay: this.delay,
-              interval: this.interval,
-              number: this.number,
-              attenuation: this.attenuation
-          });
-      };
-      return Afterimage;
-  }(Effect));
-
   var Particle = /** @class */ (function () {
       function Particle(_a) {
           var _b = _a === void 0 ? {} : _a, _c = _b.life, life = _c === void 0 ? 3 : _c, _d = _b.lifeRandom, lifeRandom = _d === void 0 ? 0 : _d, // 生命随机比例
@@ -186,7 +149,7 @@ var TP = (function (exports,THREE) {
           this.direction = new THREE.Vector3(0, 1, 0); // 粒子运动方向由发射器控制，不受参数影响
           this.velocity = velocity;
           this.border = border;
-          this.afterimage = afterimage instanceof Afterimage ? afterimage.clone() : afterimage;
+          this.afterimage = afterimage; // 残影对象应该是克隆副本，因为残影保持了原粒子的运动轨迹
           this.afterimageMatrixWorldIndex = 0;
           this.afterimagePositionArrayIndex = 0;
           this.onBeforeCreated = onBeforeCreated;
@@ -196,6 +159,147 @@ var TP = (function (exports,THREE) {
           this.emitting = true;
       }
       return Particle;
+  }());
+
+  var Effect = /** @class */ (function () {
+      function Effect(options) {
+          if (options === void 0) { options = {}; }
+          this.type = 'Effect';
+      }
+      Effect.prototype.effect = function (particle, emitter) {
+      };
+      return Effect;
+  }());
+
+  // 粒子发光特效
+  var Glow = /** @class */ (function (_super) {
+      __extends(Glow, _super);
+      function Glow(_a) {
+          if (_a === void 0) { _a = {}; }
+          var _b = _a.opacity, opacity = _b === void 0 ? 0.5 : _b, _c = _a.intensity, intensity = _c === void 0 ? 1 : _c, _d = _a.rate, rate = _d === void 0 ? 1.1 : _d, _e = _a.feature, feature = _e === void 0 ? 5 : _e, _f = _a.color, color = _f === void 0 ? new THREE.Color(0x00ffff) : _f, options = __rest(_a, ["opacity", "intensity", "rate", "feature", "color"]);
+          var _this = _super.call(this, options || {}) || this;
+          _this.opacity = opacity;
+          _this.intensity = intensity;
+          _this.color = color;
+          _this.feature = feature;
+          _this.rate = rate;
+          // intensity 应该为 [-5, 5]
+          // abs(intensity) > 5 时，值再大变化效果也不明显
+          _this.scale = -intensity;
+          // 当 scale 为 5 时，不透明度基本上都为 1
+          // 因此将 bias 根据 scale ，让 scale 从区间 0 - 5 映射到 bias 从区间 1 - 0
+          _this.bias = THREE.Math.mapLinear(intensity, 0, 5, 1.0, 0.0);
+          _this.power = 5 / feature;
+          _this.type = 'Glow';
+          return _this;
+      }
+      // 根据 glow 的参数生成着色器材质
+      // 并不是很好的解决方法，目前是为了减少重复编码
+      Glow.prototype.getShaderMaterial = function () {
+          return new THREE.ShaderMaterial({
+              uniforms: {
+                  'scale': { type: 'f', value: this.scale },
+                  'bias': { type: 'f', value: this.bias },
+                  'power': { type: 'f', value: this.power },
+                  'opacity': { type: 'f', value: this.opacity },
+                  color: { type: 'c', value: this.color }
+              },
+              vertexShader: Glow.vertexShader,
+              fragmentShader: Glow.fragmentShader,
+              blending: THREE.AdditiveBlending,
+              transparent: true
+          });
+      };
+      Glow.prototype.clone = function () {
+          return new Glow({
+              opacity: this.opacity,
+              intensity: this.intensity,
+              rate: this.rate,
+              feature: this.feature,
+              color: this.color
+          });
+      };
+      // from: https://zhuanlan.zhihu.com/p/38548428
+      Glow.vertexShader = "\n\t\tvarying vec3 vNormal;\n\t\tvarying vec3 vPositionNormal;\n\t\tvoid main() \n\t\t{\n\t\t  vNormal = normalize( normalMatrix * normal ); // \u8F6C\u6362\u5230\u89C6\u56FE\u7A7A\u95F4\n\t\t  vPositionNormal = normalize(( modelViewMatrix * vec4( position, 1.0) ).xyz);\n\t\t  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n\t\t}\n\t";
+      Glow.fragmentShader = "\n\t\tuniform vec3 color;\n\t\tuniform float opacity;\n\t\tuniform float bias;\n\t\tuniform float power;\n\t\tuniform float scale;\n\t\tvarying vec3 vNormal;\n\t\tvarying vec3 vPositionNormal;\n\t\tvoid main() \n\t\t{\n      // Empricial \u83F2\u6D85\u5C14\u8FD1\u4F3C\u7B49\u5F0F\n      // \u8BA1\u7B97\u5F97\u5230\u7247\u6BB5\u7740\u8272\u7684\u900F\u660E\u5EA6\n      float alpha = pow( bias + scale * abs(dot(vNormal, vPositionNormal)), power );\n\t\t  gl_FragColor = vec4( color, alpha * opacity );\n\t\t}\n\t";
+      return Glow;
+  }(Effect));
+
+  // 通用工具包
+  var Util = /** @class */ (function () {
+      function Util() {
+      }
+      // 填充函数，用于将源头赋值给目标
+      // 当目标是数组的时候，源头将同时赋值给数组内的每个元素
+      Util.fill = function (target, source, propertyName) {
+          if (Array.isArray(target)) {
+              for (var i = target.length - 1; i >= 0; i--) {
+                  if (propertyName) {
+                      target[i][propertyName] = source;
+                  }
+                  else {
+                      target[i] = source;
+                  }
+              }
+          }
+          else {
+              if (propertyName) {
+                  target[propertyName] = source;
+              }
+              else {
+                  target = source;
+              }
+          }
+          return target;
+      };
+      // threejs 对象清除函数
+      Util.dispose = function (object) {
+          if (object.dispose) {
+              object.dispose();
+          }
+          if (object instanceof Particle) {
+              object.geometry.dispose();
+              object.material.dispose();
+          }
+          if (Array.isArray(object.children)) {
+              for (var i = object.children.length - 1; i >= 0; i--) {
+                  Util.dispose(object.children[i]);
+              }
+          }
+          object = null;
+      };
+      // 深拷贝
+      // 与一般深拷贝不同，该方法会优先认同传入对象的 clone 方法
+      Util.clone = function (anything) {
+          var _a;
+          if (anything && anything.clone) {
+              return anything.clone();
+          }
+          if (Array.isArray(anything)) {
+              var array = Array.from({ length: anything.length });
+              for (var i = anything.length - 1; i >= 0; i--) {
+                  array[i] = Util.clone(anything[i]);
+              }
+              return array;
+          }
+          else if (Object.prototype.toString.call(anything).toLowerCase() === '[object object]') {
+              var object = {};
+              for (var key in anything) {
+                  Object.assign(object, (_a = {}, _a[key] = Util.clone(anything[key]), _a));
+              }
+              return object;
+          }
+          else {
+              return anything;
+          }
+      };
+      // 判断数组内元素是否都是特定类型
+      Util.isElementsInstanceOf = function (array, type) {
+          return Array.isArray(array) &&
+              (array.length === 0 ||
+                  array.length > 0 && array.every(function (element) { return element instanceof type; }));
+      };
+      return Util;
   }());
 
   /* 球 */
@@ -221,7 +325,7 @@ var TP = (function (exports,THREE) {
           return _this;
       }
       Sphere.prototype.clone = function () {
-          return new Sphere(__assign({ radius: this.radius, heightSegments: this.heightSegments, widthSegments: this.widthSegments, material: this.material.clone(), glow: this.glow }, this.options));
+          return new Sphere(__assign({ radius: this.radius, heightSegments: this.heightSegments, widthSegments: this.widthSegments, material: this.material.clone(), glow: this.glow instanceof Glow ? this.glow.clone() : null }, Util.clone(this.options)));
       };
       Sphere.TYPE = 'Sphere';
       return Sphere;
@@ -258,7 +362,7 @@ var TP = (function (exports,THREE) {
           return _this;
       }
       Line.prototype.clone = function () {
-          return new Line(__assign({ verticesNumber: this.verticesNumber, verticesSize: this.verticesSize, vertices: this.vertices, colors: this.colors, material: this.material.clone() }, this.options));
+          return new Line(__assign({ verticesNumber: this.verticesNumber, verticesSize: this.verticesSize, vertices: this.vertices, colors: this.colors, material: this.material.clone() }, Util.clone(this.options)));
       };
       Line.TYPE = 'Line';
       return Line;
@@ -344,7 +448,7 @@ var TP = (function (exports,THREE) {
           return _this;
       }
       Points.prototype.clone = function () {
-          return new Points(__assign({ verticesNumber: this.verticesNumber, verticesSize: this.verticesSize, vertices: this.vertices, spread: this.spread, colors: this.colors, material: this.material.clone(), glow: this.glow }, this.options));
+          return new Points(__assign({ verticesNumber: this.verticesNumber, verticesSize: this.verticesSize, vertices: this.vertices, spread: this.spread, colors: this.colors, material: this.material.clone(), glow: this.glow instanceof Glow ? this.glow.clone() : null }, Util.clone(this.options)));
       };
       Points.TYPE = 'Points';
       return Points;
@@ -426,7 +530,7 @@ var TP = (function (exports,THREE) {
           this.emitting = true;
       };
       Text.prototype.clone = function () {
-          return new Text(__assign({ text: this.text, font: this.font, size: this.size, height: this.height, curveSegments: this.curveSegments, bevelEnabled: this.bevelEnabled, bevelThickness: this.bevelThickness, bevelSize: this.bevelSize, bevelSegments: this.bevelSegments, material: this.material.clone(), glow: this.glow }, this.options));
+          return new Text(__assign({ text: this.text, font: this.font, size: this.size, height: this.height, curveSegments: this.curveSegments, bevelEnabled: this.bevelEnabled, bevelThickness: this.bevelThickness, bevelSize: this.bevelSize, bevelSegments: this.bevelSegments, material: this.material.clone(), glow: this.glow instanceof Glow ? this.glow.clone() : null }, Util.clone(this.options)));
       };
       Text.TYPE = 'Text';
       return Text;
@@ -447,88 +551,11 @@ var TP = (function (exports,THREE) {
           return _this;
       }
       Sprite.prototype.clone = function () {
-          return new Sprite(__assign({ image: this.image, material: this.material.clone() }, this.options));
+          return new Sprite(__assign({ image: this.image, material: this.material.clone() }, Util.clone(this.options)));
       };
       Sprite.TYPE = 'Sprite';
       return Sprite;
   }(THREE.Sprite));
-
-  // 通用工具包
-  var Util = /** @class */ (function () {
-      function Util() {
-      }
-      // 填充函数，用于将源头赋值给目标
-      // 当目标是数组的时候，源头将同时赋值给数组内的每个元素
-      Util.fill = function (target, source, propertyName) {
-          if (Array.isArray(target)) {
-              for (var i = target.length - 1; i >= 0; i--) {
-                  if (propertyName) {
-                      target[i][propertyName] = source;
-                  }
-                  else {
-                      target[i] = source;
-                  }
-              }
-          }
-          else {
-              if (propertyName) {
-                  target[propertyName] = source;
-              }
-              else {
-                  target = source;
-              }
-          }
-          return target;
-      };
-      // threejs 对象清除函数
-      Util.dispose = function (object) {
-          if (object.dispose) {
-              object.dispose();
-          }
-          if (object instanceof Particle) {
-              object.geometry.dispose();
-              object.material.dispose();
-          }
-          if (Array.isArray(object.children)) {
-              for (var i = object.children.length - 1; i >= 0; i--) {
-                  Util.dispose(object.children[i]);
-              }
-          }
-          object = null;
-      };
-      // 深拷贝
-      // 与一般深拷贝不同，该方法会优先认同传入对象的 clone 方法
-      Util.clone = function (anything) {
-          var _a;
-          if (anything && anything.clone) {
-              return anything.clone();
-          }
-          if (Array.isArray(anything)) {
-              var array = Array.from({ length: anything.length });
-              for (var i = anything.length - 1; i >= 0; i--) {
-                  array[i] = Util.clone(anything[i]);
-              }
-              return array;
-          }
-          else if (Object.prototype.toString.call(anything).toLowerCase() === '[object object]') {
-              var object = {};
-              for (var key in anything) {
-                  Object.assign(object, (_a = {}, _a[key] = Util.clone(object[key]), _a));
-              }
-              return object;
-          }
-          else {
-              return anything;
-          }
-      };
-      // 判断数组内元素是否都是特定类型
-      Util.isElementsInstanceOf = function (array, type) {
-          return Array.isArray(array) &&
-              (array.length === 0 ||
-                  array.length > 0 && array.every(function (element) { return element instanceof type; }));
-      };
-      return Util;
-  }());
 
   var Emitter = /** @class */ (function (_super) {
       __extends(Emitter, _super);
@@ -594,6 +621,11 @@ var TP = (function (exports,THREE) {
           }
           return particles;
       };
+      Emitter.prototype.clearParticles = function () {
+          var particles = this.particles;
+          this.particles = [];
+          return particles;
+      };
       // 新增物理场
       Emitter.prototype.addPhysical = function (physical) {
           this.physicals.push(physical);
@@ -612,6 +644,11 @@ var TP = (function (exports,THREE) {
           for (var i = 0; i < physicals.length; i++) {
               this.removePhysical(physicals[i]);
           }
+          return physicals;
+      };
+      Emitter.prototype.clearPhysicals = function () {
+          var physicals = this.physicals;
+          this.physicals = [];
           return physicals;
       };
       // 新增特效场
@@ -634,6 +671,11 @@ var TP = (function (exports,THREE) {
           }
           return effects;
       };
+      Emitter.prototype.clearEffects = function () {
+          var effects = this.effects;
+          this.effects = [];
+          return effects;
+      };
       // 新增交互事件
       Emitter.prototype.addEvent = function (event) {
           this.events.push(event);
@@ -652,6 +694,11 @@ var TP = (function (exports,THREE) {
           for (var i = 0; i < events.length; i++) {
               this.removeEvent(events[i]);
           }
+          return events;
+      };
+      Emitter.prototype.clearEvents = function () {
+          var events = this.events;
+          this.events = [];
           return events;
       };
       // 开始发射粒子，创建发射器后默认开启
@@ -915,6 +962,8 @@ var TP = (function (exports,THREE) {
               particle.updateMatrix(); // 粒子形变处理完成，更新 matrix
           }
       };
+      // clear 和 clearAll 应该是内部方法
+      // 仅在内部使用，用户无需关注
       Emitter.prototype.clear = function (particle) {
           // 清除指定的粒子
           particle.onBeforeDestroyed();
@@ -1457,49 +1506,31 @@ var TP = (function (exports,THREE) {
       return Turbulent;
   }(Effect));
 
-  // 粒子发光特效
-  var Glow = /** @class */ (function (_super) {
-      __extends(Glow, _super);
-      function Glow(_a) {
+  // 残影特效
+  var Afterimage = /** @class */ (function (_super) {
+      __extends(Afterimage, _super);
+      function Afterimage(_a) {
           if (_a === void 0) { _a = {}; }
-          var _b = _a.opacity, opacity = _b === void 0 ? 0.5 : _b, _c = _a.intensity, intensity = _c === void 0 ? 1 : _c, _d = _a.rate, rate = _d === void 0 ? 1.1 : _d, _e = _a.feature, feature = _e === void 0 ? 5 : _e, _f = _a.color, color = _f === void 0 ? new THREE.Color(0x00ffff) : _f, options = __rest(_a, ["opacity", "intensity", "rate", "feature", "color"]);
+          var _b = _a.delay, delay = _b === void 0 ? 0.2 : _b, _c = _a.interval, interval = _c === void 0 ? 0.2 : _c, _d = _a.attenuation, attenuation = _d === void 0 ? 0.2 : _d, _e = _a.number, number = _e === void 0 ? 2 : _e, options = __rest(_a, ["delay", "interval", "attenuation", "number"]);
           var _this = _super.call(this, options || {}) || this;
-          _this.opacity = opacity;
-          _this.intensity = intensity;
-          _this.color = color;
-          _this.feature = feature;
-          _this.rate = rate;
-          // intensity 应该为 [-5, 5]
-          // abs(intensity) > 5 时，值再大变化效果也不明显
-          _this.scale = -intensity;
-          // 当 scale 为 5 时，不透明度基本上都为 1
-          // 因此将 bias 根据 scale ，让 scale 从区间 0 - 5 映射到 bias 从区间 1 - 0
-          _this.bias = THREE.Math.mapLinear(intensity, 0, 5, 1.0, 0.0);
-          _this.power = 5 / feature;
-          _this.type = 'Glow';
+          _this.delay = delay;
+          _this.interval = interval;
+          _this.number = number;
+          _this.attenuation = attenuation;
+          _this.matrixWorlds = [];
+          _this.positionArrays = [];
+          _this.type = 'Afterimage';
           return _this;
       }
-      // 根据 glow 的参数生成着色器材质
-      // 并不是很好的解决方法，目前是为了减少重复编码
-      Glow.prototype.getShaderMaterial = function () {
-          return new THREE.ShaderMaterial({
-              uniforms: {
-                  'scale': { type: 'f', value: this.scale },
-                  'bias': { type: 'f', value: this.bias },
-                  'power': { type: 'f', value: this.power },
-                  'opacity': { type: 'f', value: this.opacity },
-                  color: { type: 'c', value: this.color }
-              },
-              vertexShader: Glow.vertexShader,
-              fragmentShader: Glow.fragmentShader,
-              blending: THREE.AdditiveBlending,
-              transparent: true
+      Afterimage.prototype.clone = function () {
+          return new Afterimage({
+              delay: this.delay,
+              interval: this.interval,
+              number: this.number,
+              attenuation: this.attenuation
           });
       };
-      // from: https://zhuanlan.zhihu.com/p/38548428
-      Glow.vertexShader = "\n\t\tvarying vec3 vNormal;\n\t\tvarying vec3 vPositionNormal;\n\t\tvoid main() \n\t\t{\n\t\t  vNormal = normalize( normalMatrix * normal ); // \u8F6C\u6362\u5230\u89C6\u56FE\u7A7A\u95F4\n\t\t  vPositionNormal = normalize(( modelViewMatrix * vec4( position, 1.0) ).xyz);\n\t\t  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n\t\t}\n\t";
-      Glow.fragmentShader = "\n\t\tuniform vec3 color;\n\t\tuniform float opacity;\n\t\tuniform float bias;\n\t\tuniform float power;\n\t\tuniform float scale;\n\t\tvarying vec3 vNormal;\n\t\tvarying vec3 vPositionNormal;\n\t\tvoid main() \n\t\t{\n      // Empricial \u83F2\u6D85\u5C14\u8FD1\u4F3C\u7B49\u5F0F\n      // \u8BA1\u7B97\u5F97\u5230\u7247\u6BB5\u7740\u8272\u7684\u900F\u660E\u5EA6\n      float alpha = pow( bias + scale * abs(dot(vNormal, vPositionNormal)), power );\n\t\t  gl_FragColor = vec4( color, alpha * opacity );\n\t\t}\n\t";
-      return Glow;
+      return Afterimage;
   }(Effect));
 
   var Event = /** @class */ (function () {

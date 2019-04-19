@@ -7,10 +7,37 @@
 </head>
 
 <body>
+    <div id="control-panel">
+        <div>
+            <span>开启湍流：</span>
+            <input id="turbulent-toggle" type="checkbox" checked>
+        </div>
+        <div>
+            <span>端点数：</span>
+            (<span id="vertices-number-label">3</span>)：
+            <input id="vertices-number" type="range" value="5" min="2" max="20">
+        </div>
+    </div>
+
     <script src="./javascripts/three.js"></script>
     <script src="../dist/index.js"></script>
     <script src="./javascripts/common.js"></script>
     <script>
+        const turbulentToggleEl = document.getElementById('turbulent-toggle');
+        const verticesNumberEl = document.getElementById('vertices-number');
+        const verticesNumberLabelEl = document.getElementById('vertices-number-label');
+        turbulentToggleEl.addEventListener('change', function () {
+            if (this.checked) {
+                emitter.addEffect(turbulent);
+            } else {
+                emitter.removeEffect(turbulent);
+            }
+        });
+        verticesNumberEl.addEventListener('change', function () {
+            line.verticesNumber = Number.parseInt(this.value);
+            verticesNumberLabelEl.innerText = this.value;
+        });
+
         const emitter = new TP.ExplosionEmitter({
             emission: 100,
         });
@@ -31,6 +58,7 @@
             emitter.update();
             renderer.render(scene, camera);
         })();
+
 
     </script>
 </body>

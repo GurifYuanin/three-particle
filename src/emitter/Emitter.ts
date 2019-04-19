@@ -127,6 +127,11 @@ class Emitter extends THREE.Object3D {
     }
     return particles;
   }
+  clearParticles(): ParticleInterface[] {
+    const particles = this.particles;
+    this.particles = [];
+    return particles;
+  }
   // 新增物理场
   addPhysical(physical: Physical): void {
     this.physicals.push(physical);
@@ -145,6 +150,11 @@ class Emitter extends THREE.Object3D {
     for (let i: number = 0; i < physicals.length; i++) {
       this.removePhysical(physicals[i]);
     }
+    return physicals;
+  }
+  clearPhysicals(): Physical[] {
+    const physicals = this.physicals;
+    this.physicals = [];
     return physicals;
   }
   // 新增特效场
@@ -167,6 +177,11 @@ class Emitter extends THREE.Object3D {
     }
     return effects;
   }
+  clearEffects(): Effect[] {
+    const effects = this.effects;
+    this.effects = [];
+    return effects;
+  }
   // 新增交互事件
   addEvent(event: Event): void {
     this.events.push(event);
@@ -185,6 +200,11 @@ class Emitter extends THREE.Object3D {
     for (let i: number = 0; i < events.length; i++) {
       this.removeEvent(events[i]);
     }
+    return events;
+  }
+  clearEvents(): Event[] {
+    const events = this.events;
+    this.events = [];
     return events;
   }
   // 开始发射粒子，创建发射器后默认开启
@@ -488,6 +508,8 @@ class Emitter extends THREE.Object3D {
       particle.updateMatrix(); // 粒子形变处理完成，更新 matrix
     }
   }
+  // clear 和 clearAll 应该是内部方法
+  // 仅在内部使用，用户无需关注
   clear(particle: ParticleInterface): void {
     // 清除指定的粒子
     particle.onBeforeDestroyed();
